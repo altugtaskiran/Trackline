@@ -14,7 +14,7 @@ struct TripRowCard: View {
                 .frame(width: 84, height: 64)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(routeTitle)
+                Text(trip.routeTitle)
                     .font(AppFont.headline)
                     .foregroundStyle(AppColor.textPrimary)
                     .lineLimit(1)
@@ -35,20 +35,5 @@ struct TripRowCard: View {
             }
         }
         .glassCard(cornerRadius: 20, padding: 14)
-    }
-
-    private var routeTitle: String {
-        switch (trip.startPlaceName, trip.endPlaceName) {
-        case let (start?, end?) where start == end:
-            return start
-        case let (start?, end?):
-            return "\(start) → \(end)"
-        case let (start?, nil):
-            return start
-        case let (nil, end?):
-            return end
-        default:
-            return trip.startTime.formatted(date: .abbreviated, time: .omitted)
-        }
     }
 }

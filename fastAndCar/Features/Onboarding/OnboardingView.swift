@@ -67,7 +67,7 @@ struct OnboardingView: View {
                         .font(AppFont.title)
                         .foregroundStyle(AppColor.textPrimary)
 
-                    Text("fastAndCar yolculuğunu kaydeder, pist haritası gibi çizer.")
+                    Text("Trackline yolculuğunu kaydeder, pist haritası gibi çizer.")
                         .font(AppFont.body)
                         .foregroundStyle(AppColor.textSecondary)
                         .multilineTextAlignment(.center)
@@ -95,10 +95,6 @@ struct OnboardingView: View {
             withAnimation(.easeOut(duration: 0.5).delay(1.0)) {
                 showsText = true
             }
-            // Permission may already be determined (e.g. granted in a prior
-            // install) — CoreLocation won't fire a fresh delegate callback in
-            // that case, so onChange alone would never advance past this screen.
-            viewModel.handleAuthorizationChange(viewModel.authorizationStatus)
         }
         .onChange(of: viewModel.authorizationStatus) { _, newValue in
             viewModel.handleAuthorizationChange(newValue)

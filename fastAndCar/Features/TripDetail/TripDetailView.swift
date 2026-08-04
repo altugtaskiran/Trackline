@@ -46,9 +46,11 @@ struct TripDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {
-                Text(viewModel.stats.startTime.formatted(date: .abbreviated, time: .omitted))
+                Text(viewModel.trip.routeTitle)
                     .font(AppFont.headline)
                     .foregroundStyle(AppColor.textPrimary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
             ToolbarItem(placement: .topBarTrailing) {
                 HStack(spacing: 16) {

@@ -8,8 +8,10 @@
 //  projection) — this is texture grounding the drive in its real streets.
 //  Rendered as its own layer (not inside a Map with the route drawn on it),
 //  so its opacity can sit fairly high without ever softening the route line
-//  on top. Zoom/pan are enabled so the map can be explored; rotate/pitch
-//  stay off to keep it predictable.
+//  on top. Static (no interaction) — this card sits inside Trip Detail's
+//  outer ScrollView and shares space with RouteInspectorOverlay's
+//  tap-to-inspect gesture, so it's a fixed backdrop rather than an
+//  independently zoomable map.
 //
 
 import MapKit
@@ -19,7 +21,7 @@ struct RouteMapBackdrop: View {
     let samples: [LocationSample]
 
     var body: some View {
-        Map(initialPosition: .region(fittedRegion), interactionModes: [.zoom, .pan]) {}
+        Map(initialPosition: .region(fittedRegion), interactionModes: []) {}
             .mapStyle(.standard(elevation: .flat, emphasis: .muted, pointsOfInterest: .excludingAll, showsTraffic: false))
             .environment(\.colorScheme, .light)
             .opacity(0.6)

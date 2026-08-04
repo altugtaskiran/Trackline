@@ -14,46 +14,80 @@ struct AppRootView: View {
     @State private var path = NavigationPath()
     @State private var activeTripPresented = false
     @State private var pendingTripResult: ActiveTripViewModel.TripResult?
+    @State private var showsSplash = true
+    // Splash shows on every launch. Onboarding (the "Konumu Etkinleştir"
+    // screen) only joins it when location permission isn't usable yet —
+    // once granted, every later launch goes straight from Splash to Home.
+    // Starts false; the splash-completion handler below decides whether to
+    // flip it on before revealing anything underneath.
+    @State private var showsOnboarding = false
     @Environment(\.modelContext) private var modelContext
 
     var body: some View {
-        NavigationStack(path: $path) {
-            Group {
-                if appEnvironment.hasCompletedOnboarding {
-                    HomeView(
-                        locationManager: appEnvironment.locationManager,
-                        onStartTrip: { activeTripPresented = true },
-                        onSelectTrip: { trip in path.append(trip) }
-                    )
-                } else {
-                    OnboardingView(locationManager: appEnvironment.locationManager) {
-                        appEnvironment.hasCompletedOnboarding = true
+        ZStack {
+            NavigationStack(path: $path) {
+                Group {
+                    if showsOnboarding {
+                        OnboardingView(locationManager: appEnvironment.locationManager) {
+                            withAnimation(.easeOut(duration: 0.4)) {
+                                showsOnboarding = false
+                            }
+                        }
+                    } else {
+                        HomeView(
+                            locationManager: appEnvironment.locationManager,
+                            onStartTrip: { activeTripPresented = true },
+                            onSelectTrip: { trip in path.append(trip) }
+                        )
                     }
                 }
+                .navigationDestination(for: Trip.self) { trip in
+                    TripDetailView(trip: trip)
+                }
             }
-            .navigationDestination(for: Trip.self) { trip in
-                TripDetailView(trip: trip)
+            .fullScreenCover(isPresented: $activeTripPresented, onDismiss: handleActiveTripDismissed) {
+                ActiveTripView(locationManager: appEnvironment.locationManager) { result in
+                    pendingTripResult = result
+                    activeTripPresented = false
+                }
+            }
+            .environment(appEnvironment)
+            .preferredColorScheme(.dark)
+            #if DEBUG
+            .task {
+                // Test-only hook: launching with -uiTestAutoStartTrip skips
+                // straight past onboarding and starts a drive immediately,
+                // so the full record → save → detail flow can be driven
+                // without taps.
+                guard ProcessInfo.processInfo.arguments.contains("-uiTestAutoStartTrip") else { return }
+                showsSplash = false
+                showsOnboarding = false
+                try? await Task.sleep(for: .seconds(1))
+                activeTripPresented = true
+            }
+            #endif
+
+            if showsSplash {
+                SplashView()
+                    .transition(.opacity)
             }
         }
-        .fullScreenCover(isPresented: $activeTripPresented, onDismiss: handleActiveTripDismissed) {
-            ActiveTripView(locationManager: appEnvironment.locationManager) { result in
-                pendingTripResult = result
-                activeTripPresented = false
-            }
-        }
-        .environment(appEnvironment)
-        .preferredColorScheme(.dark)
-        #if DEBUG
         .task {
-            // Test-only hook: launching with -uiTestAutoStartTrip skips
-            // onboarding and starts a drive immediately, so the full
-            // record → save → detail flow can be driven without taps.
-            guard ProcessInfo.processInfo.arguments.contains("-uiTestAutoStartTrip") else { return }
-            appEnvironment.hasCompletedOnboarding = true
-            try? await Task.sleep(for: .seconds(1))
-            activeTripPresented = true
+            // Skips the splash wait entirely during automated test runs so
+            // the debug hooks above aren't slowed down by it.
+            let isUITest = ProcessInfo.processInfo.arguments.contains { $0.hasPrefix("-uiTest") }
+            try? await Task.sleep(for: .seconds(isUITest ? 0.2 : 3.5))
+            // Decided once, right as the splash finishes: permission not
+            // usable yet → reveal Onboarding underneath (it then stays on
+            // screen until the user actually grants/denies, no timer).
+            // Already usable → reveal Home directly, Onboarding never shows.
+            if !appEnvironment.locationManager.hasUsableAuthorization {
+                showsOnboarding = true
+            }
+            withAnimation(.easeOut(duration: 0.4)) {
+                showsSplash = false
+            }
         }
-        #endif
     }
 
     /// Runs after the Active Trip cover has fully dismissed — creating the

@@ -111,4 +111,22 @@ final class Trip {
         events[index].label = label
         stopEventsData = (try? JSONEncoder().encode(events)) ?? stopEventsData
     }
+
+    /// "Start → End" once reverse geocoding has resolved, falling back to
+    /// the start date while it hasn't (or if it never does, e.g. offline).
+    /// Shared by Home's trip rows and the Trip Detail title.
+    var routeTitle: String {
+        switch (startPlaceName, endPlaceName) {
+        case let (start?, end?) where start == end:
+            return start
+        case let (start?, end?):
+            return "\(start) → \(end)"
+        case let (start?, nil):
+            return start
+        case let (nil, end?):
+            return end
+        default:
+            return startTime.formatted(date: .abbreviated, time: .omitted)
+        }
+    }
 }
