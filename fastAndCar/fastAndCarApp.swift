@@ -5,13 +5,15 @@
 //  Created by Altuğ Taşkıran on 4.08.2026.
 //
 
+import SwiftData
 import SwiftUI
 
 @main
 struct fastAndCarApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            AppRootView()
         }
+        .modelContainer(PersistenceController.shared)
     }
 }
