@@ -24,7 +24,7 @@
     "%lld" : {
 
     },
-    "• " : {
+    "• %@" : {
 
     },
     "Akıcı sürüş, yakıt verimliliği yüksek" : {

@@ -18,6 +18,15 @@ struct fastAndCarApp: App {
     // WindowGroup that hosts the whole scene.
     @AppStorage("appLanguage") private var appLanguageRaw = AppLanguage.system.rawValue
 
+    init() {
+        #if DEBUG
+        let args = ProcessInfo.processInfo.arguments
+        if let idx = args.firstIndex(of: "-uiTestSetLanguage"), idx + 1 < args.count {
+            UserDefaults.standard.set(args[idx + 1], forKey: "appLanguage")
+        }
+        #endif
+    }
+
     var body: some Scene {
         WindowGroup {
             // "System" must skip the modifier entirely rather than pin

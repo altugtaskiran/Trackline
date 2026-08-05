@@ -126,7 +126,12 @@ final class Trip {
         case let (nil, end?):
             return end
         default:
-            return startTime.formatted(date: .abbreviated, time: .omitted)
+            // Not a View, so no @Environment(\.locale) to read here —
+            // String.appLocalized's same AppLanguage.current lookup covers
+            // the Settings > Language override for this plain model type too.
+            let style = Date.FormatStyle(date: .abbreviated, time: .omitted)
+                .locale(AppLanguage.current.locale ?? .autoupdatingCurrent)
+            return startTime.formatted(style)
         }
     }
 }

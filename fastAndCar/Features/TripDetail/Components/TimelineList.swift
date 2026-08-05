@@ -23,6 +23,7 @@ struct TimelineList: View {
 
     @State private var editingEventID: UUID?
     @State private var editingLabel = ""
+    @Environment(\.locale) private var locale
 
     private var entries: [TimelineEntry] {
         var result: [TimelineEntry] = [
@@ -61,7 +62,7 @@ struct TimelineList: View {
                     .padding(.top, 4)
 
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(entry.time.formatted(date: .omitted, time: .shortened))
+                        Text(entry.time.formatted(Date.FormatStyle(date: .omitted, time: .shortened).locale(locale)))
                             .font(AppFont.caption)
                             .foregroundStyle(AppColor.textSecondary)
                         HStack(spacing: 4) {

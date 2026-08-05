@@ -12,6 +12,7 @@ struct TripDetailView: View {
     @State private var viewModel: TripDetailViewModel
     @State private var showsShareSheet = false
     @State private var showsLeaderboard = false
+    @Environment(\.locale) private var locale
 
     init(trip: Trip) {
         _viewModel = State(initialValue: TripDetailViewModel(trip: trip))
@@ -125,7 +126,7 @@ struct TripDetailView: View {
 
     private func inspectorTooltip(for sample: LocationSample) -> some View {
         HStack(spacing: 10) {
-            Text(sample.timestamp.formatted(date: .omitted, time: .standard))
+            Text(sample.timestamp.formatted(Date.FormatStyle(date: .omitted, time: .standard).locale(locale)))
                 .font(AppFont.caption.bold())
                 .foregroundStyle(AppColor.textPrimary)
             Text(String(format: "%.0f km/h", sample.speedKph))

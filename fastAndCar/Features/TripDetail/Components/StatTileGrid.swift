@@ -15,6 +15,11 @@ private struct StatTile: Identifiable {
 
 struct StatTileGrid: View {
     let stats: TripStats
+    // .formatted() is a plain Foundation call, not a SwiftUI-environment-
+    // aware one — without reading this back explicitly, Start/Finish Time
+    // would always use the device's system locale regardless of the
+    // Settings > Language override.
+    @Environment(\.locale) private var locale
 
     private var tiles: [StatTile] {
         var result: [StatTile] = []
@@ -30,8 +35,9 @@ struct StatTileGrid: View {
         result.append(StatTile(title: "Lowest Altitude", value: String(format: "%.0f m", stats.lowestAltitude), icon: "arrow.down.to.line", tint: Color(hex: 0x64D2FF)))
         result.append(StatTile(title: "Number of Stops", value: "\(stats.stopCount)", icon: "flag.fill", tint: Color(hex: 0xFFD600)))
         result.append(StatTile(title: "GPS Accuracy", value: String(format: "±%.0fm", stats.averageGpsAccuracy), icon: "location.fill", tint: Color(hex: 0x8E8E93)))
-        result.append(StatTile(title: "Start Time", value: stats.startTime.formatted(date: .omitted, time: .shortened), icon: "play.circle.fill", tint: AppColor.routeStart))
-        result.append(StatTile(title: "Finish Time", value: stats.finishTime.formatted(date: .omitted, time: .shortened), icon: "flag.checkered", tint: AppColor.routeEnd))
+        let timeStyle = Date.FormatStyle(date: .omitted, time: .shortened).locale(locale)
+        result.append(StatTile(title: "Start Time", value: stats.startTime.formatted(timeStyle), icon: "play.circle.fill", tint: AppColor.routeStart))
+        result.append(StatTile(title: "Finish Time", value: stats.finishTime.formatted(timeStyle), icon: "flag.checkered", tint: AppColor.routeEnd))
         return result
     }
 

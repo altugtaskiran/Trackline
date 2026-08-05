@@ -31,6 +31,11 @@ private enum HeatColor {
 private struct ShareCardContent: View {
     let trip: Trip
     let carPhotoData: Data?
+    // .formatted() is a plain Foundation call, not a SwiftUI-environment-
+    // aware one — it won't pick up the .environment(\.locale, ...) applied
+    // before rendering unless we read it back out explicitly and hand it to
+    // the format style ourselves.
+    @Environment(\.locale) private var locale
 
     private var carImage: UIImage? {
         carPhotoData.flatMap { UIImage(data: $0) }
@@ -120,14 +125,15 @@ private struct ShareCardContent: View {
                         .foregroundStyle(.white)
                 }
                 Spacer()
-                Text(trip.startTime.formatted(date: .abbreviated, time: .omitted))
+                Text(trip.startTime.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted).locale(locale)))
                     .font(AppFont.caption)
                     .foregroundStyle(.white.opacity(0.75))
+                    .shadow(color: .black.opacity(0.5), radius: 2, y: 1)
             }
             Text("SESSION COMPLETE")
-                .font(.system(size: 9, weight: .bold, design: .rounded))
-                .tracking(2)
-                .foregroundStyle(HeatColor.amber.opacity(0.85))
+                .font(.system(size: 9, weight: .heavy, design: .rounded))
+                .tracking(3)
+                .foregroundStyle(HeatColor.amber)
         }
         .padding(.top, 22)
         .padding(.horizontal, 24)
@@ -177,47 +183,53 @@ private struct ShareCardContent: View {
     }
 
     private var statsBlock: some View {
-        VStack(spacing: 12) {
-            HStack {
+        VStack(spacing: 16) {
+            HStack(spacing: 0) {
                 fireStat(title: "TOP SPEED", value: String(format: "%.0f km/h", trip.topSpeedKph))
-                Spacer()
+                    .frame(maxWidth: .infinity)
                 shareStat(title: "AVG SPEED", value: String(format: "%.0f km/h", trip.averageSpeedKph))
+                    .frame(maxWidth: .infinity)
             }
-            HStack {
+            HStack(spacing: 0) {
                 shareStat(title: "DISTANCE", value: String(format: "%.1f km", trip.distanceMeters / 1000))
-                Spacer()
+                    .frame(maxWidth: .infinity)
                 shareStat(title: "DRIVE TIME", value: formatDuration(trip.driveTime))
+                    .frame(maxWidth: .infinity)
             }
         }
     }
 
+    // Centered rather than leading-aligned: with each stat now owning an
+    // equal-width half of the row, centering reads as one deliberate,
+    // symmetric block instead of text stranded at the left edge of empty
+    // space — a small change that makes the whole card feel more designed,
+    // less like a form.
     private func shareStat(title: String, value: String) -> some View {
-        VStack(alignment: .leading, spacing: 3) {
+        VStack(spacing: 3) {
             Text(title)
                 .font(.system(size: 10, weight: .bold, design: .rounded))
-                .tracking(0.5)
+                .tracking(1)
                 .foregroundStyle(.white.opacity(0.65))
             Text(value)
-                .font(.system(size: 20, weight: .bold, design: .rounded))
+                .font(.system(size: 21, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
+                .shadow(color: .black.opacity(0.4), radius: 3, y: 1)
         }
-        .frame(minWidth: 140, alignment: .leading)
     }
 
-    /// The hero stat — top speed rendered in a redline-gradient, italic and
-    /// a size up from the rest, so the card's one big brag lands first.
+    /// The hero stat — top speed rendered in a redline-gradient and a size
+    /// up from the rest, so the card's one big brag lands first.
     private func fireStat(title: String, value: String) -> some View {
-        VStack(alignment: .leading, spacing: 3) {
+        VStack(spacing: 4) {
             Text(title)
                 .font(.system(size: 10, weight: .bold, design: .rounded))
-                .tracking(0.5)
+                .tracking(1)
                 .foregroundStyle(HeatColor.amber.opacity(0.85))
             Text(value)
-                .font(.system(size: 25, weight: .heavy, design: .rounded))
-                .italic()
+                .font(.system(size: 32, weight: .heavy, design: .rounded))
                 .foregroundStyle(HeatColor.fireGradient)
+                .shadow(color: HeatColor.redline.opacity(0.6), radius: 8)
         }
-        .frame(minWidth: 140, alignment: .leading)
     }
 
     private func formatDuration(_ interval: TimeInterval) -> String {
@@ -231,7 +243,15 @@ private struct ShareCardContent: View {
 enum ShareCardRenderer {
     @MainActor
     static func render(trip: Trip, carPhotoData: Data?) -> UIImage? {
-        let renderer = ImageRenderer(content: ShareCardContent(trip: trip, carPhotoData: carPhotoData))
+        // ImageRenderer draws this content into a UIImage in its own
+        // detached rendering pass — it never inherits the environment
+        // SwiftUI applies to the app's actual window/view tree, so the
+        // Settings > Language override has to be set here explicitly or
+        // every share card silently falls back to whatever Bundle's default
+        // resolution picks (Turkish, being the source language).
+        let content = ShareCardContent(trip: trip, carPhotoData: carPhotoData)
+            .environment(\.locale, AppLanguage.current.locale ?? .autoupdatingCurrent)
+        let renderer = ImageRenderer(content: content)
         // Fixed high-density scale for crisp shares regardless of the
         // rendering device's own screen (this view is never actually shown
         // on-screen at 1x).

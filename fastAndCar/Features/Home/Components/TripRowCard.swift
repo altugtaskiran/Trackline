@@ -7,6 +7,7 @@ import SwiftUI
 
 struct TripRowCard: View {
     let trip: Trip
+    @Environment(\.locale) private var locale
 
     var body: some View {
         HStack(spacing: 16) {
@@ -18,7 +19,7 @@ struct TripRowCard: View {
                     .font(AppFont.headline)
                     .foregroundStyle(AppColor.textPrimary)
                     .lineLimit(1)
-                Text(trip.startTime.formatted(date: .abbreviated, time: .shortened))
+                Text(trip.startTime.formatted(Date.FormatStyle(date: .abbreviated, time: .shortened).locale(locale)))
                     .font(.system(size: 11, weight: .medium, design: .rounded))
                     .foregroundStyle(AppColor.textSecondary)
             }
