@@ -16,9 +16,9 @@ struct LeaderboardPolylinePoint: Codable {
 enum LeaderboardPolylineCodec {
     /// Downsampled to keep the CloudKit record small — a leaderboard route
     /// thumbnail doesn't need every 1Hz sample, just its shape.
-    static let maxPoints = 120
+    nonisolated static let maxPoints = 120
 
-    static func encode(samples: [LocationSample]) -> Data? {
+    nonisolated static func encode(samples: [LocationSample]) -> Data? {
         guard !samples.isEmpty else { return nil }
         let step = max(1, samples.count / maxPoints)
         let downsampled = Swift.stride(from: 0, to: samples.count, by: step).map { samples[$0] }
@@ -26,7 +26,7 @@ enum LeaderboardPolylineCodec {
         return try? JSONEncoder().encode(points)
     }
 
-    static func decode(_ data: Data) -> [LeaderboardPolylinePoint] {
+    nonisolated static func decode(_ data: Data) -> [LeaderboardPolylinePoint] {
         (try? JSONDecoder().decode([LeaderboardPolylinePoint].self, from: data)) ?? []
     }
 }

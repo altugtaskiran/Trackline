@@ -2,33 +2,35 @@
 //  PlaceNameResolver.swift
 //  fastAndCar
 //
-//  Reverse-geocodes a trip's start/end coordinates into "City, Province"
-//  labels for Home's trip rows. Best-effort — returns nil on failure (no
-//  network, rate limited, etc.) and callers fall back to showing the date.
+//  Reverse-geocodes a trip's start/end coordinates into "City, Country"
+//  labels for Home's trip rows — country rather than province/state so the
+//  label reads sensibly anywhere in the world, not just Turkey. Best-effort —
+//  returns nil on failure (no network, rate limited, etc.) and callers fall
+//  back to showing the date.
 //
 
 import CoreLocation
+import MapKit
 
 enum PlaceNameResolver {
-    private static let geocoder = CLGeocoder()
-
     static func resolve(coordinate: CLLocationCoordinate2D) async -> String? {
         let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-        guard let placemark = try? await geocoder.reverseGeocodeLocation(location).first else { return nil }
-        return format(locality: placemark.locality, administrativeArea: placemark.administrativeArea)
+        guard let request = MKReverseGeocodingRequest(location: location) else { return nil }
+        guard let mapItem = try? await request.mapItems.first else { return nil }
+        return format(city: mapItem.addressRepresentations?.cityName, country: mapItem.addressRepresentations?.regionName)
     }
 
-    private static func format(locality: String?, administrativeArea: String?) -> String? {
-        let city = locality?.trimmingCharacters(in: .whitespaces)
-        let province = administrativeArea?.trimmingCharacters(in: .whitespaces)
+    private static func format(city: String?, country: String?) -> String? {
+        let city = city?.trimmingCharacters(in: .whitespaces)
+        let country = country?.trimmingCharacters(in: .whitespaces)
 
-        switch (city, province) {
-        case let (city?, province?) where !city.isEmpty && !province.isEmpty && city != province:
-            return "\(city), \(province)"
+        switch (city, country) {
+        case let (city?, country?) where !city.isEmpty && !country.isEmpty && city != country:
+            return "\(city), \(country)"
         case let (city?, _) where !city.isEmpty:
             return city
-        case let (_, province?) where !province.isEmpty:
-            return province
+        case let (_, country?) where !country.isEmpty:
+            return country
         default:
             return nil
         }

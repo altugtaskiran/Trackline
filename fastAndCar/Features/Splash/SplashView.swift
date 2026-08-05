@@ -20,19 +20,43 @@ struct SplashView: View {
             VStack(spacing: 0) {
                 Spacer()
 
-                RouteMotifShape()
-                    .trim(from: 0, to: lineProgress)
-                    .stroke(
-                        LinearGradient(
-                            colors: AppColor.heatmapStops.map(\.color),
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        ),
-                        style: StrokeStyle(lineWidth: 4, lineCap: .round, lineJoin: .round)
-                    )
-                    .shadow(color: AppColor.accent.opacity(0.45), radius: 14)
-                    .frame(height: 150)
-                    .padding(.horizontal, 56)
+                GeometryReader { proxy in
+                    ZStack {
+                        RouteMotifShape()
+                            .trim(from: 0, to: lineProgress)
+                            .stroke(
+                                LinearGradient(
+                                    colors: AppColor.heatmapStops.map(\.color),
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                ),
+                                style: StrokeStyle(lineWidth: 4, lineCap: .round, lineJoin: .round)
+                            )
+                            .shadow(color: AppColor.accent.opacity(0.45), radius: 14)
+
+                        Circle()
+                            .fill(AppColor.routeStart)
+                            .frame(width: 12, height: 12)
+                            .shadow(color: AppColor.routeStart, radius: 8)
+                            .position(
+                                x: proxy.size.width * RouteMotifShape.startPointUnit.x,
+                                y: proxy.size.height * RouteMotifShape.startPointUnit.y
+                            )
+                            .opacity(lineProgress > 0.02 ? 1 : 0)
+
+                        Circle()
+                            .fill(AppColor.routeEnd)
+                            .frame(width: 12, height: 12)
+                            .shadow(color: AppColor.routeEnd, radius: 8)
+                            .position(
+                                x: proxy.size.width * RouteMotifShape.endPointUnit.x,
+                                y: proxy.size.height * RouteMotifShape.endPointUnit.y
+                            )
+                            .opacity(lineProgress > 0.97 ? 1 : 0)
+                    }
+                }
+                .frame(height: 150)
+                .padding(.horizontal, 56)
 
                 Text("Drive Tracker: TrackLine")
                     .font(AppFont.title)

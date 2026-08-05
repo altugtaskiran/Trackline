@@ -2,15 +2,13 @@
 //  GarageView.swift
 //  fastAndCar
 //
-//  The user's cars: photo + specs. Reached from a small icon on Home,
-//  same pattern as Settings.
+//  The user's cars: photo + specs. The Garage tab.
 //
 
 import SwiftData
 import SwiftUI
 
 struct GarageView: View {
-    @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Car.createdAt, order: .reverse) private var cars: [Car]
     @State private var showsAddCar = false
@@ -33,15 +31,12 @@ struct GarageView: View {
                         }
                     }
                     .padding(20)
+                    .padding(.bottom, 20)
                 }
             }
             .navigationTitle("Garaj")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Kapat") { dismiss() }
-                        .foregroundStyle(AppColor.accent)
-                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         showsAddCar = true
@@ -52,7 +47,6 @@ struct GarageView: View {
                 }
             }
         }
-        .preferredColorScheme(.dark)
         .sheet(isPresented: $showsAddCar) {
             AddCarView()
         }

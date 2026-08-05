@@ -12,8 +12,8 @@ import SwiftUI
 struct AppRootView: View {
     @State private var appEnvironment = AppEnvironment()
     @State private var path = NavigationPath()
-    @State private var activeTripPresented = false
-    @State private var pendingTripResult: ActiveTripViewModel.TripResult?
+    @State private var selectedTab: AppTab = .dashboard
+    @State private var isRecording = false
     @State private var showsSplash = true
     // Splash shows on every launch. Onboarding (the "Konumu Etkinleştir"
     // screen) only joins it when location permission isn't usable yet —
@@ -34,21 +34,48 @@ struct AppRootView: View {
                             }
                         }
                     } else {
-                        HomeView(
-                            locationManager: appEnvironment.locationManager,
-                            onStartTrip: { activeTripPresented = true },
-                            onSelectTrip: { trip in path.append(trip) }
-                        )
+                        Group {
+                            switch selectedTab {
+                            case .trips:
+                                TripsListView(
+                                    locationManager: appEnvironment.locationManager,
+                                    onSelectTrip: { trip in path.append(trip.id) }
+                                )
+                            case .dashboard:
+                                DashboardView(
+                                    locationManager: appEnvironment.locationManager,
+                                    isRecording: $isRecording,
+                                    onTripEnded: handleTripEnded
+                                )
+                            case .garage:
+                                GarageView()
+                            }
+                        }
+                        // safeAreaInset (not a raw overlay) so the bar's
+                        // footprint actually insets scrollable content —
+                        // list rows and their tap targets never end up
+                        // underneath it, unlike a ZStack overlay which only
+                        // adjusts what's visible, not what's touchable.
+                        .safeAreaInset(edge: .bottom) {
+                            if !isRecording {
+                                MainTabBar(selectedTab: $selectedTab)
+                                    .padding(.horizontal, 20)
+                                    .padding(.bottom, 8)
+                                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                            }
+                        }
+                        .animation(.spring(response: 0.35, dampingFraction: 0.85), value: isRecording)
                     }
                 }
-                .navigationDestination(for: Trip.self) { trip in
-                    TripDetailView(trip: trip)
-                }
-            }
-            .fullScreenCover(isPresented: $activeTripPresented, onDismiss: handleActiveTripDismissed) {
-                ActiveTripView(locationManager: appEnvironment.locationManager) { result in
-                    pendingTripResult = result
-                    activeTripPresented = false
+                // Pushes a Trip's Codable `id`, not the Trip (a SwiftData
+                // model, not Codable) itself — NavigationPath needs to
+                // serialize its elements for state restoration across
+                // backgrounding, and a non-Codable element there silently
+                // breaks the destination lookup until the next cold launch.
+                .navigationDestination(for: UUID.self) { tripID in
+                    if let trip = fetchTrip(id: tripID) {
+                        TripDetailView(trip: trip)
+                    }
                 }
             }
             .environment(appEnvironment)
@@ -63,7 +90,28 @@ struct AppRootView: View {
                 showsSplash = false
                 showsOnboarding = false
                 try? await Task.sleep(for: .seconds(1))
-                activeTripPresented = true
+                isRecording = true
+            }
+            .task {
+                // Test-only hook: launching with -uiTestAutoGarage switches
+                // straight to the Garage tab so it can be verified without taps.
+                guard ProcessInfo.processInfo.arguments.contains("-uiTestAutoGarage") else { return }
+                try? await Task.sleep(for: .seconds(1))
+                selectedTab = .garage
+            }
+            .task {
+                // Test-only hook: launching with -uiTestAutoOpenTrip switches to
+                // the Sürüşlerim tab and pushes the most recent trip, so the
+                // list-row-tap → Trip Detail path can be verified without taps.
+                guard ProcessInfo.processInfo.arguments.contains("-uiTestAutoOpenTrip") else { return }
+                try? await Task.sleep(for: .seconds(1))
+                selectedTab = .trips
+                try? await Task.sleep(for: .seconds(1))
+                var descriptor = FetchDescriptor<Trip>(sortBy: [SortDescriptor(\.createdAt, order: .reverse)])
+                descriptor.fetchLimit = 1
+                if let trip = try? modelContext.fetch(descriptor).first {
+                    path.append(trip.id)
+                }
             }
             #endif
 
@@ -90,17 +138,20 @@ struct AppRootView: View {
         }
     }
 
-    /// Runs after the Active Trip cover has fully dismissed — creating the
-    /// Trip and pushing navigation here (rather than in the same tick as the
-    /// dismissal) avoids a race where the NavigationStack drops a path
-    /// mutation made while the cover is still animating away.
-    private func handleActiveTripDismissed() {
-        guard let result = pendingTripResult else { return }
-        pendingTripResult = nil
+    /// Dashboard hands back a finished recording (already past the "too
+    /// short to save" check) the moment the user taps Sürüşü Bitir — no
+    /// modal dismissal to wait for anymore, so this runs immediately.
+    private func handleTripEnded(_ result: ActiveTripViewModel.TripResult) {
         let trip = Trip(samples: result.samples, stopEvents: result.stopEvents, stats: result.stats, score: result.score)
         modelContext.insert(trip)
-        path.append(trip)
+        path.append(trip.id)
         resolvePlaceNames(for: trip)
+    }
+
+    private func fetchTrip(id: UUID) -> Trip? {
+        var descriptor = FetchDescriptor<Trip>(predicate: #Predicate { $0.id == id })
+        descriptor.fetchLimit = 1
+        return try? modelContext.fetch(descriptor).first
     }
 
     /// Fire-and-forget: fills in the trip row's "City → City" label once

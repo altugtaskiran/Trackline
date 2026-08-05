@@ -16,12 +16,12 @@ final class SettingsViewModel {
 
     var authorizationStatusText: String {
         switch locationManager.authorizationStatus {
-        case .authorizedAlways: "Her zaman izinli"
-        case .authorizedWhenInUse: "Yalnızca uygulama kullanılırken"
-        case .denied: "Reddedildi"
-        case .restricted: "Kısıtlı"
-        case .notDetermined: "Belirlenmedi"
-        @unknown default: "Bilinmiyor"
+        case .authorizedAlways: String.appLocalized("Her zaman izinli")
+        case .authorizedWhenInUse: String.appLocalized("Yalnızca uygulama kullanılırken")
+        case .denied: String.appLocalized("Reddedildi")
+        case .restricted: String.appLocalized("Kısıtlı")
+        case .notDetermined: String.appLocalized("Belirlenmedi")
+        @unknown default: String.appLocalized("Bilinmiyor")
         }
     }
 
@@ -30,8 +30,7 @@ final class SettingsViewModel {
     }
 
     var appVersion: String {
-        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"
-        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "1"
-        return "\(version) (\(build))"
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"
     }
 }
+

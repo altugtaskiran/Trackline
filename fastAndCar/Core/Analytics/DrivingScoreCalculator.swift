@@ -55,8 +55,15 @@ enum DrivingScoreCalculator {
         score -= min(stoppedRatio * 30, 15)
         score = min(max(score, 0), 100)
 
+        // Each string here is itself the String Catalog lookup key (source
+        // language tr) — DrivingScoreCard renders them through
+        // LocalizedStringKey, not verbatim, so they translate at display
+        // time. The one case with an embedded count uses a %d format key so
+        // it isn't a distinct catalog entry per count value.
         let insights = [
-            harshBrakeCount <= 1 ? "Ani fren az" : "\(harshBrakeCount) ani fren tespit edildi",
+            harshBrakeCount <= 1
+                ? "Ani fren az"
+                : String(format: String.appLocalized("%d ani fren tespit edildi"), harshBrakeCount),
             speedConsistency < 0.35 ? "Ortalama hız dengeli" : "Hız değişkenliği yüksek",
             harshAccelCount <= 1 ? "Kalkışlar ve virajlar kontrollü" : "Ani hızlanmalar fazla",
             stoppedRatio < 0.15 ? "Akıcı sürüş, yakıt verimliliği yüksek" : "Sık duruşlar yakıt verimliliğini düşürüyor",

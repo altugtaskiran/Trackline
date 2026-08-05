@@ -37,6 +37,9 @@ final class ActiveTripViewModel {
     }
 
     func start() {
+        // Idempotent: a redundant call (e.g. a duplicate trigger from the
+        // view layer) must never wipe samples already recorded this session.
+        guard timer == nil else { return }
         samples = []
         distanceMeters = 0
         elapsedTime = 0

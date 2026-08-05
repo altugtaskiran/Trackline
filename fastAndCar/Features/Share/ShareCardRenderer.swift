@@ -167,6 +167,12 @@ private struct ShareCardContent: View {
                 .compositingGroup()
                 .blendMode(.screen)
             RouteCanvas(samples: trip.samples, lineWidth: lineWidth, showsEndpoints: true, padding: padding)
+            RouteEndpointLabels(
+                samples: trip.samples,
+                startPlaceName: trip.startPlaceName,
+                endPlaceName: trip.endPlaceName,
+                padding: padding
+            )
         }
     }
 

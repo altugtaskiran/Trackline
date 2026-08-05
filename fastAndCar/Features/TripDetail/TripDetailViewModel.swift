@@ -16,7 +16,12 @@ final class TripDetailViewModel {
 
     var inspectedIndex: Int?
 
-    private(set) var playbackIndex: Int = 0
+    // Playback drives the same map marker a tap does — scrubbing or hitting
+    // play must move the inspected point along the route in lockstep, not
+    // just update the stat readouts.
+    private(set) var playbackIndex: Int = 0 {
+        didSet { inspectedIndex = playbackIndex }
+    }
     private(set) var isPlaying = false
     private var playbackTimer: Timer?
     /// How many samples to advance per tick so total playback time stays

@@ -15,11 +15,12 @@ struct RouteInspectorOverlay: View {
     let samples: [LocationSample]
     let padding: CGFloat
     @Binding var inspectedIndex: Int?
+    var projector: ([LocationSample], CGRect, CGFloat) -> [CGPoint] = RouteProjector.project
 
     var body: some View {
         GeometryReader { proxy in
             let rect = CGRect(origin: .zero, size: proxy.size)
-            let points = RouteProjector.project(samples: samples, into: rect, padding: padding)
+            let points = projector(samples, rect, padding)
 
             ZStack {
                 Color.clear

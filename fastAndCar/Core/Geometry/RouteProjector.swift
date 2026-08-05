@@ -14,7 +14,7 @@ enum RouteProjector {
     /// Projects samples onto a local tangent plane (meters, x = east, y = north),
     /// then scales/centers the shape to fit `rect` with `padding` on every side,
     /// preserving aspect ratio. Returns one CGPoint per input sample, same order.
-    static func project(samples: [LocationSample], into rect: CGRect, padding: CGFloat = 24) -> [CGPoint] {
+    nonisolated static func project(samples: [LocationSample], into rect: CGRect, padding: CGFloat = 24) -> [CGPoint] {
         guard let origin = samples.first, rect.width > 0, rect.height > 0 else { return [] }
 
         let meanLatitude = samples.reduce(0.0) { $0 + $1.latitude } / Double(samples.count)

@@ -65,7 +65,11 @@ struct TimelineList: View {
                             .font(AppFont.caption)
                             .foregroundStyle(AppColor.textSecondary)
                         HStack(spacing: 4) {
-                            Text(entry.title)
+                            // "Started"/"Finished"/the default "Stop" label
+                            // are catalog keys; a user-renamed stop is free
+                            // text that just won't match any key and renders
+                            // as-is.
+                            Text(LocalizedStringKey(entry.title))
                                 .font(AppFont.body)
                                 .foregroundStyle(AppColor.textPrimary)
                             if let subtitle = entry.subtitle {

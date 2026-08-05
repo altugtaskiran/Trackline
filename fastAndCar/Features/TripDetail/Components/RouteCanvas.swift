@@ -19,11 +19,15 @@ struct RouteCanvas: View {
     var showsEndpoints: Bool = true
     var padding: CGFloat = 16
     var progress: Double?
+    /// Overridable so Trip Detail can swap in a projection registered to the
+    /// real map underneath (see GeoMapProjector) instead of this default,
+    /// which fits the route to its own view bounds with no map involved.
+    var projector: ([LocationSample], CGRect, CGFloat) -> [CGPoint] = RouteProjector.project
 
     var body: some View {
         Canvas { context, size in
             let rect = CGRect(origin: .zero, size: size)
-            let points = RouteProjector.project(samples: samples, into: rect, padding: padding)
+            let points = projector(samples, rect, padding)
             guard points.count > 1 else { return }
 
             let visibleCount: Int

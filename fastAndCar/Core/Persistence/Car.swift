@@ -20,10 +20,10 @@ enum FuelType: String, Codable, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .gasoline: "Benzin"
-        case .diesel: "Dizel"
-        case .electric: "Elektrik"
-        case .hybrid: "Hibrit"
+        case .gasoline: String.appLocalized("Benzin")
+        case .diesel: String.appLocalized("Dizel")
+        case .electric: String.appLocalized("Elektrik")
+        case .hybrid: String.appLocalized("Hibrit")
         }
     }
 }

@@ -97,7 +97,7 @@ struct ShareCardView: View {
     private var carPicker: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 10) {
-                carChip(title: "Yok", isSelected: selectedCar == nil) {
+                carChip(title: String.appLocalized("Yok"), isSelected: selectedCar == nil) {
                     selectedCar = nil
                 }
                 ForEach(cars) { car in

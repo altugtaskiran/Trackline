@@ -85,19 +85,37 @@ struct TripDetailView: View {
             try? await Task.sleep(for: .seconds(1))
             showsShareSheet = true
         }
+        .task {
+            guard ProcessInfo.processInfo.arguments.contains("-uiTestAutoPlay") else { return }
+            try? await Task.sleep(for: .seconds(1))
+            viewModel.play()
+        }
         #endif
     }
 
     private var routeHero: some View {
-        ZStack {
-            RouteMapBackdrop(samples: viewModel.samples)
-            RouteCanvas(samples: viewModel.samples, lineWidth: 3, showsEndpoints: true, padding: 24)
-            RouteInspectorOverlay(samples: viewModel.samples, padding: 24, inspectedIndex: $viewModel.inspectedIndex)
+        GeometryReader { proxy in
+            let rect = CGRect(origin: .zero, size: proxy.size)
+            let region = FittedRegion.fitting(samples: viewModel.samples, aspectRatio: rect.width / max(rect.height, 1))
+            let projector = GeoMapProjector.projector(region: region)
 
-            if let sample = viewModel.inspectedSample {
-                VStack {
-                    inspectorTooltip(for: sample)
-                    Spacer()
+            ZStack {
+                RouteMapBackdrop(region: region)
+                RouteCanvas(samples: viewModel.samples, lineWidth: 3, showsEndpoints: true, padding: 24, projector: projector)
+                RouteEndpointLabels(
+                    samples: viewModel.samples,
+                    startPlaceName: viewModel.trip.startPlaceName,
+                    endPlaceName: viewModel.trip.endPlaceName,
+                    padding: 24,
+                    projector: projector
+                )
+                RouteInspectorOverlay(samples: viewModel.samples, padding: 24, inspectedIndex: $viewModel.inspectedIndex, projector: projector)
+
+                if let sample = viewModel.inspectedSample {
+                    VStack {
+                        inspectorTooltip(for: sample)
+                        Spacer()
+                    }
                 }
             }
         }

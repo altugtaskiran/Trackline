@@ -1,34 +1,24 @@
 //
-//  HomeView.swift
+//  TripsListView.swift
 //  fastAndCar
 //
-//  Trip history doubles as the home surface: a list of past drives plus one
-//  floating "Start Drive" action. No tab bar, no extra chrome.
+//  The "Sürüşlerim" tab: trip history. Start Drive itself now lives on the
+//  Dashboard tab — this is history + settings only.
 //
 
 import SwiftData
 import SwiftUI
-import UIKit
 
-struct HomeView: View {
+struct TripsListView: View {
     @Query(sort: \Trip.createdAt, order: .reverse) private var trips: [Trip]
-    @State private var viewModel: HomeViewModel
     @State private var showsSettings = false
-    @State private var showsGarage = false
     @Environment(\.modelContext) private var modelContext
     private let locationManager: LocationManager
 
-    var onStartTrip: () -> Void
     var onSelectTrip: (Trip) -> Void
 
-    init(
-        locationManager: LocationManager,
-        onStartTrip: @escaping () -> Void,
-        onSelectTrip: @escaping (Trip) -> Void
-    ) {
+    init(locationManager: LocationManager, onSelectTrip: @escaping (Trip) -> Void) {
         self.locationManager = locationManager
-        _viewModel = State(initialValue: HomeViewModel(locationManager: locationManager))
-        self.onStartTrip = onStartTrip
         self.onSelectTrip = onSelectTrip
     }
 
@@ -67,7 +57,7 @@ struct HomeView: View {
                             }
                         }
                         Color.clear
-                            .frame(height: 100)
+                            .frame(height: 20)
                             .listRowBackground(Color.clear)
                             .listRowSeparator(.hidden)
                     }
@@ -75,64 +65,25 @@ struct HomeView: View {
                     .scrollContentBackground(.hidden)
                 }
             }
-
-            VStack {
-                Spacer()
-                Button {
-                    viewModel.startTripTapped(onAuthorized: onStartTrip)
-                } label: {
-                    Label("Sürüşe Başla", systemImage: "location.fill")
-                }
-                .buttonStyle(.glass(.accent))
-                .padding(.bottom, 24)
-            }
         }
         .sheet(isPresented: $showsSettings) {
             SettingsView(locationManager: locationManager)
         }
-        .sheet(isPresented: $showsGarage) {
-            GarageView()
-        }
         #if DEBUG
-        .task {
-            // Test-only hook: launching with -uiTestAutoGarage opens the
-            // Garage sheet automatically so it can be verified without taps.
-            guard ProcessInfo.processInfo.arguments.contains("-uiTestAutoGarage") else { return }
-            try? await Task.sleep(for: .seconds(1))
-            showsGarage = true
-        }
         .task {
             guard ProcessInfo.processInfo.arguments.contains("-uiTestAutoSettings") else { return }
             try? await Task.sleep(for: .seconds(1))
             showsSettings = true
         }
         #endif
-        .alert("Konum İzni Gerekli", isPresented: $viewModel.showsPermissionAlert) {
-            Button("Ayarları Aç") {
-                if let url = URL(string: UIApplication.openSettingsURLString) {
-                    UIApplication.shared.open(url)
-                }
-            }
-            Button("Vazgeç", role: .cancel) {}
-        } message: {
-            Text("Sürüşünü kaydedebilmek için Ayarlar'dan konum iznini etkinleştir.")
-        }
     }
 
     private var header: some View {
         HStack {
-            Text("Trackline")
+            Text("Sürüşlerim")
                 .font(AppFont.title)
                 .foregroundStyle(AppColor.textPrimary)
             Spacer()
-            Button {
-                showsGarage = true
-            } label: {
-                Image(systemName: "car.side.fill")
-                    .font(.system(size: 17))
-                    .foregroundStyle(AppColor.textSecondary)
-                    .frame(width: 36, height: 36)
-            }
             Button {
                 showsSettings = true
             } label: {

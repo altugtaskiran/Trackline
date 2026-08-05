@@ -112,7 +112,7 @@ struct AddCarView: View {
         .buttonStyle(.plain)
     }
 
-    private func labeledField(_ title: String, text: Binding<String>) -> some View {
+    private func labeledField(_ title: LocalizedStringKey, text: Binding<String>) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
                 .font(AppFont.caption)
@@ -125,7 +125,7 @@ struct AddCarView: View {
         }
     }
 
-    private func numericField(_ title: String, value: Binding<Int>, groupsThousands: Bool = false) -> some View {
+    private func numericField(_ title: LocalizedStringKey, value: Binding<Int>, groupsThousands: Bool = false) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
                 .font(AppFont.caption)

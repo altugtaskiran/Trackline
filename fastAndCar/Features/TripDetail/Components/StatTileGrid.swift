@@ -7,7 +7,7 @@ import SwiftUI
 
 private struct StatTile: Identifiable {
     let id = UUID()
-    let title: String
+    let title: LocalizedStringKey
     let value: String
     let icon: String
     let tint: Color

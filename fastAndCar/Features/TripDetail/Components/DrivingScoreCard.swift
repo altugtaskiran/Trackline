@@ -35,7 +35,12 @@ struct DrivingScoreCard: View {
                     .font(AppFont.headline)
                     .foregroundStyle(AppColor.textPrimary)
                 ForEach(score.insights, id: \.self) { insight in
-                    Text("• \(insight)")
+                    // `insight` is itself the Turkish source text produced by
+                    // DrivingScoreCalculator — routing it through
+                    // LocalizedStringKey (rather than plain string
+                    // interpolation) is what makes it look itself up in the
+                    // String Catalog instead of rendering verbatim.
+                    Text("• \(Text(LocalizedStringKey(insight)))")
                         .font(AppFont.caption)
                         .foregroundStyle(AppColor.textSecondary)
                 }

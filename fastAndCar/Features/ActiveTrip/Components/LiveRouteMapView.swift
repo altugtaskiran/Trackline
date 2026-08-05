@@ -16,6 +16,14 @@
 //  of as a MapPolyline inside the Map: the map itself can go very faint
 //  (labels genuinely wash out) while the route stays fully opaque and crisp.
 //
+//  ActiveTripView animates `cameraPosition` (withAnimation) every time a new
+//  sample lands, so the map camera is very often mid-transition. proxy.convert
+//  only reflects the map's *current* on-screen geometry, so the overlay must
+//  be redrawn every frame while that animation runs — otherwise the route
+//  goes stale for up to 0.6s and visibly slides out of registration with the
+//  streets underneath. TimelineView(.animation) forces that continuous
+//  redraw instead of only redrawing when `samples` changes.
+//
 
 import MapKit
 import SwiftUI
@@ -27,7 +35,9 @@ struct LiveRouteMapView: View {
     var body: some View {
         MapReader { proxy in
             ZStack {
-                Map(position: $cameraPosition, interactionModes: []) {}
+                Map(position: $cameraPosition, interactionModes: []) {
+                    UserAnnotation()
+                }
                     .mapStyle(.standard(elevation: .flat, emphasis: .muted, pointsOfInterest: .excludingAll, showsTraffic: false))
                     .environment(\.colorScheme, .light)
                     .opacity(0.22)
@@ -47,28 +57,30 @@ private struct RouteOverlayCanvas: View {
     let proxy: MapProxy
 
     var body: some View {
-        Canvas { context, _ in
-            let points = samples.map { proxy.convert($0.coordinate, to: .local) }
-            guard points.count > 1 else { return }
+        TimelineView(.animation(paused: samples.count < 2)) { _ in
+            Canvas { context, _ in
+                let points = samples.map { proxy.convert($0.coordinate, to: .local) }
+                guard points.count > 1 else { return }
 
-            for index in 1..<points.count {
-                guard let previous = points[index - 1], let current = points[index] else { continue }
-                var segment = Path()
-                segment.move(to: previous)
-                segment.addLine(to: current)
-                context.stroke(
-                    segment,
-                    with: .color(AppColor.heatmapColor(forSpeedKph: samples[index].speedKph)),
-                    style: StrokeStyle(lineWidth: 6, lineCap: .round, lineJoin: .round)
-                )
-            }
+                for index in 1..<points.count {
+                    guard let previous = points[index - 1], let current = points[index] else { continue }
+                    var segment = Path()
+                    segment.move(to: previous)
+                    segment.addLine(to: current)
+                    context.stroke(
+                        segment,
+                        with: .color(AppColor.heatmapColor(forSpeedKph: samples[index].speedKph)),
+                        style: StrokeStyle(lineWidth: 6, lineCap: .round, lineJoin: .round)
+                    )
+                }
 
-            if let startPoint = points.first ?? nil {
-                let radius: CGFloat = 7
-                let rect = CGRect(x: startPoint.x - radius, y: startPoint.y - radius, width: radius * 2, height: radius * 2)
-                context.drawLayer { layer in
-                    layer.addFilter(.shadow(color: AppColor.routeStart, radius: 8))
-                    layer.fill(Path(ellipseIn: rect), with: .color(AppColor.routeStart))
+                if let startPoint = points.first ?? nil {
+                    let radius: CGFloat = 7
+                    let rect = CGRect(x: startPoint.x - radius, y: startPoint.y - radius, width: radius * 2, height: radius * 2)
+                    context.drawLayer { layer in
+                        layer.addFilter(.shadow(color: AppColor.routeStart, radius: 8))
+                        layer.fill(Path(ellipseIn: rect), with: .color(AppColor.routeStart))
+                    }
                 }
             }
         }
