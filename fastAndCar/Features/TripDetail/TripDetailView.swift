@@ -12,6 +12,11 @@ struct TripDetailView: View {
     @State private var viewModel: TripDetailViewModel
     @State private var showsShareSheet = false
     @State private var showsCreateSegment = false
+    // Faz 2 spike: 3D satellite replay alongside the existing flat route
+    // canvas, not in place of it — MapKit's realistic elevation only covers
+    // the regions Apple has modeled, so this stays opt-in per trip rather
+    // than becoming the only way to review a drive.
+    @State private var showsSatelliteReplay = false
     @Environment(\.locale) private var locale
 
     init(trip: Trip) {
@@ -104,22 +109,43 @@ struct TripDetailView: View {
             let projector = GeoMapProjector.projector(region: region)
 
             ZStack {
-                RouteMapBackdrop(region: region)
-                RouteCanvas(samples: viewModel.samples, lineWidth: 3, showsEndpoints: true, padding: 24, projector: projector)
-                RouteEndpointLabels(
-                    samples: viewModel.samples,
-                    startPlaceName: viewModel.trip.startPlaceName,
-                    endPlaceName: viewModel.trip.endPlaceName,
-                    padding: 24,
-                    projector: projector
-                )
-                RouteInspectorOverlay(samples: viewModel.samples, padding: 24, inspectedIndex: $viewModel.inspectedIndex, projector: projector)
+                if showsSatelliteReplay {
+                    SatelliteReplayMapView(viewModel: viewModel)
+                } else {
+                    RouteMapBackdrop(region: region)
+                    RouteCanvas(samples: viewModel.samples, lineWidth: 3, showsEndpoints: true, padding: 24, projector: projector)
+                    RouteEndpointLabels(
+                        samples: viewModel.samples,
+                        startPlaceName: viewModel.trip.startPlaceName,
+                        endPlaceName: viewModel.trip.endPlaceName,
+                        padding: 24,
+                        projector: projector
+                    )
+                    RouteInspectorOverlay(samples: viewModel.samples, padding: 24, inspectedIndex: $viewModel.inspectedIndex, projector: projector)
 
-                if let sample = viewModel.inspectedSample {
-                    VStack {
-                        inspectorTooltip(for: sample)
-                        Spacer()
+                    if let sample = viewModel.inspectedSample {
+                        VStack {
+                            inspectorTooltip(for: sample)
+                            Spacer()
+                        }
                     }
+                }
+
+                VStack {
+                    HStack {
+                        Spacer()
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.25)) { showsSatelliteReplay.toggle() }
+                        } label: {
+                            Image(systemName: showsSatelliteReplay ? "map.fill" : "globe.americas.fill")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(AppColor.accent)
+                                .frame(width: 36, height: 36)
+                                .background(Circle().fill(.ultraThinMaterial))
+                        }
+                        .padding(10)
+                    }
+                    Spacer()
                 }
             }
         }
