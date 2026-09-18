@@ -16,6 +16,7 @@ struct CrewHomeView: View {
     @State private var showsCreateCrew = false
     @State private var showsInvite = false
     @State private var pendingShare: (share: CKShareBox, container: CKContainerBox)?
+    @State private var pendingCrewName = ""
 
     var body: some View {
         NavigationStack {
@@ -54,13 +55,14 @@ struct CrewHomeView: View {
         .sheet(isPresented: $showsCreateCrew) {
             CreateCrewView { ref, share in
                 myCrewsStore.record(ref.crew, zoneRef: ref.zoneRef)
+                pendingCrewName = ref.crew.name
                 pendingShare = (CKShareBox(share), CKContainerBox(CKContainer.default()))
                 showsInvite = true
             }
         }
         .sheet(isPresented: $showsInvite) {
             if let pendingShare {
-                CloudSharingSheet(share: pendingShare.share.value, container: pendingShare.container.value)
+                CrewInviteView(crewName: pendingCrewName, share: pendingShare.share.value, container: pendingShare.container.value)
             }
         }
         .onChange(of: CrewInviteAcceptance.shared.lastAcceptedCrew?.id) { _, _ in

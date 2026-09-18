@@ -91,7 +91,7 @@ struct CrewDetailView: View {
         }
         .sheet(isPresented: $showsInvite) {
             if let pendingShare {
-                CloudSharingSheet(share: pendingShare.share.value, container: pendingShare.container.value)
+                CrewInviteView(crewName: crewRef.crew.name, share: pendingShare.share.value, container: pendingShare.container.value)
             }
         }
     }
