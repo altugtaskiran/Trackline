@@ -18,6 +18,12 @@ struct DashboardView: View {
     @State private var viewModel: HomeViewModel
     @State private var tripViewModel: ActiveTripViewModel
     @State private var showsTooShortAlert = false
+    // Live-drive-only: a 3D satellite chase view following the current GPS
+    // fix, offered as an alternative to the flat live route map while
+    // actually recording. Not available for reviewing a finished trip — see
+    // LiveSatelliteMapView's header comment for why that placement got
+    // pulled.
+    @State private var showsSatelliteChase = false
     @Binding var isRecording: Bool
     let locationManager: LocationManager
     var onTripEnded: (ActiveTripViewModel.TripResult) -> Void
@@ -47,12 +53,17 @@ struct DashboardView: View {
         ZStack {
             AppColor.background.ignoresSafeArea()
 
-            LiveRouteMapView(
-                samples: isRecording ? tripViewModel.samples : [],
-                cameraPosition: $cameraPosition,
-                ghostRouteCoordinates: ghostRouteCoordinates
-            )
-            .ignoresSafeArea()
+            if isRecording && showsSatelliteChase {
+                LiveSatelliteMapView(samples: tripViewModel.samples)
+                    .ignoresSafeArea()
+            } else {
+                LiveRouteMapView(
+                    samples: isRecording ? tripViewModel.samples : [],
+                    cameraPosition: $cameraPosition,
+                    ghostRouteCoordinates: ghostRouteCoordinates
+                )
+                .ignoresSafeArea()
+            }
 
             LinearGradient(
                 colors: [
@@ -167,6 +178,26 @@ struct DashboardView: View {
                 .padding(.bottom, isRecording ? 40 : 100)
             }
             .animation(.spring(response: 0.35, dampingFraction: 0.85), value: isRecording)
+
+            if isRecording {
+                VStack {
+                    HStack {
+                        Spacer()
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.25)) { showsSatelliteChase.toggle() }
+                        } label: {
+                            Image(systemName: showsSatelliteChase ? "map.fill" : "globe.americas.fill")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(AppColor.accent)
+                                .frame(width: 36, height: 36)
+                                .background(Circle().fill(.ultraThinMaterial))
+                        }
+                        .padding(.trailing, 20)
+                    }
+                    Spacer()
+                }
+                .padding(.top, 60)
+            }
         }
         .onAppear {
             if !isRecording { cameraPosition = .userLocation(fallback: .automatic) }
@@ -175,16 +206,22 @@ struct DashboardView: View {
             if recording {
                 tripViewModel.start()
                 withAnimation { cameraPosition = .automatic }
+            } else {
+                showsSatelliteChase = false
             }
         }
         .onChange(of: tripViewModel.samples.last?.id) { _, _ in
+            // Heading-up, not north-up: the camera's `heading` tracks the
+            // car's own course, so the road ahead is always toward the top
+            // of the screen instead of the phone's physical top only
+            // matching that when you happen to be driving north. Falls
+            // back to true north (0°) only while course is still unknown
+            // (e.g. the very first fix, before the device has moved enough
+            // for CoreLocation to derive a heading from GPS).
             guard isRecording, let latest = tripViewModel.samples.last else { return }
             withAnimation(.easeOut(duration: 0.6)) {
-                cameraPosition = .region(
-                    MKCoordinateRegion(
-                        center: latest.coordinate,
-                        span: MKCoordinateSpan(latitudeDelta: 0.006, longitudeDelta: 0.006)
-                    )
+                cameraPosition = .camera(
+                    MapCamera(centerCoordinate: latest.coordinate, distance: 600, heading: latest.heading ?? 0, pitch: 0)
                 )
             }
         }
