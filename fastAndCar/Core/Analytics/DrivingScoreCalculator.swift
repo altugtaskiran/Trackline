@@ -15,8 +15,6 @@ struct DrivingScore: Codable, Equatable {
 }
 
 enum DrivingScoreCalculator {
-    private static let gravity = 9.80665
-    private static let harshAccelThresholdG = 0.35
     /// Same GPS-glitch guard as TripStatsCalculator — an implausible position
     /// jump must not read as a harsh brake/accel event.
     private static let maxPlausibleSpeedMps = 83.0
@@ -26,8 +24,11 @@ enum DrivingScoreCalculator {
             return DrivingScore(value: 100, insights: ["Skor için yeterli veri yok"])
         }
 
-        var harshBrakeCount = 0
-        var harshAccelCount = 0
+        // Harsh brake/accel counts come from TripStatsCalculator, which
+        // already computes them with the same threshold in its single pass
+        // over the samples — no need to recompute here.
+        let harshBrakeCount = stats.harshBrakeCount
+        let harshAccelCount = stats.harshAccelCount
         var movingSpeeds: [Double] = []
 
         for index in 1..<samples.count {
@@ -36,10 +37,6 @@ enum DrivingScoreCalculator {
             let dt = sample.timestamp.timeIntervalSince(previous.timestamp)
             guard dt > 0 else { continue }
             guard GeoMath.distanceMeters(from: previous.coordinate, to: sample.coordinate) / dt <= maxPlausibleSpeedMps else { continue }
-
-            let accelG = ((sample.speedMps - previous.speedMps) / dt) / gravity
-            if accelG <= -harshAccelThresholdG { harshBrakeCount += 1 }
-            if accelG >= harshAccelThresholdG { harshAccelCount += 1 }
             if sample.speedMps > 1 { movingSpeeds.append(sample.speedKph) }
         }
 

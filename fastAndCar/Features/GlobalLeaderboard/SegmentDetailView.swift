@@ -148,7 +148,12 @@ struct SegmentDetailView: View {
                 hasVoted = (try? await CloudKitSegmentService.hasVoted(segmentId: segment.id, userId: userId)) ?? false
             }
         } catch SegmentServiceError.featureNotAvailable {
-            errorMessage = "Bu özellik yakında aktif olacak."
+            // Expected right now — CloudKit is gated off pending a paid
+            // Apple Developer account (see FeatureFlags). Not a real
+            // problem, so this falls through to the plain "no one yet"
+            // empty state instead of a blocking alert — which, on this
+            // screen, was covering the "Bu Rotayı Sür" button underneath it
+            // the instant the screen opened.
         } catch {
             errorMessage = "Liderlik tablosu yüklenemedi. iCloud'a giriş yaptığından emin ol."
         }

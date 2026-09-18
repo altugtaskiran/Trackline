@@ -480,6 +480,22 @@
         }
       }
     },
+    "Cornering Events": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cornering Events"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Viraj Sayısı"
+          }
+        }
+      }
+    },
     "Crew": {
       "localizations": {
         "en": {
@@ -752,6 +768,38 @@
         }
       }
     },
+    "Elevation Gain": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elevation Gain"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tırmanış"
+          }
+        }
+      }
+    },
+    "Elevation Loss": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elevation Loss"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İniş"
+          }
+        }
+      }
+    },
     "Finish Time": {
       "localizations": {
         "en": {
@@ -890,6 +938,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Couldn't submit. Check your connection and try again."
+          }
+        }
+      }
+    },
+    "Harsh Acceleration": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Harsh Acceleration"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ani Hızlanma"
+          }
+        }
+      }
+    },
+    "Harsh Braking": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Harsh Braking"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ani Fren"
           }
         }
       }
@@ -1760,6 +1840,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Başladı"
+          }
+        }
+      }
+    },
+    "Steepest Climb": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steepest Climb"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En Dik Yokuş"
           }
         }
       }

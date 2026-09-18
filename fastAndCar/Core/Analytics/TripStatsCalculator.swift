@@ -23,6 +23,13 @@ struct TripStats: Codable, Equatable {
     var averageGpsAccuracy: Double
     var startTime: Date
     var finishTime: Date
+    var elevationGainMeters: Double
+    var elevationLossMeters: Double
+    var steepestClimbPercent: Double
+    var steepestDescentPercent: Double
+    var harshBrakeCount: Int
+    var harshAccelCount: Int
+    var corneringCount: Int
 }
 
 enum TripStatsCalculator {
@@ -34,6 +41,25 @@ enum TripStatsCalculator {
     /// blow up distance/average-speed without bound. Excluded, not clamped,
     /// so it doesn't skew accel/braking either.
     private static let maxPlausibleSpeedMps = 83.0
+    /// Shared with DrivingScoreCalculator's insight text — a single
+    /// threshold definition for what counts as a harsh brake/accel event.
+    private static let harshAccelThresholdG = 0.35
+    /// GPS/barometric altitude jitters by roughly this much even standing
+    /// still; ignoring smaller deltas keeps elevation gain/loss from
+    /// accumulating pure noise over a long trip.
+    private static let elevationNoiseThresholdMeters = 1.5
+    /// Grade (%) is undefined/unstable over near-zero horizontal distance —
+    /// skip segments shorter than this rather than dividing by ~0.
+    private static let minHorizontalDistanceForGradeMeters = 3.0
+    /// Cornering hysteresis: enter a "turning" state above this angular
+    /// rate, count one event, then require the rate to drop below the exit
+    /// threshold before a new turn can be counted — so one sustained turn
+    /// isn't double counted as the rate fluctuates near the boundary.
+    private static let corneringEnterDegPerSecond = 25.0
+    private static let corneringExitDegPerSecond = 10.0
+    /// Below this speed, heading readings are noisy/meaningless (parking,
+    /// stopped at a light), so they're excluded from cornering detection.
+    private static let minSpeedForCorneringMps = 3.0
 
     static func calculate(samples: [LocationSample], stopEvents: [TripStopEvent]) -> TripStats? {
         guard let first = samples.first, let last = samples.last else { return nil }
@@ -44,6 +70,14 @@ enum TripStatsCalculator {
         var topSpeedKph = 0.0
         var altitudes: [Double] = []
         var accuracySum = 0.0
+        var elevationGain = 0.0
+        var elevationLoss = 0.0
+        var steepestClimb = 0.0
+        var steepestDescent = 0.0
+        var harshBrakeCount = 0
+        var harshAccelCount = 0
+        var corneringCount = 0
+        var isTurning = false
 
         for (index, sample) in samples.enumerated() {
             topSpeedKph = max(topSpeedKph, sample.speedKph)
@@ -62,6 +96,39 @@ enum TripStatsCalculator {
             let accelG = ((sample.speedMps - previous.speedMps) / dt) / gravity
             maxAccelG = max(maxAccelG, accelG)
             maxBrakeG = min(maxBrakeG, accelG)
+            if accelG <= -harshAccelThresholdG { harshBrakeCount += 1 }
+            if accelG >= harshAccelThresholdG { harshAccelCount += 1 }
+
+            let altitudeDelta = sample.altitude - previous.altitude
+            if abs(altitudeDelta) >= elevationNoiseThresholdMeters {
+                if altitudeDelta > 0 {
+                    elevationGain += altitudeDelta
+                } else {
+                    elevationLoss += -altitudeDelta
+                }
+            }
+            if segmentDistance >= minHorizontalDistanceForGradeMeters {
+                let gradePercent = (altitudeDelta / segmentDistance) * 100
+                if gradePercent > 0 {
+                    steepestClimb = max(steepestClimb, gradePercent)
+                } else {
+                    steepestDescent = max(steepestDescent, -gradePercent)
+                }
+            }
+
+            if let heading = sample.heading, let previousHeading = previous.heading,
+               sample.speedMps >= minSpeedForCorneringMps {
+                var delta = heading - previousHeading
+                if delta > 180 { delta -= 360 }
+                if delta < -180 { delta += 360 }
+                let angularRateDegPerSecond = abs(delta) / dt
+                if isTurning {
+                    if angularRateDegPerSecond < corneringExitDegPerSecond { isTurning = false }
+                } else if angularRateDegPerSecond > corneringEnterDegPerSecond {
+                    isTurning = true
+                    corneringCount += 1
+                }
+            }
         }
 
         let stoppedTime = stopEvents.reduce(0.0) { $0 + ($1.duration ?? 0) }
@@ -83,7 +150,14 @@ enum TripStatsCalculator {
             stopCount: stopEvents.count,
             averageGpsAccuracy: samples.isEmpty ? 0 : accuracySum / Double(samples.count),
             startTime: first.timestamp,
-            finishTime: last.timestamp
+            finishTime: last.timestamp,
+            elevationGainMeters: elevationGain,
+            elevationLossMeters: elevationLoss,
+            steepestClimbPercent: steepestClimb,
+            steepestDescentPercent: steepestDescent,
+            harshBrakeCount: harshBrakeCount,
+            harshAccelCount: harshAccelCount,
+            corneringCount: corneringCount
         )
     }
 }

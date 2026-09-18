@@ -165,7 +165,11 @@ struct GlobalLeaderboardListView: View {
             do {
                 searchResults = try await CloudKitSegmentService.searchSegments(nameContains: text)
             } catch SegmentServiceError.featureNotAvailable {
-                errorMessage = "Bu özellik yakında aktif olacak."
+                // Expected right now (CloudKit gated off) — fires on every
+                // keystroke via onChange(of: searchText), so surfacing it as
+                // a blocking alert here would mean one alert per character
+                // typed. Empty results is enough.
+                searchResults = []
             } catch {
                 searchResults = []
             }

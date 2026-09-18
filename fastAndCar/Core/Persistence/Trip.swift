@@ -38,6 +38,13 @@ final class Trip {
     var startTime: Date = Date()
     var finishTime: Date = Date()
     var drivingScoreValue: Int = 0
+    var elevationGainMeters: Double = 0
+    var elevationLossMeters: Double = 0
+    var steepestClimbPercent: Double = 0
+    var steepestDescentPercent: Double = 0
+    var harshBrakeCount: Int = 0
+    var harshAccelCount: Int = 0
+    var corneringCount: Int = 0
 
     /// Filled in asynchronously after save via PlaceNameResolver — nil until
     /// reverse geocoding resolves (or if it fails, e.g. offline).
@@ -66,6 +73,26 @@ final class Trip {
         self.startTime = stats.startTime
         self.finishTime = stats.finishTime
         self.drivingScoreValue = score.value
+        self.elevationGainMeters = stats.elevationGainMeters
+        self.elevationLossMeters = stats.elevationLossMeters
+        self.steepestClimbPercent = stats.steepestClimbPercent
+        self.steepestDescentPercent = stats.steepestDescentPercent
+        self.harshBrakeCount = stats.harshBrakeCount
+        self.harshAccelCount = stats.harshAccelCount
+        self.corneringCount = stats.corneringCount
+    }
+
+    /// One-time backfill for trips saved before elevation/event stats
+    /// existed — see StatsBackfill.swift. Recomputes only the new fields
+    /// from the already-stored raw samples; nothing else changes.
+    func applyBackfilledStats(_ stats: TripStats) {
+        elevationGainMeters = stats.elevationGainMeters
+        elevationLossMeters = stats.elevationLossMeters
+        steepestClimbPercent = stats.steepestClimbPercent
+        steepestDescentPercent = stats.steepestDescentPercent
+        harshBrakeCount = stats.harshBrakeCount
+        harshAccelCount = stats.harshAccelCount
+        corneringCount = stats.corneringCount
     }
 
     var samples: [LocationSample] {
@@ -95,7 +122,14 @@ final class Trip {
             stopCount: stopCount,
             averageGpsAccuracy: averageGpsAccuracy,
             startTime: startTime,
-            finishTime: finishTime
+            finishTime: finishTime,
+            elevationGainMeters: elevationGainMeters,
+            elevationLossMeters: elevationLossMeters,
+            steepestClimbPercent: steepestClimbPercent,
+            steepestDescentPercent: steepestDescentPercent,
+            harshBrakeCount: harshBrakeCount,
+            harshAccelCount: harshAccelCount,
+            corneringCount: corneringCount
         )
     }
 
