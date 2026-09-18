@@ -30,7 +30,7 @@ Sekme sırası (soldan sağa, `MainTabBar.swift`):
 ### 🕓 Sürüşlerim (`.trips`)
 | Dosya | Tür | Ne işe yarar |
 |---|---|---|
-| `Features/Home/TripsListView.swift` | **Ekran** | Sürüş geçmişi listesi. Ayarlar ikonu da burada. |
+| `Features/Home/TripsListView.swift` | **Ekran** | Sürüş geçmişi listesi. Ayarlar ve 🏆 Başarılar ikonları da burada. |
 | `Features/Home/Components/TripRowCard.swift` | Bileşen | Listedeki her sürüş satırı |
 | `Features/Home/HomeViewModel.swift` | ViewModel | Bu ekranın verisi |
 
@@ -52,11 +52,17 @@ parkurunu ara" Liderlik → Global kısmında.
 |---|---|---|
 | `Features/Home/DashboardView.swift` | **Ekran** | Tek ekran, iki hali var: boşta (harita + "Sürüşe Başla") ve kayıt sırasında (aynı ekran, buton "Sürüşü Bitir"e döner) |
 | `Features/ActiveTrip/ActiveTripViewModel.swift` | ViewModel | Kayıt oturumunu yönetir: örnekleri toplar, canlı hız/mesafe/süre hesaplar |
-| `Features/ActiveTrip/Components/LiveRouteMapView.swift` | Bileşen | Canlı harita + büyüyen rota çizgisi + (varsa) mor kesikli "hayalet rota" + tur talimatları |
+| `Features/ActiveTrip/Components/LiveRouteMapView.swift` | Bileşen | Canlı harita + büyüyen rota çizgisi + (varsa) mor kesikli "hayalet rota" + tur talimatları. Konum göstergesi MapKit'in kendi `UserAnnotation`'ı (özel araç ikonu denendi, kaldırıldı — bkz. git geçmişi) |
+| `Features/ActiveTrip/Components/LiveSatelliteMapView.swift` | Bileşen | Kayıt sırasında sağ üstteki 🌐 butonuyla açılan opsiyonel 3D uydu "takip kamerası" — her zaman en güncel GPS konumunu izler, kat edilen yol `MapPolyline` ile çizilir |
 | `Features/ActiveTrip/Components/LiveStatBadge.swift` | Bileşen | Hız/mesafe rozetleri |
 
 Bir "Parkur"u "Bu Rotayı Sür" ile aktive edince buraya otomatik geçiliyor ve
 kayıt otomatik başlıyor (`AppRootView.followSegment`).
+
+**Kayıt sırasında harita artık "heading-up"**: kamera aracın yönünü
+(`heading`) takip ediyor, kuzeye sabit değil — dönüşlerde yol her zaman
+ekranın üstünde kalıyor (`DashboardView`'daki `.onChange(of:
+tripViewModel.samples.last?.id)` bloğu, `MapCamera(heading:)`).
 
 ### 🚗 Garaj (`.garage`)
 | Dosya | Tür | Ne işe yarar |
@@ -76,10 +82,11 @@ kayıt otomatik başlıyor (`AppRootView.followSegment`).
 | `Features/Community/Crew/CrewHomeView.swift` | Alt-ekran (Crew) | Benim ekiplerim (oluşturulan/katılınan) + yeni ekip oluştur |
 | `Features/Community/Crew/CreateCrewView.swift` | Sheet | Yeni Crew oluşturma |
 | `Features/Community/Crew/CrewDetailView.swift` | Alt-ekran | Üye listesi + kişisel-en-iyi sıralaması + son sürüşler |
-| `Features/Community/Crew/CloudSharingSheet.swift` | Sheet | Sistemin kendi davet ekranı (CKShare, Mesajlar/Mail/link kopyala) |
+| `Features/Community/Crew/CrewInviteView.swift` | Sheet | Davet ekranı — önce taranabilir bir **QR kod** (`QRCodeGenerator`, `CKShare.url`'den), altında "Diğer Yollarla Paylaş" ile eski native paylaşım sayfasına geçiş |
+| `Features/Community/Crew/CloudSharingSheet.swift` | Sheet | Sistemin kendi davet ekranı (CKShare, Mesajlar/Mail/link kopyala) — artık `CrewInviteView` üzerinden, doğrudan çağrılmıyor |
 | `Features/Community/Crew/Components/CrewRow.swift`, `CrewDriveSummaryRow.swift` | Bileşen | Liste satırları |
 
-⚠️ **Global Liderlik ve Crew şu an UI'da kapalı** — bkz. §6.
+⚠️ **Global Liderlik ve Crew arkasındaki CloudKit çağrıları şu an kapalı** (bkz. §6) — ama sekme ve ekranlar erişilebilir durumda, `CommunityView` sekmeyi gizlemiyor. Beklenen CloudKit hatalarında artık bloklayıcı alert göstermiyoruz (öyle olan yerler bugün düzeltildi), sessizce boş duruma düşüyor — "Oluşturduklarım" listesinden bir segmente tıklamak gibi CloudKit'siz gerçekten çalışamayacak birkaç yer hâlâ "yakında aktif olacak" alert'i gösteriyor.
 
 ## 3. Sekme dışı ekranlar / akışlar
 
@@ -89,7 +96,8 @@ kayıt otomatik başlıyor (`AppRootView.followSegment`).
 | `Features/Onboarding/OnboardingView.swift` + `OnboardingViewModel.swift` | Ekran | İlk kurulum, tek ekran |
 | `Features/TripDetail/TripDetailView.swift` | **Ekran** | Sürüşe tıklayınca açılan detay: F1-tarzı rota, hız haritası, playback, sürüş skoru, istatistik grid'i, düzenlenebilir zaman çizelgesi |
 | `Features/TripDetail/TripDetailViewModel.swift` | ViewModel | Bu ekranın verisi + playback imleci |
-| `Features/TripDetail/Components/*.swift` | Bileşen | `DrivingScoreCard`, `PlaybackBar`, `RouteCanvas` (asıl rota çizici, her yerde reuse ediliyor), `RouteEndpointLabels`, `RouteInspectorOverlay` (rotaya dokununca en yakın örneği bul), `RouteMapBackdrop`, `StatTileGrid`, `TimelineList` |
+| `Features/TripDetail/Components/*.swift` | Bileşen | `DrivingScoreCard`, `PlaybackBar`, `RouteCanvas` (asıl rota çizici, her yerde reuse ediliyor), `RouteEndpointLabels`, `RouteInspectorOverlay` (rotaya dokununca en yakın örneği bul), `RouteMapBackdrop`, `StatTileGrid` (irtifa kazanım/kayıp, en dik yokuş, ani fren/hızlanma/viraj sayaçları dahil), `TimelineList`. 3D uydu tekrar oynatma burada denendi, gerçek sürüşlerde yanlış konum gösterdiği için kaldırıldı — canlı sürüş tarafına taşındı (bkz. §2 Ana Sayfa) |
+| `Features/Achievements/AchievementsView.swift` | Ekran (sheet) | Rozet grid'i (kilitli/açık) — Sürüşlerim'deki 🏆 ikonundan açılıyor, `AchievementEvaluator` ile anlık hesaplanıyor |
 | `Features/Share/ShareCardView.swift` | Sheet | Render edilen paylaşım kartının önizlemesi + native paylaş sayfası |
 | `Features/Share/ShareCardRenderer.swift` | Servis | Sürüşü sabit 360×640 bir paylaşım kartına (UIImage) çeviriyor |
 | `Features/Share/InstagramStorySharer.swift` | Servis | "Instagram Stories'e paylaş" native paylaşım sayfasının bir seçeneği olarak |
@@ -102,9 +110,11 @@ kayıt otomatik başlıyor (`AppRootView.followSegment`).
 
 | Alt klasör | İçerik |
 |---|---|
-| `Core/Persistence/` | `Trip.swift` (SwiftData modeli, örnekler JSON blob olarak tutulur), `Car.swift`, `PersistenceController.swift` (tek paylaşılan SwiftData container) |
+| `Core/Persistence/` | `Trip.swift` (SwiftData modeli, örnekler JSON blob olarak tutulur), `Car.swift`, `PersistenceController.swift` (tek paylaşılan SwiftData container), `StatsBackfill.swift` (eski trip'lere irtifa/sayaç alanlarını tek seferlik geriye dönük hesaplar) |
 | `Core/Location/` | `LocationManager` (CLLocationManager sarmalayıcısı), `LocationSample`, `LocationSmoothing` (GPS jitter filtresi), `PlaceNameResolver` (ters coğrafi kodlama), `TripAutoDetector` (durma tespiti) |
-| `Core/Analytics/` | `TripStatsCalculator` (ham örneklerden istatistik), `DrivingScoreCalculator` (sürüş skoru) |
+| `Core/Analytics/` | `TripStatsCalculator` (ham örneklerden istatistik — irtifa kazanım/kayıp, en dik eğim, ani fren/hızlanma/viraj sayaçları dahil), `DrivingScoreCalculator` (sürüş skoru, sayaçları artık `TripStats`'tan okuyor) |
+| `Core/Achievements/` | `Achievement` + `AchievementCatalog` (sabit rozet listesi), `AchievementEvaluator` (Trip geçmişi üzerinde saf fonksiyon), `NotifiedAchievementsStore` (hangi rozetler için bildirim gönderildi) — tamamen yerel, CloudKit'e bağımlı değil |
+| `Core/QRCodeGenerator.swift` | Crew davet linkinden QR kod görseli üretir (CoreImage) |
 | `Core/Geometry/` | `RouteProjector`, `GeoMapProjector`, `FittedRegion`, `GeoMath` — GPS koordinatlarını ekrana/haritaya doğru şekilde oturtan matematik |
 | `Core/Leaderboard/` | Parkur (Segment) sistemi: `Segment`, `SegmentEffort`, `SegmentMatcher`, `SegmentAutoMatcher`, `CloudKitSegmentService`, `Geohash`, `AntiCheat`, `RouteGuidance` + `RouteGuidanceTracker` (basit metin tabanlı yön talimatları), `LocalRoutesStore` (Rotalar sekmesinin yerel verisi), `MyCreatedSegmentsStore`, `NicknameStore`, `RoutePolylinePoint` |
 | `Core/Crew/` | `Crew`, `CrewMembership`, `CrewDriveSummary`, `CrewZoneRef`, `MyCrewsStore`, `CloudKitCrewService` (CKShare tabanlı grup sistemi) |
