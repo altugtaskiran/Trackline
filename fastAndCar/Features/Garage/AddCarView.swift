@@ -10,6 +10,11 @@ import PhotosUI
 import SwiftData
 import SwiftUI
 
+struct IdentifiableImage: Identifiable {
+    let id = UUID()
+    let image: UIImage
+}
+
 struct AddCarView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
@@ -22,6 +27,7 @@ struct AddCarView: View {
     @State private var mileageKm = 0
     @State private var photoItem: PhotosPickerItem?
     @State private var photoData: Data?
+    @State private var pickedImageForCrop: IdentifiableImage?
 
     var body: some View {
         NavigationStack {
@@ -81,9 +87,45 @@ struct AddCarView: View {
         }
         .preferredColorScheme(.dark)
         .task(id: photoItem) {
-            guard let photoItem, let data = try? await photoItem.loadTransferable(type: Data.self) else { return }
-            photoData = data
+            guard let photoItem,
+                  let data = try? await photoItem.loadTransferable(type: Data.self),
+                  let uiImage = UIImage(data: data) else { return }
+            // PhotosPicker's own presentation is still mid-dismissal right
+            // as this fires — presenting another sheet in the same beat
+            // raced it and lost (a blank/gray sheet with none of its
+            // content, not even the Kullan button), so this gives that
+            // transition a moment to actually finish first.
+            try? await Task.sleep(for: .milliseconds(250))
+            pickedImageForCrop = IdentifiableImage(image: uiImage)
         }
+        // .sheet(item:) instead of a separate Bool + optional-image pair —
+        // this guarantees the sheet's content closure only ever runs with
+        // a real, already-non-nil image, so there's no window where it
+        // could present before rawPickedImage was actually set.
+        .sheet(item: $pickedImageForCrop) { wrapped in
+            PhotoCropView(image: wrapped.image) { croppedData in
+                photoData = croppedData
+            }
+        }
+        #if DEBUG
+        .task {
+            // Test-only hook: launching with -uiTestAutoCropTest opens the
+            // crop sheet with a synthetic generated image, bypassing
+            // PhotosPicker entirely — PhotosPicker needs a real photo
+            // library selection that can't be scripted, so this is how
+            // PhotoCropView's own rendering gets verified in isolation.
+            guard ProcessInfo.processInfo.arguments.contains("-uiTestAutoCropTest") else { return }
+            try? await Task.sleep(for: .seconds(1))
+            let renderer = UIGraphicsImageRenderer(size: CGSize(width: 800, height: 600))
+            let testImage = renderer.image { context in
+                UIColor.systemBlue.setFill()
+                context.fill(CGRect(x: 0, y: 0, width: 800, height: 600))
+                UIColor.white.setFill()
+                context.fill(CGRect(x: 350, y: 250, width: 100, height: 100))
+            }
+            pickedImageForCrop = IdentifiableImage(image: testImage)
+        }
+        #endif
     }
 
     private var photoPicker: some View {

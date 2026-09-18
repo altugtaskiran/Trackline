@@ -11,7 +11,7 @@ import SwiftUI
 struct TripDetailView: View {
     @State private var viewModel: TripDetailViewModel
     @State private var showsShareSheet = false
-    @State private var showsLeaderboard = false
+    @State private var showsCreateSegment = false
     @Environment(\.locale) private var locale
 
     init(trip: Trip) {
@@ -53,30 +53,33 @@ struct TripDetailView: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
             }
+            // Adjacent .topBarTrailing items still merge into one shared
+            // glass capsule on their own — separate ToolbarItems alone
+            // don't break that grouping, a ToolbarSpacer in between does,
+            // giving Segment and Share their own distinct circles.
             ToolbarItem(placement: .topBarTrailing) {
-                HStack(spacing: 16) {
-                    if FeatureFlags.leaderboardEnabled {
-                        Button {
-                            showsLeaderboard = true
-                        } label: {
-                            Image(systemName: "flag.checkered")
-                                .foregroundStyle(AppColor.accent)
-                        }
-                    }
-                    Button {
-                        showsShareSheet = true
-                    } label: {
-                        Image(systemName: "square.and.arrow.up")
-                            .foregroundStyle(AppColor.accent)
-                    }
+                Button {
+                    showsCreateSegment = true
+                } label: {
+                    Image(systemName: "ruler")
+                        .foregroundStyle(AppColor.accent)
+                }
+            }
+            ToolbarSpacer(.fixed, placement: .topBarTrailing)
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    showsShareSheet = true
+                } label: {
+                    Image(systemName: "square.and.arrow.up")
+                        .foregroundStyle(AppColor.accent)
                 }
             }
         }
         .sheet(isPresented: $showsShareSheet) {
             ShareCardView(trip: viewModel.trip)
         }
-        .sheet(isPresented: $showsLeaderboard) {
-            LeaderboardView(trip: viewModel.trip)
+        .sheet(isPresented: $showsCreateSegment) {
+            CreateSegmentFlowView(trip: viewModel.trip)
         }
         #if DEBUG
         .task {

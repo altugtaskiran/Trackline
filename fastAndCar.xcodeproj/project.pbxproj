@@ -260,6 +260,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Config/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Trackline;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.navigation";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "fastAndCar, sürüşünü kesintisiz kaydedebilmek için uygulama arka plandayken de konumuna ihtiyaç duyar.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "fastAndCar, rotanı kaydetmek için konumuna ihtiyaç duyar.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -298,6 +299,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Config/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Trackline;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.navigation";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "fastAndCar, sürüşünü kesintisiz kaydedebilmek için uygulama arka plandayken de konumuna ihtiyaç duyar.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "fastAndCar, rotanı kaydetmek için konumuna ihtiyaç duyar.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

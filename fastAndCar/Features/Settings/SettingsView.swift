@@ -19,6 +19,7 @@ struct SettingsView: View {
     @State private var viewModel: SettingsViewModel
     @AppStorage("distanceUnit") private var distanceUnitRaw = DistanceUnit.kilometers.rawValue
     @AppStorage("appLanguage") private var appLanguageRaw = AppLanguage.system.rawValue
+    @AppStorage("globalLeaderboardOptIn") private var globalLeaderboardOptIn = false
     #if DEBUG
     @State private var debugAutoOpenLanguage = false
     #endif
@@ -76,6 +77,20 @@ struct SettingsView: View {
                                     }
                                 }
                                 .pickerStyle(.segmented)
+                            }
+                        }
+
+                        GlassCard {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Toggle(isOn: $globalLeaderboardOptIn) {
+                                    Text("Genel liderlik tablolarına katıl")
+                                        .font(AppFont.headline)
+                                        .foregroundStyle(AppColor.textPrimary)
+                                }
+                                .tint(AppColor.accent)
+                                Text("Açıkken, her sürüş sonunda yakındaki parkurlarla otomatik eşleştirilir ve derecen genel liderlik tablosuna gönderilir.")
+                                    .font(AppFont.caption)
+                                    .foregroundStyle(AppColor.textSecondary)
                             }
                         }
 

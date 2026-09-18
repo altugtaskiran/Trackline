@@ -41,6 +41,24 @@ private struct ShareCardContent: View {
         carPhotoData.flatMap { UIImage(data: $0) }
     }
 
+    private var shortRouteLabel: String? {
+        func city(_ full: String) -> String {
+            full.split(separator: ",").first.map(String.init) ?? full
+        }
+        switch (trip.startPlaceName, trip.endPlaceName) {
+        case let (start?, end?) where start == end:
+            return city(start)
+        case let (start?, end?):
+            return "\(city(start)) → \(city(end))"
+        case let (start?, nil):
+            return city(start)
+        case let (nil, end?):
+            return city(end)
+        default:
+            return nil
+        }
+    }
+
     var body: some View {
         if let carImage {
             photoCard(carImage: carImage)
@@ -134,6 +152,19 @@ private struct ShareCardContent: View {
                 .font(.system(size: 9, weight: .heavy, design: .rounded))
                 .tracking(3)
                 .foregroundStyle(HeatColor.amber)
+            // City-only, no ", Türkiye" — the full "City, Country → City,
+            // Country" routeTitle used for the nav-bar title reads fine
+            // there but was way too long/soft for this card's tight,
+            // tracked-caps label language (SESSION COMPLETE, TOP SPEED).
+            if let routeLabel = shortRouteLabel {
+                Text(routeLabel.uppercased())
+                    .font(.system(size: 9, weight: .bold, design: .rounded))
+                    .tracking(1.5)
+                    .foregroundStyle(.white.opacity(0.6))
+                    .lineLimit(1)
+                    .shadow(color: .black.opacity(0.5), radius: 2, y: 1)
+                    .padding(.top, 1)
+            }
         }
         .padding(.top, 22)
         .padding(.horizontal, 24)
@@ -173,12 +204,6 @@ private struct ShareCardContent: View {
                 .compositingGroup()
                 .blendMode(.screen)
             RouteCanvas(samples: trip.samples, lineWidth: lineWidth, showsEndpoints: true, padding: padding)
-            RouteEndpointLabels(
-                samples: trip.samples,
-                startPlaceName: trip.startPlaceName,
-                endPlaceName: trip.endPlaceName,
-                padding: padding
-            )
         }
     }
 

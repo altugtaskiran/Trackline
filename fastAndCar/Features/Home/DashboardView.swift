@@ -25,21 +25,34 @@ struct DashboardView: View {
     init(
         locationManager: LocationManager,
         isRecording: Binding<Bool>,
+        guidanceSegment: Segment? = nil,
         onTripEnded: @escaping (ActiveTripViewModel.TripResult) -> Void
     ) {
         self.locationManager = locationManager
         _viewModel = State(initialValue: HomeViewModel(locationManager: locationManager))
-        _tripViewModel = State(initialValue: ActiveTripViewModel(locationManager: locationManager))
+        _tripViewModel = State(initialValue: ActiveTripViewModel(locationManager: locationManager, guidanceSegment: guidanceSegment))
         _isRecording = isRecording
         self.onTripEnded = onTripEnded
+    }
+
+    private var ghostRouteCoordinates: [CLLocationCoordinate2D] {
+        // Shown as soon as a route is armed, not just once recording starts
+        // — the point is confirming "yes, this is the route" before Sürüşe
+        // Başla, not just during.
+        guard let segment = tripViewModel.guidanceTracker?.segment else { return [] }
+        return segment.polyline.map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon) }
     }
 
     var body: some View {
         ZStack {
             AppColor.background.ignoresSafeArea()
 
-            LiveRouteMapView(samples: isRecording ? tripViewModel.samples : [], cameraPosition: $cameraPosition)
-                .ignoresSafeArea()
+            LiveRouteMapView(
+                samples: isRecording ? tripViewModel.samples : [],
+                cameraPosition: $cameraPosition,
+                ghostRouteCoordinates: ghostRouteCoordinates
+            )
+            .ignoresSafeArea()
 
             LinearGradient(
                 colors: [
@@ -56,7 +69,22 @@ struct DashboardView: View {
 
             VStack {
                 if isRecording {
-                    if tripViewModel.isStopped {
+                    if let instructionText = tripViewModel.guidanceTracker?.instructionText {
+                        HStack(spacing: 8) {
+                            Image(systemName: "arrow.triangle.turn.up.right.diamond.fill")
+                                .foregroundStyle(Color(hex: 0xBF5AF2))
+                            Text(instructionText)
+                                .font(AppFont.headline)
+                                .foregroundStyle(AppColor.textPrimary)
+                        }
+                        .padding(.horizontal, 18)
+                        .padding(.vertical, 10)
+                        .background(Capsule().fill(.ultraThinMaterial))
+                        .overlay(Capsule().strokeBorder(AppColor.glassBorderSubtle, lineWidth: 1))
+                        .padding(.top, 8)
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: instructionText)
+                    } else if tripViewModel.isStopped {
                         Text("Duraklatıldı")
                             .font(AppFont.caption)
                             .foregroundStyle(AppColor.textSecondary)
@@ -97,8 +125,20 @@ struct DashboardView: View {
                     HStack(spacing: 40) {
                         LiveStatBadge(title: "Süre", value: formattedElapsed)
                         LiveStatBadge(title: "Mesafe", value: String(format: "%.1f km", tripViewModel.distanceMeters / 1000))
+                        if let formattedSegmentElapsed {
+                            LiveStatBadge(title: "Parkur", value: formattedSegmentElapsed)
+                        }
                     }
                     .padding(.top, 28)
+                } else if let segment = tripViewModel.guidanceTracker?.segment {
+                    VStack(spacing: 2) {
+                        Text("Rota Hazır")
+                            .font(AppFont.headline)
+                            .foregroundStyle(AppColor.textPrimary)
+                        Text(segment.name)
+                            .font(AppFont.caption)
+                            .foregroundStyle(Color(hex: 0xBF5AF2))
+                    }
                 } else {
                     Text("Sürüşe hazır")
                         .font(AppFont.headline)
@@ -195,5 +235,15 @@ struct DashboardView: View {
         let minutes = (total % 3600) / 60
         let seconds = total % 60
         return hours > 0 ? String(format: "%dh %02dm", hours, minutes) : String(format: "%dm %02ds", minutes, seconds)
+    }
+
+    // Nil until the driver's GPS actually reaches the segment's own start
+    // point (see RouteGuidanceTracker.hasStarted) — the badge only appears
+    // once the race clock has a real zero to count from, not from whenever
+    // Sürüşe Başla happened to be tapped.
+    private var formattedSegmentElapsed: String? {
+        guard let elapsed = tripViewModel.guidanceTracker?.elapsedSeconds else { return nil }
+        let total = max(0, Int(elapsed))
+        return String(format: "%d:%02d", total / 60, total % 60)
     }
 }

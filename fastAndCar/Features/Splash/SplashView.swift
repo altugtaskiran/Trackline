@@ -66,7 +66,6 @@ struct SplashView: View {
                     .offset(y: showsText ? 0 : 6)
 
                 Spacer()
-                Spacer()
 
                 VStack(spacing: 4) {
                     Text("GELİŞTİRİCİ")

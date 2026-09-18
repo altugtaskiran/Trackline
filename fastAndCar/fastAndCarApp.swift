@@ -7,6 +7,7 @@
 
 import SwiftData
 import SwiftUI
+import UserNotifications
 
 @main
 struct fastAndCarApp: App {
@@ -17,8 +18,10 @@ struct fastAndCarApp: App {
     // set further up inside the same view, only ones set at (or above) the
     // WindowGroup that hosts the whole scene.
     @AppStorage("appLanguage") private var appLanguageRaw = AppLanguage.system.rawValue
+    @UIApplicationDelegateAdaptor(CrewShareAppDelegate.self) private var crewShareAppDelegate
 
     init() {
+        UNUserNotificationCenter.current().delegate = LocalNotificationPresenter.shared
         #if DEBUG
         let args = ProcessInfo.processInfo.arguments
         if let idx = args.firstIndex(of: "-uiTestSetLanguage"), idx + 1 < args.count {

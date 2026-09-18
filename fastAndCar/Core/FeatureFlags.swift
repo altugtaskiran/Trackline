@@ -9,5 +9,10 @@
 //
 
 enum FeatureFlags {
-    static let leaderboardEnabled = false
+    /// User-defined segments + the Global Leaderboard tab (Segment,
+    /// SegmentEffort — CloudKitSegmentService).
+    static let globalLeaderboardEnabled = false
+    /// Crew creation/invites/drive comparison (Crew, CrewMembership,
+    /// CrewDriveSummary — CloudKitCrewService + CKShare). Same gate.
+    static let crewEnabled = false
 }

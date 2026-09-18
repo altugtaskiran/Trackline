@@ -26,6 +26,12 @@ final class LocationManager: NSObject {
     /// Throttles raw CoreLocation callbacks down to ~1 sample/second, per spec.
     private let minSampleInterval: TimeInterval = 1.0
 
+    /// Fulfilled by the next `didUpdateLocations`/`didFailWithError` callback
+    /// after `requestOneShotLocation` — independent of the continuous
+    /// recording session (`isRecording`/`onSample`), so a "find segments
+    /// near me" lookup never touches trip-recording state.
+    private var oneShotCompletion: ((CLLocationCoordinate2D?) -> Void)?
+
     override init() {
         authorizationStatus = manager.authorizationStatus
         super.init()
@@ -67,6 +73,18 @@ final class LocationManager: NSObject {
         manager.allowsBackgroundLocationUpdates = false
         manager.showsBackgroundLocationIndicator = false
     }
+
+    /// A single current-location fix for "what's nearby" lookups (Global
+    /// Leaderboard's segment discovery) — not a recording session, so it
+    /// never flips `isRecording` or touches `onSample`.
+    func requestOneShotLocation(completion: @escaping (CLLocationCoordinate2D?) -> Void) {
+        guard hasUsableAuthorization else {
+            completion(nil)
+            return
+        }
+        oneShotCompletion = completion
+        manager.requestLocation()
+    }
 }
 
 extension LocationManager: CLLocationManagerDelegate {
@@ -76,6 +94,12 @@ extension LocationManager: CLLocationManagerDelegate {
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
+
+        if let oneShotCompletion {
+            self.oneShotCompletion = nil
+            oneShotCompletion(location.coordinate)
+        }
+
         let timestamp = location.timestamp
 
         if let last = lastAcceptedTimestamp, timestamp.timeIntervalSince(last) < minSampleInterval {
@@ -102,5 +126,10 @@ extension LocationManager: CLLocationManagerDelegate {
         if isRecording {
             onSample?(sample)
         }
+    }
+
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        oneShotCompletion?(nil)
+        oneShotCompletion = nil
     }
 }

@@ -31,6 +31,10 @@ import SwiftUI
 struct LiveRouteMapView: View {
     let samples: [LocationSample]
     @Binding var cameraPosition: MapCameraPosition
+    /// The target Segment's own route, drawn as a fixed "ghost" reference
+    /// line underneath the live-recorded route — Route Following mode's
+    /// only UI besides the turn-hint banner, no MapKit routing involved.
+    var ghostRouteCoordinates: [CLLocationCoordinate2D] = []
 
     var body: some View {
         MapReader { proxy in
@@ -42,7 +46,7 @@ struct LiveRouteMapView: View {
                     .environment(\.colorScheme, .light)
                     .opacity(0.22)
 
-                RouteOverlayCanvas(samples: samples, proxy: proxy)
+                RouteOverlayCanvas(samples: samples, ghostRouteCoordinates: ghostRouteCoordinates, proxy: proxy)
                     .allowsHitTesting(false)
             }
         }
@@ -54,11 +58,32 @@ struct LiveRouteMapView: View {
 /// being part of the (deliberately faded) Map content itself.
 private struct RouteOverlayCanvas: View {
     let samples: [LocationSample]
+    var ghostRouteCoordinates: [CLLocationCoordinate2D] = []
     let proxy: MapProxy
 
     var body: some View {
-        TimelineView(.animation(paused: samples.count < 2)) { _ in
+        TimelineView(.animation(paused: samples.count < 2 && ghostRouteCoordinates.isEmpty)) { _ in
             Canvas { context, _ in
+                if ghostRouteCoordinates.count > 1 {
+                    let ghostPoints = ghostRouteCoordinates.map { proxy.convert($0, to: .local) }
+                    var ghostPath = Path()
+                    var started = false
+                    for point in ghostPoints {
+                        guard let point else { continue }
+                        if !started {
+                            ghostPath.move(to: point)
+                            started = true
+                        } else {
+                            ghostPath.addLine(to: point)
+                        }
+                    }
+                    context.stroke(
+                        ghostPath,
+                        with: .color(Color(hex: 0xBF5AF2).opacity(0.7)),
+                        style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round, dash: [2, 10])
+                    )
+                }
+
                 let points = samples.map { proxy.convert($0.coordinate, to: .local) }
                 guard points.count > 1 else { return }
 

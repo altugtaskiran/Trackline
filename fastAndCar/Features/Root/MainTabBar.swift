@@ -17,8 +17,10 @@ struct MainTabBar: View {
     var body: some View {
         HStack(spacing: 0) {
             tabButton(.trips, systemImage: "clock.arrow.circlepath", label: "Sürüşlerim")
+            tabButton(.routes, systemImage: "map.fill", label: "Rotalar")
             tabButton(.dashboard, systemImage: "location.fill", label: "Ana Sayfa", highlighted: true)
             tabButton(.garage, systemImage: "car.side.fill", label: "Garaj")
+            tabButton(.community, systemImage: "trophy.fill", label: "Liderlik")
         }
         .padding(.horizontal, 22)
         .padding(.vertical, 12)

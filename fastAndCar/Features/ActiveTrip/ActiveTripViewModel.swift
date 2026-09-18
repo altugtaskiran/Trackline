@@ -32,8 +32,16 @@ final class ActiveTripViewModel {
     private(set) var isStopped = false
     private(set) var showsEndSuggestion = false
 
-    init(locationManager: LocationManager) {
+    /// Set before `start()` (via DashboardView, when arriving from a
+    /// Segment's "Bu Rotayı Sür" button) to draw a ghost route + surface
+    /// simple turn hints while recording. nil for a normal free drive.
+    var guidanceTracker: RouteGuidanceTracker?
+
+    init(locationManager: LocationManager, guidanceSegment: Segment? = nil) {
         self.locationManager = locationManager
+        if let guidanceSegment {
+            guidanceTracker = RouteGuidanceTracker(segment: guidanceSegment)
+        }
     }
 
     func start() {
@@ -87,6 +95,7 @@ final class ActiveTripViewModel {
         }
         samples.append(sample)
         currentSpeedKph = sample.speedKph
+        guidanceTracker?.update(with: sample)
 
         autoDetector.ingest(sample)
         isStopped = autoDetector.isStopped

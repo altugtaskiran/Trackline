@@ -18,6 +18,8 @@ struct ShareCardView: View {
     @State private var showsActivitySheet = false
     @State private var selectedCar: Car?
     @State private var didPickCar = false
+    @State private var myCrewsStore = MyCrewsStore()
+    @State private var sharesToCrew = true
 
     var body: some View {
         NavigationStack {
@@ -57,8 +59,19 @@ struct ShareCardView: View {
                         carPicker
                     }
 
+                    if FeatureFlags.crewEnabled && !myCrewsStore.crews.isEmpty {
+                        Toggle("Crew'larımla paylaş", isOn: $sharesToCrew)
+                            .font(AppFont.body)
+                            .foregroundStyle(AppColor.textPrimary)
+                            .tint(AppColor.accent)
+                            .padding(.horizontal, 4)
+                    }
+
                     Button("Paylaş") {
                         showsActivitySheet = true
+                        if sharesToCrew {
+                            Task { await submitToCrews() }
+                        }
                     }
                     .buttonStyle(.glass(.accent))
                     .disabled(renderedImage == nil)
@@ -91,6 +104,32 @@ struct ShareCardView: View {
             if let renderedImage {
                 ActivityShareSheet(items: [renderedImage], image: renderedImage)
             }
+        }
+    }
+
+    /// Fire-and-forget: writes one CrewDriveSummary per crew this device
+    /// belongs to. Best-effort like SegmentAutoMatcher — offline or
+    /// not-yet-activated failures never interrupt the actual share sheet.
+    private func submitToCrews() async {
+        guard FeatureFlags.crewEnabled else { return }
+        let nickname = NicknameStore().nickname
+        guard !nickname.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+        guard let userId = try? await CloudKitCrewService.currentUserId() else { return }
+
+        for crewRef in myCrewsStore.crews {
+            let summary = CrewDriveSummary(
+                id: UUID().uuidString,
+                crewId: crewRef.crew.id,
+                userId: userId,
+                nickname: nickname,
+                tripId: trip.id.uuidString,
+                topSpeedKph: trip.topSpeedKph,
+                averageSpeedKph: trip.averageSpeedKph,
+                distanceMeters: trip.distanceMeters,
+                drivingScore: trip.drivingScoreValue,
+                createdAt: Date()
+            )
+            try? await CloudKitCrewService.submitDriveSummary(summary, zoneRef: crewRef.zoneRef)
         }
     }
 
