@@ -24,6 +24,22 @@
         }
       }
     },
+    "\"%@\" rozetini kazandın!": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You earned the \"%@\" badge!"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\"%@\" rozetini kazandın!"
+          }
+        }
+      }
+    },
     "\"%@\" segmentini tamamladın!": {
       "extractionState": "stale",
       "localizations": {
@@ -64,6 +80,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ km · Avg. %lld km/h"
+          }
+        }
+      }
+    },
+    "%d / %d rozet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d / %d badges"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d / %d rozet"
           }
         }
       }
@@ -113,6 +145,38 @@
       }
     },
     "/100": {},
+    "7 Gün Üst Üste": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7 Days in a Row"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7 Gün Üst Üste"
+          }
+        }
+      }
+    },
+    "7 gün art arda sürüş yaptın": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You drove 7 days in a row"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7 gün art arda sürüş yaptın"
+          }
+        }
+      }
+    },
     "AVG SPEED": {
       "extractionState": "stale",
       "localizations": {
@@ -257,6 +321,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "When on, every drive is automatically matched against nearby segments at the end, and your time is submitted to the global leaderboard."
+          }
+        }
+      }
+    },
+    "Başarılar": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Achievements"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başarılar"
           }
         }
       }
@@ -800,6 +880,22 @@
         }
       }
     },
+    "En az 1 km'lik bir sürüşü hiç ani fren yapmadan tamamladın": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You finished a drive of at least 1 km with zero harsh braking"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En az 1 km'lik bir sürüşü hiç ani fren yapmadan tamamladın"
+          }
+        }
+      }
+    },
     "Finish Time": {
       "localizations": {
         "en": {
@@ -839,6 +935,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Adjust Photo"
+          }
+        }
+      }
+    },
+    "Fren Ustası": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smooth Operator"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fren Ustası"
           }
         }
       }
@@ -885,6 +997,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Your garage is empty"
+          }
+        }
+      }
+    },
+    "Gece Kuşu": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Night Owl"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gece Kuşu"
+          }
+        }
+      }
+    },
+    "Gece yarısı ile 05:00 arasında bir sürüş yaptın": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You drove sometime between midnight and 5 AM"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gece yarısı ile 05:00 arasında bir sürüş yaptın"
           }
         }
       }
@@ -1302,6 +1446,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "En Düşük Rakım"
+          }
+        }
+      }
+    },
+    "Maraton": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marathon"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maraton"
           }
         }
       }
@@ -2022,6 +2182,22 @@
         }
       }
     },
+    "Tek bir sürüşte 50 km'yi geçtin": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You passed 50 km in a single drive"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tek bir sürüşte 50 km'yi geçtin"
+          }
+        }
+      }
+    },
     "Timeline": {
       "localizations": {
         "en": {
@@ -2050,6 +2226,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "Maks Hız"
+          }
+        }
+      }
+    },
+    "Toplamda 100 km yol kat ettin": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You've driven 100 km total"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toplamda 100 km yol kat ettin"
+          }
+        }
+      }
+    },
+    "Toplamda 1000 km yol kat ettin": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You've driven 1000 km total"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toplamda 1000 km yol kat ettin"
+          }
+        }
+      }
+    },
+    "Toplamda 500 km yol kat ettin": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You've driven 500 km total"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toplamda 500 km yol kat ettin"
           }
         }
       }
@@ -2154,6 +2378,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Create New Crew"
+          }
+        }
+      }
+    },
+    "Yeni Rozet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Badge"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni Rozet"
           }
         }
       }
@@ -2295,6 +2535,22 @@
         }
       }
     },
+    "İlk Sürüş": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "First Drive"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İlk Sürüş"
+          }
+        }
+      }
+    },
     "İlk sen gönder, liderlik tablosunu başlat.": {
       "extractionState": "stale",
       "localizations": {
@@ -2312,6 +2568,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Start your first drive, see your route here."
+          }
+        }
+      }
+    },
+    "İlk sürüşünü kaydettin": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You recorded your first drive"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İlk sürüşünü kaydettin"
           }
         }
       }

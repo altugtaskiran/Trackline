@@ -216,8 +216,23 @@ struct AppRootView: View {
         path.append(trip.id)
         resolvePlaceNames(for: trip)
         Task { await SegmentAutoMatcher.run(for: trip) }
+        checkForNewlyUnlockedAchievements()
         // A followed route only applies to the one drive it was armed for.
         guidanceSegment = nil
+    }
+
+    /// Re-evaluates the full badge set against every trip on disk (cheap —
+    /// AchievementEvaluator only reads denormalized Trip fields, no sample
+    /// decoding) and notifies for whatever wasn't already notified before.
+    private func checkForNewlyUnlockedAchievements() {
+        guard let allTrips = try? modelContext.fetch(FetchDescriptor<Trip>()) else { return }
+        let unlocked = AchievementEvaluator.unlockedIds(for: allTrips)
+        var store = NotifiedAchievementsStore()
+        let newIds = store.newlyUnlocked(from: unlocked)
+        for id in newIds {
+            guard let achievement = AchievementCatalog.all.first(where: { $0.id == id }) else { continue }
+            LocalNotifier.notifyAchievementUnlocked(title: achievement.title)
+        }
     }
 
     /// "Bu Rotayı Sür" in a Segment's detail screen — arms Dashboard with

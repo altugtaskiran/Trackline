@@ -50,6 +50,14 @@ enum LocalNotifier {
         post(content)
     }
 
+    static func notifyAchievementUnlocked(title: String) {
+        let content = UNMutableNotificationContent()
+        content.title = String.appLocalized("Yeni Rozet")
+        content.body = String(format: String.appLocalized("\"%@\" rozetini kazandın!"), title)
+        content.sound = .default
+        post(content)
+    }
+
     private static func post(_ content: UNMutableNotificationContent) {
         let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
         UNUserNotificationCenter.current().add(request)

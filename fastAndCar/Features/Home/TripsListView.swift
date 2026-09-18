@@ -12,6 +12,7 @@ import SwiftUI
 struct TripsListView: View {
     @Query(sort: \Trip.createdAt, order: .reverse) private var trips: [Trip]
     @State private var showsSettings = false
+    @State private var showsAchievements = false
     @Environment(\.modelContext) private var modelContext
     private let locationManager: LocationManager
 
@@ -69,6 +70,9 @@ struct TripsListView: View {
         .sheet(isPresented: $showsSettings) {
             SettingsView(locationManager: locationManager)
         }
+        .sheet(isPresented: $showsAchievements) {
+            AchievementsView()
+        }
         #if DEBUG
         .task {
             guard ProcessInfo.processInfo.arguments.contains("-uiTestAutoSettings") else { return }
@@ -84,6 +88,14 @@ struct TripsListView: View {
                 .font(AppFont.title)
                 .foregroundStyle(AppColor.textPrimary)
             Spacer()
+            Button {
+                showsAchievements = true
+            } label: {
+                Image(systemName: "trophy.fill")
+                    .font(.system(size: 18))
+                    .foregroundStyle(AppColor.textSecondary)
+                    .frame(width: 36, height: 36)
+            }
             Button {
                 showsSettings = true
             } label: {
