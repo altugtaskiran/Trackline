@@ -70,6 +70,18 @@ struct RoutesTabView: View {
                                 .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                                     Button(role: .destructive) {
                                         withAnimation { localRoutesStore.remove(segment.id) }
+                                        // A route deleted here might also
+                                        // have been published to the Global
+                                        // Leaderboard (opt-in toggle in
+                                        // CreateSegmentFlowView) — removing
+                                        // it locally should take it off
+                                        // there too, not leave a dangling
+                                        // "Oluşturduklarım" entry pointing
+                                        // at a route that no longer exists.
+                                        // Harmless no-op if it was never
+                                        // published.
+                                        MyCreatedSegmentsStore().remove(segment.id)
+                                        Task { try? await CloudKitSegmentService.deleteSegment(id: segment.id) }
                                     } label: {
                                         Label("Sil", systemImage: "trash")
                                     }

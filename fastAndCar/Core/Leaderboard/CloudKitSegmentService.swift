@@ -59,6 +59,23 @@ enum CloudKitSegmentService {
         }
     }
 
+    /// Mirrors createSegment — deleting a route locally (RoutesTabView)
+    /// should take it off the public Global Leaderboard too, the same
+    /// best-effort way it got published there in the first place. Not an
+    /// error if the record was never actually published (e.g. it predates
+    /// CloudKit going live, or the toggle was off) — CKError.unknownItem is
+    /// swallowed as a no-op by the caller via `try?`.
+    static func deleteSegment(id: String) async throws {
+        guard FeatureFlags.globalLeaderboardEnabled else { throw SegmentServiceError.featureNotAvailable }
+        do {
+            _ = try await database.deleteRecord(withID: CKRecord.ID(recordName: id))
+        } catch let error as CKError where error.code == .notAuthenticated {
+            throw SegmentServiceError.notSignedIntoiCloud
+        } catch {
+            throw SegmentServiceError.underlying(error)
+        }
+    }
+
     /// Pre-filtered by geohash cell, not distance — the public database has
     /// no native geo query, so this is a coarse "could plausibly be nearby"
     /// pass; SegmentMatcher does the real distance/bearing check afterward.

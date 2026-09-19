@@ -32,6 +32,11 @@ final class MyCreatedSegmentsStore {
         save()
     }
 
+    func remove(_ id: String) {
+        segments.removeAll { $0.id == id }
+        save()
+    }
+
     private static func load() -> [MyCreatedSegmentRef] {
         guard let data = UserDefaults.standard.data(forKey: key),
               let decoded = try? JSONDecoder().decode([MyCreatedSegmentRef].self, from: data) else { return [] }

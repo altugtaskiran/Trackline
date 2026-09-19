@@ -27,6 +27,7 @@ struct CreateSegmentFlowView: View {
     // happen automatically on every locally created route, which read as
     // surprising/unwanted. Now it's the driver's own explicit choice.
     @State private var publishesGlobally = false
+    @FocusState private var isNameFieldFocused: Bool
 
     // `trip.samples` decodes the whole recorded route from its stored JSON
     // blob on every access — fine for a one-off read, but this view's two
@@ -72,6 +73,7 @@ struct CreateSegmentFlowView: View {
         NavigationStack {
             ZStack {
                 AppColor.background.ignoresSafeArea()
+                    .onTapGesture { isNameFieldFocused = false }
 
                 ScrollView {
                     VStack(spacing: 20) {
@@ -111,6 +113,7 @@ struct CreateSegmentFlowView: View {
                                     .foregroundStyle(AppColor.textPrimary)
                                     .padding(12)
                                     .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(AppColor.surfaceElevated))
+                                    .focused($isNameFieldFocused)
                             }
                         }
 
@@ -134,7 +137,15 @@ struct CreateSegmentFlowView: View {
                         .disabled(trimmedName.isEmpty || isSubmitting || previewSamples.count < 2)
                     }
                     .padding(20)
+                    // contentShape makes the gaps between cards tappable
+                    // too, not just the cards themselves — tapping anywhere
+                    // on this screen dismisses the keyboard, not only the
+                    // "Parkur Oluştur" button at the bottom, which meant
+                    // scrolling all the way down was the only way out.
+                    .contentShape(Rectangle())
+                    .onTapGesture { isNameFieldFocused = false }
                 }
+                .scrollDismissesKeyboard(.immediately)
             }
             .navigationTitle("Parkur Oluştur")
             .navigationBarTitleDisplayMode(.inline)
