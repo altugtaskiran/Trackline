@@ -1,2777 +1,2802 @@
 {
-  "sourceLanguage": "tr",
-  "strings": {
-    "": {},
-    "\"%@\" crew'ına katıl: %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Join \"%@\": %@"
+  "sourceLanguage" : "tr",
+  "strings" : {
+    "" : {
+
+    },
+    "· %@" : {
+
+    },
+    "\"%@\" crew'ına katıl: %@" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Join \"%@\": %@"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "\"%@\" crew'ına katıl: %@"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"%@\" crew'ına katıl: %@"
           }
         }
       }
     },
-    "\"%@\" crew'ına katıldın.": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You joined \"%@\"."
+    "\"%@\" crew'ına katıldın." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You joined \"%@\"."
           }
         }
       }
     },
-    "\"%@\" parkurunu tamamladın!": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You completed \"%@\"!"
+    "\"%@\" parkurunu tamamladın!" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You completed \"%@\"!"
           }
         }
       }
     },
-    "\"%@\" rozetini kazandın!": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You earned the \"%@\" badge!"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "\"%@\" rozetini kazandın!"
-          }
-        }
-      }
-    },
-    "\"%@\" segmentini tamamladın!": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You completed \"%@\"!"
-          }
-        }
-      }
-    },
-    "#%lld": {},
-    "%.0fm sonra %@": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "In %.0fm, %@"
-          }
-        }
-      }
-    },
-    "%.1f km · Ort. %lld km/h": {
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "new",
-            "value": "%1$.1f km · Ort. %2$lld km/h"
-          }
-        }
-      }
-    },
-    "%@ km · Ort. %lld km/h": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ km · Avg. %lld km/h"
-          }
-        }
-      }
-    },
-    "%d / %d rozet": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d / %d badges"
+    "\"%@\" rozetini kazandın!" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You earned the \"%@\" badge!"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d / %d rozet"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"%@\" rozetini kazandın!"
           }
         }
       }
     },
-    "%d ani fren tespit edildi": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d harsh brakes detected"
+    "\"%@\" segmentini tamamladın!" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You completed \"%@\"!"
           }
         }
       }
     },
-    "%d parkur tamamladın!": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You completed %d courses!"
+    "/100" : {
+
+    },
+    "#%lld" : {
+
+    },
+    "%.0fm sonra %@" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In %.0fm, %@"
           }
         }
       }
     },
-    "%d segment tamamladın!": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You completed %d segments!"
+    "%.1f km · Ort. %lld km/h" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$.1f km · Ort. %2$lld km/h"
           }
         }
       }
     },
-    "%lld": {},
-    "%lld üye": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld members"
+    "%@ km · Ort. %lld km/h" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ km · Avg. %lld km/h"
           }
         }
       }
     },
-    "/100": {},
-    "7 Gün Üst Üste": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "7 Days in a Row"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "7 Gün Üst Üste"
-          }
-        }
-      }
-    },
-    "7 gün art arda sürüş yaptın": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You drove 7 days in a row"
+    "%d / %d rozet" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d / %d badges"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "7 gün art arda sürüş yaptın"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d / %d rozet"
           }
         }
       }
     },
-    "AVG SPEED": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "AVG SPEED"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ORT HIZ"
+    "%d ani fren tespit edildi" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d harsh brakes detected"
           }
         }
       }
     },
-    "Akıcı sürüş, yakıt verimliliği yüksek": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Smooth driving, high fuel efficiency"
+    "%d parkur tamamladın!" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You completed %d courses!"
           }
         }
       }
     },
-    "Altuğ Taşkıran": {},
-    "Ana Sayfa": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Home"
+    "%d segment tamamladın!" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You completed %d segments!"
           }
         }
       }
     },
-    "Ani fren az": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Few harsh brakes"
+    "%lld" : {
+
+    },
+    "%lld üye" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld members"
           }
         }
       }
     },
-    "Ani hızlanmalar fazla": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Too many harsh accelerations"
-          }
-        }
-      }
+    "• %@" : {
+
     },
-    "Aracını ekle, paylaşım kartlarında ve gelecekte istatistiklerinde görünsün.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add your car so it shows up on share cards and future stats."
-          }
-        }
-      }
-    },
-    "Araç Ekle": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add Car"
-          }
-        }
-      }
-    },
-    "Araç Fotoğrafı Ekle": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add Car Photo"
-          }
-        }
-      }
-    },
-    "Average Speed": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Average Speed"
+    "7 gün art arda sürüş yaptın" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You drove 7 days in a row"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ort. Hız"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "7 gün art arda sürüş yaptın"
           }
         }
       }
     },
-    "Ayarlar": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Settings"
-          }
-        }
-      }
-    },
-    "Ayarları Aç": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open Settings"
-          }
-        }
-      }
-    },
-    "Açıkken, her sürüş sonunda yakındaki parkurlarla otomatik eşleştirilir ve derecen genel liderlik tablosuna gönderilir.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "When on, every drive is automatically matched against nearby courses at the end, and your time is submitted to the global leaderboard."
-          }
-        }
-      }
-    },
-    "Açıkken, her sürüş sonunda yakındaki segmentlerle otomatik eşleştirilir ve derecen genel liderlik tablosuna gönderilir.": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "When on, every drive is automatically matched against nearby segments at the end, and your time is submitted to the global leaderboard."
-          }
-        }
-      }
-    },
-    "Başarılar": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Achievements"
+    "7 Gün Üst Üste" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "7 Days in a Row"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Başarılar"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "7 Gün Üst Üste"
           }
         }
       }
     },
-    "Başlangıç": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Start"
+    "Açıkken, her sürüş sonunda yakındaki parkurlarla otomatik eşleştirilir ve derecen genel liderlik tablosuna gönderilir." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When on, every drive is automatically matched against nearby courses at the end, and your time is submitted to the global leaderboard."
           }
         }
       }
     },
-    "Belirlenmedi": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Not determined"
+    "Açıkken, her sürüş sonunda yakındaki segmentlerle otomatik eşleştirilir ve derecen genel liderlik tablosuna gönderilir." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When on, every drive is automatically matched against nearby segments at the end, and your time is submitted to the global leaderboard."
           }
         }
       }
     },
-    "Benzin": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gasoline"
+    "Akıcı sürüş, yakıt verimliliği yüksek" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Smooth driving, high fuel efficiency"
           }
         }
       }
     },
-    "Beygir Gücü": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Horsepower"
+    "Altuğ Taşkıran" : {
+
+    },
+    "Ana Sayfa" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Home"
           }
         }
       }
     },
-    "Bilinmiyor": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Unknown"
+    "Ani fren az" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Few harsh brakes"
           }
         }
       }
     },
-    "Bir Sorun Oluştu": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Something Went Wrong"
+    "Ani hızlanmalar fazla" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Too many harsh accelerations"
           }
         }
       }
     },
-    "Bir Sürüş Seç": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pick a Drive"
+    "Araç Ekle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Car"
           }
         }
       }
     },
-    "Bir crew oluştur ve arkadaşlarını davet et — sürüşlerinizi karşılaştırın, konum paylaşımı olmadan.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Create a crew and invite your friends — compare your drives, no location sharing."
+    "Araç Fotoğrafı Ekle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Car Photo"
           }
         }
       }
     },
-    "Bir sürüş bitirip paylaşırken bu crew ile paylaşmayı seçersen burada görünür.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Finish a drive and choose to share it with this crew, and it'll show up here."
+    "Aracını ekle, paylaşım kartlarında ve gelecekte istatistiklerinde görünsün." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add your car so it shows up on share cards and future stats."
           }
         }
       }
     },
-    "Bir sürüş detayında rotandan bir parkur oluştur, ya da yukarıdan ara.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Create a course from your route in a trip detail, or search above."
-          }
-        }
-      }
-    },
-    "Bir sürüş detayında rotandan bir segment oluştur, ya da yukarıdan ara.": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Create a segment from your route in a trip detail, or search above."
-          }
-        }
-      }
-    },
-    "Bitiş": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Finish"
-          }
-        }
-      }
-    },
-    "Bu Rotayı Sür": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Follow This Route"
-          }
-        }
-      }
-    },
-    "Bu aralıktan bir parkur oluşturulamadı.": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A course couldn't be created from this range."
-          }
-        }
-      }
-    },
-    "Bu aralıktan bir segment oluşturulamadı.": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A segment couldn't be created from this range."
-          }
-        }
-      }
-    },
-    "Bu parkurda henüz kimse yok": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No one's on this course yet"
-          }
-        }
-      }
-    },
-    "Bu rotada henüz kimse yok": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No one's here yet on this route"
-          }
-        }
-      }
-    },
-    "Bu rotayı sür, otomatik olarak liderlik tablosuna gönderilsin.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Drive this route and it'll be submitted to the leaderboard automatically."
-          }
-        }
-      }
-    },
-    "Bu segmentte henüz kimse yok": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No one's on this segment yet"
-          }
-        }
-      }
-    },
-    "Bu sürüş kaydedilemeyecek kadar kısa — en az birkaç saniye konum verisi gerekiyor.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This drive is too short to save — at least a few seconds of location data is needed."
-          }
-        }
-      }
-    },
-    "Bu özellik yakında aktif olacak.": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This feature will be active soon."
-          }
-        }
-      }
-    },
-    "Cornering Events": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cornering Events"
+    "Average Speed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Average Speed"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Viraj Sayısı"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ort. Hız"
           }
         }
       }
     },
-    "Crew": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Crew"
-          }
-        }
-      }
-    },
-    "Crew Sıralaması": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Crew Rankings"
-          }
-        }
-      }
-    },
-    "Crew bilgileri yüklenemedi. iCloud'a giriş yaptığından emin ol.": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Couldn't load crew info. Make sure you're signed into iCloud."
-          }
-        }
-      }
-    },
-    "Crew oluşturmak için cihazında iCloud hesabına giriş yapmalısın.": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You need to be signed into iCloud on your device to create a crew."
-          }
-        }
-      }
-    },
-    "Crew oluşturulamadı. Bağlantını kontrol edip tekrar dene.": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Couldn't create the crew. Check your connection and try again."
-          }
-        }
-      }
-    },
-    "Crew'a Katıldın": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Joined Crew"
-          }
-        }
-      }
-    },
-    "Crew'dan Ayrıl": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Leave Crew"
-          }
-        }
-      }
-    },
-    "Crew'larımla paylaş": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Share with my crews"
-          }
-        }
-      }
-    },
-    "Crew'u Sil": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Delete Crew"
-          }
-        }
-      }
-    },
-    "Crew'una bir isim ver": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Give your crew a name"
-          }
-        }
-      }
-    },
-    "DISTANCE": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "DISTANCE"
+    "AVG SPEED" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AVG SPEED"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "MESAFE"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ORT HIZ"
           }
         }
       }
     },
-    "DRIVE TIME": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "DRIVE TIME"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "SÜRE"
+    "Ayarlar" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings"
           }
         }
       }
     },
-    "Davet açılamadı.": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Couldn't open the invite."
+    "Ayarları Aç" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Settings"
           }
         }
       }
     },
-    "Davet kabul edilemedi. Bağlantını kontrol edip tekrar dene.": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Couldn't accept the invite. Check your connection and try again."
-          }
-        }
-      }
-    },
-    "Davet linki bulunamadı.": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Invite link not found."
-          }
-        }
-      }
-    },
-    "Dil": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Language"
-          }
-        }
-      }
-    },
-    "Distance": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Distance"
+    "Başarılar" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Achievements"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mesafe"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Başarılar"
           }
         }
       }
     },
-    "Dizel": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Diesel"
+    "Başlangıç" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start"
           }
         }
       }
     },
-    "Diğer Yollarla Paylaş": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Share Another Way"
+    "Belirlenmedi" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not determined"
           }
         }
       }
     },
-    "Drive Time": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Drive Time"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sürüş Süresi"
+    "Benzin" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gasoline"
           }
         }
       }
     },
-    "Drive Tracker: TrackLine": {},
-    "Driving Score": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Driving Score"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sürüş Skoru"
+    "Beygir Gücü" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Horsepower"
           }
         }
       }
     },
-    "Duraklatıldı": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Paused"
+    "Bilinmiyor" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown"
           }
         }
       }
     },
-    "Durağı Adlandır": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Name the Stop"
+    "Bir crew oluştur ve arkadaşlarını davet et — sürüşlerinizi karşılaştırın, konum paylaşımı olmadan." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create a crew and invite your friends — compare your drives, no location sharing."
           }
         }
       }
     },
-    "Elektrik": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Electric"
+    "Bir Sorun Oluştu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Something Went Wrong"
           }
         }
       }
     },
-    "Elevation Gain": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Elevation Gain"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tırmanış"
+    "Bir sürüş bitirip paylaşırken bu crew ile paylaşmayı seçersen burada görünür." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finish a drive and choose to share it with this crew, and it'll show up here."
           }
         }
       }
     },
-    "Elevation Loss": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Elevation Loss"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "İniş"
+    "Bir sürüş detayında rotandan bir parkur oluştur, ya da yukarıdan ara." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create a course from your route in a trip detail, or search above."
           }
         }
       }
     },
-    "En az 1 km'lik bir sürüşü hiç ani fren yapmadan tamamladın": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You finished a drive of at least 1 km with zero harsh braking"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "En az 1 km'lik bir sürüşü hiç ani fren yapmadan tamamladın"
+    "Bir sürüş detayında rotandan bir segment oluştur, ya da yukarıdan ara." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create a segment from your route in a trip detail, or search above."
           }
         }
       }
     },
-    "Finish Time": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Finish Time"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bitiş Saati"
+    "Bir Sürüş Seç" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pick a Drive"
           }
         }
       }
     },
-    "Finished": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Finished"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bitti"
+    "Bitiş" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finish"
           }
         }
       }
     },
-    "Fotoğrafı Ayarla": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Adjust Photo"
+    "Bu aralıktan bir parkur oluşturulamadı." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A course couldn't be created from this range."
           }
         }
       }
     },
-    "Fren Ustası": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Smooth Operator"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fren Ustası"
+    "Bu aralıktan bir segment oluşturulamadı." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A segment couldn't be created from this range."
           }
         }
       }
     },
-    "GELİŞTİRİCİ": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "DEVELOPER"
+    "Bu özellik yakında aktif olacak." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This feature will be active soon."
           }
         }
       }
     },
-    "GPS Accuracy": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "GPS Accuracy"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "GPS Doğruluğu"
+    "Bu parkurda henüz kimse yok" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No one's on this course yet"
           }
         }
       }
     },
-    "Garaj": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Garage"
+    "Bu rotada henüz kimse yok" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No one's here yet on this route"
           }
         }
       }
     },
-    "Garajın boş": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your garage is empty"
+    "Bu Rotayı Sür" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Follow This Route"
           }
         }
       }
     },
-    "Gece Kuşu": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Night Owl"
+    "Bu rotayı sür, otomatik olarak liderlik tablosuna gönderilsin." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drive this route and it'll be submitted to the leaderboard automatically."
+          }
+        }
+      }
+    },
+    "Bu segmentte henüz kimse yok" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No one's on this segment yet"
+          }
+        }
+      }
+    },
+    "Bu sürüş kaydedilemeyecek kadar kısa — en az birkaç saniye konum verisi gerekiyor." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This drive is too short to save — at least a few seconds of location data is needed."
+          }
+        }
+      }
+    },
+    "Çevrimiçi Özellik" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Online Feature"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gece Kuşu"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Çevrimiçi Özellik"
           }
         }
       }
     },
-    "Gece yarısı ile 05:00 arasında bir sürüş yaptın": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You drove sometime between midnight and 5 AM"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gece yarısı ile 05:00 arasında bir sürüş yaptın"
-          }
-        }
-      }
-    },
-    "Genel liderlik tablolarına katıl": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Join global leaderboards"
-          }
-        }
-      }
-    },
-    "Global": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Global"
-          }
-        }
-      }
-    },
-    "Global Liderlik": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Global Leaderboard"
-          }
-        }
-      }
-    },
-    "Gönder": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Submit"
-          }
-        }
-      }
-    },
-    "Gönderilemedi. Bağlantını kontrol edip tekrar dene.": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Couldn't submit. Check your connection and try again."
-          }
-        }
-      }
-    },
-    "Harsh Acceleration": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Harsh Acceleration"
+    "Çevrimiçi özellikler yakında aktif olacak." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Online features will be active soon."
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ani Hızlanma"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Çevrimiçi özellikler yakında aktif olacak."
           }
         }
       }
     },
-    "Harsh Braking": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Harsh Braking"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ani Fren"
-          }
-        }
-      }
-    },
-    "Henüz bir crew'un yok": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You don't have a crew yet"
-          }
-        }
-      }
-    },
-    "Henüz bir rotan yok": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You don't have a route yet"
-          }
-        }
-      }
-    },
-    "Henüz kaydedilmiş bir sürüşün yok": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You don't have any saved drives yet"
-          }
-        }
-      }
-    },
-    "Henüz parkur yok": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No courses yet"
-          }
-        }
-      }
-    },
-    "Henüz paylaşılan sürüş yok": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No shared drives yet"
-          }
-        }
-      }
-    },
-    "Henüz segment yok": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No segments yet"
-          }
-        }
-      }
-    },
-    "Henüz yolculuk yok": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No drives yet"
-          }
-        }
-      }
-    },
-    "Her sürüş bir rota.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Every drive is a route."
-          }
-        }
-      }
-    },
-    "Her zaman izinli": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Always allowed"
-          }
-        }
-      }
-    },
-    "Herkese Açık Liderlik Tablosuna Ekle": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add to Public Leaderboard"
+    "Cornering Events" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cornering Events"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Herkese Açık Liderlik Tablosuna Ekle"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Viraj Sayısı"
           }
         }
       }
     },
-    "Hibrit": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hybrid"
+    "Crew" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crew"
           }
         }
       }
     },
-    "Highest Altitude": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Highest Altitude"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "En Yüksek Rakım"
+    "Crew bilgileri yüklenemedi. iCloud'a giriş yaptığından emin ol." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't load crew info. Make sure you're signed into iCloud."
           }
         }
       }
     },
-    "Hız": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Speed"
+    "Crew oluşturmak için cihazında iCloud hesabına giriş yapmalısın." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You need to be signed into iCloud on your device to create a crew."
           }
         }
       }
     },
-    "Hız değişkenliği yüksek": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "High speed variability"
+    "Crew oluşturulamadı. Bağlantını kontrol edip tekrar dene." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't create the crew. Check your connection and try again."
           }
         }
       }
     },
-    "Kalkışlar ve virajlar kontrollü": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Controlled starts and turns"
+    "Crew Sıralaması" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crew Rankings"
           }
         }
       }
     },
-    "Kapat": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Close"
+    "Crew'a Katıldın" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Joined Crew"
           }
         }
       }
     },
-    "Katılmak için bu kodu okutsun": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Have them scan this code to join"
+    "Crew'dan Ayrıl" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leave Crew"
           }
         }
       }
     },
-    "Kaydedilmiş bir sürüşten rota oluştur, sonra aynı rotayı tekrar sürmek için kullan.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Create a route from a saved drive, then use it to drive the same route again."
+    "Crew'larımla paylaş" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share with my crews"
           }
         }
       }
     },
-    "Kaydet": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Save"
+    "Crew'u Sil" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Crew"
           }
         }
       }
     },
-    "Kilometre": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kilometers"
+    "Crew'una bir isim ver" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Give your crew a name"
           }
         }
       }
     },
-    "Konum İzni": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Location Permission"
+    "Davet açılamadı." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't open the invite."
           }
         }
       }
     },
-    "Konum İzni Gerekli": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Location Permission Required"
+    "Davet kabul edilemedi. Bağlantını kontrol edip tekrar dene." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't accept the invite. Check your connection and try again."
           }
         }
       }
     },
-    "Konumu Etkinleştir": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Enable Location"
+    "Davet linki bulunamadı." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invite link not found."
           }
         }
       }
     },
-    "Kullan": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Use"
+    "Diğer Yollarla Paylaş" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share Another Way"
           }
         }
       }
     },
-    "Kurucu sensin": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You're the creator"
+    "Dil" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Language"
           }
         }
       }
     },
-    "Kurucu: %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Creator: %@"
-          }
-        }
-      }
-    },
-    "Kısıtlı": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Restricted"
-          }
-        }
-      }
-    },
-    "Liderlik": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Leaderboard"
-          }
-        }
-      }
-    },
-    "Liderlik Tablosu": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Leaderboard"
-          }
-        }
-      }
-    },
-    "Liderlik tablosu yüklenemedi. iCloud'a giriş yaptığından emin ol.": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Couldn't load the leaderboard. Make sure you're signed into iCloud."
-          }
-        }
-      }
-    },
-    "Liderlik tablosunda görünecek bir isim seç": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choose a name to show on the leaderboard"
-          }
-        }
-      }
-    },
-    "Liderlik tablosunu kullanmak için cihazında iCloud hesabına giriş yapmalısın.": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You need to be signed into iCloud on this device to use the leaderboard."
-          }
-        }
-      }
-    },
-    "Lowest Altitude": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lowest Altitude"
+    "Distance" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Distance"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "En Düşük Rakım"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mesafe"
           }
         }
       }
     },
-    "Maraton": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Marathon"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Maraton"
-          }
-        }
-      }
-    },
-    "Marka": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Make"
-          }
-        }
-      }
-    },
-    "Max Acceleration": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Max Acceleration"
+    "DISTANCE" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DISTANCE"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Maks İvme"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MESAFE"
           }
         }
       }
     },
-    "Max Braking": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Max Braking"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Maks Fren"
+    "Dizel" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diesel"
           }
         }
       }
     },
-    "Mesafe": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Distance"
-          }
-        }
-      }
-    },
-    "Mesafe Birimi": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Distance Unit"
-          }
-        }
-      }
-    },
-    "Mil": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Miles"
-          }
-        }
-      }
-    },
-    "Model": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Model"
-          }
-        }
-      }
-    },
-    "Moving Time": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Moving Time"
+    "Drive Time" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drive Time"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hareket Süresi"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sürüş Süresi"
           }
         }
       }
     },
-    "Number of Stops": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Number of Stops"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Duraklama Sayısı"
-          }
-        }
-      }
-    },
-    "Oluştur ve Davet Et": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Create and Invite"
-          }
-        }
-      }
-    },
-    "Oluşturan: %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Created by: %@"
-          }
-        }
-      }
-    },
-    "Oluşturduklarım": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Created by Me"
-          }
-        }
-      }
-    },
-    "Ort. %lld km/h · Zirve %lld km/h": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Avg. %lld km/h · Peak %lld km/h"
-          }
-        }
-      }
-    },
-    "Ortalama hız dengeli": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Consistent average speed"
-          }
-        }
-      }
-    },
-    "Oy verilemedi. Bağlantını kontrol edip tekrar dene.": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Couldn't vote. Check your connection and try again."
-          }
-        }
-      }
-    },
-    "Parkur": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Route"
-          }
-        }
-      }
-    },
-    "Parkur Adı": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Course Name"
-          }
-        }
-      }
-    },
-    "Parkur Ara": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Search Courses"
-          }
-        }
-      }
-    },
-    "Parkur Eşleşmesi": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Course Match"
-          }
-        }
-      }
-    },
-    "Parkur Oluştur": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Create Course"
-          }
-        }
-      }
-    },
-    "Parkur adı": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Course name"
-          }
-        }
-      }
-    },
-    "Parkur yüklenemedi.": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Couldn't load the course."
-          }
-        }
-      }
-    },
-    "Parkurunu görüntüle": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "View your course"
-          }
-        }
-      }
-    },
-    "Paylaş": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Share"
-          }
-        }
-      }
-    },
-    "Reddedildi": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Denied"
-          }
-        }
-      }
-    },
-    "Rota Hazır": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Route Ready"
-          }
-        }
-      }
-    },
-    "Rotalar": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Routes"
-          }
-        }
-      }
-    },
-    "Rotalarım": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "My Routes"
-          }
-        }
-      }
-    },
-    "Rotayı tamamladın!": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You completed the route!"
-          }
-        }
-      }
-    },
-    "Rotayı tamamladın! Süren: %@": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You completed the route! Your time: %@"
-          }
-        }
-      }
-    },
-    "Rotayı tamamladın! Süren: %@ — %@'den %@ geride": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You completed the route! Your time: %@ — %@ behind %@"
-          }
-        }
-      }
-    },
-    "Rotayı tamamladın! Süren: %@ — %@'i %@ farkla geçtin!": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You completed the route! Your time: %@ — you beat %@ by %@!"
-          }
-        }
-      }
-    },
-    "SESSION COMPLETE": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "SESSION COMPLETE"
+    "DRIVE TIME" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DRIVE TIME"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "OTURUM TAMAMLANDI"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SÜRE"
           }
         }
       }
     },
-    "Segment Adı": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Segment Name"
-          }
-        }
-      }
+    "Drive Tracker: TrackLine" : {
+
     },
-    "Segment Ara": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Search Segments"
-          }
-        }
-      }
-    },
-    "Segment Eşleşmesi": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Segment Match"
-          }
-        }
-      }
-    },
-    "Segment Oluştur": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Create Segment"
-          }
-        }
-      }
-    },
-    "Segment adı": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Segment name"
-          }
-        }
-      }
-    },
-    "Segment oluşturmak için cihazında iCloud hesabına giriş yapmalısın.": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You need to be signed into iCloud on your device to create a segment."
-          }
-        }
-      }
-    },
-    "Segment oluşturulamadı. Bağlantını kontrol edip tekrar dene.": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Couldn't create the segment. Check your connection and try again."
-          }
-        }
-      }
-    },
-    "Segmentini görüntüle": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "View your segment"
-          }
-        }
-      }
-    },
-    "Sil": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Delete"
-          }
-        }
-      }
-    },
-    "Silinemedi.": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Couldn't delete it."
-          }
-        }
-      }
-    },
-    "Sistem": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "System"
-          }
-        }
-      }
-    },
-    "Skor için yeterli veri yok": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Not enough data for a score"
-          }
-        }
-      }
-    },
-    "Son Sürüşler": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Recent Drives"
-          }
-        }
-      }
-    },
-    "Sonuç bulunamadı": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No results found"
-          }
-        }
-      }
-    },
-    "Start Time": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Start Time"
+    "Driving Score" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Driving Score"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Başlangıç Saati"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sürüş Skoru"
           }
         }
       }
     },
-    "Started": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Started"
+    "Durağı Adlandır" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name the Stop"
+          }
+        }
+      }
+    },
+    "Duraklatıldı" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paused"
+          }
+        }
+      }
+    },
+    "Elektrik" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Electric"
+          }
+        }
+      }
+    },
+    "Elevation Gain" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elevation Gain"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Başladı"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tırmanış"
           }
         }
       }
     },
-    "Steepest Climb": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Steepest Climb"
+    "Elevation Loss" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elevation Loss"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "En Dik Yokuş"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İniş"
           }
         }
       }
     },
-    "Stop": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Stop"
+    "En az 1 km'lik bir sürüşü hiç ani fren yapmadan tamamladın" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You finished a drive of at least 1 km with zero harsh braking"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Duraklama"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En az 1 km'lik bir sürüşü hiç ani fren yapmadan tamamladın"
           }
         }
       }
     },
-    "Stopped Time": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Stopped Time"
+    "Finish Time" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finish Time"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Duraklama Süresi"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitiş Saati"
           }
         }
       }
     },
-    "Süre": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Time"
-          }
-        }
-      }
-    },
-    "Sürüm": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Version"
-          }
-        }
-      }
-    },
-    "Sürüş Kaydedilemedi": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Drive Not Saved"
-          }
-        }
-      }
-    },
-    "Sürüşe Başla": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Start Drive"
-          }
-        }
-      }
-    },
-    "Sürüşe hazır": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ready to drive"
-          }
-        }
-      }
-    },
-    "Sürüşlerim": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "My Drives"
-          }
-        }
-      }
-    },
-    "Sürüşten Rota Oluştur": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Create Route From Drive"
-          }
-        }
-      }
-    },
-    "Sürüşü Bitir": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "End Drive"
-          }
-        }
-      }
-    },
-    "Sürüşünü kaydedebilmek için Ayarlar'dan konum iznini etkinleştir.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Turn on location permission in Settings to record your drive."
-          }
-        }
-      }
-    },
-    "Sık duruşlar yakıt verimliliğini düşürüyor": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Frequent stops reduce fuel efficiency"
-          }
-        }
-      }
-    },
-    "TOP SPEED": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "TOP SPEED"
+    "Finished" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finished"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "MAKS HIZ"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitti"
           }
         }
       }
     },
-    "TRACKLINE": {},
-    "Tamam": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "OK"
+    "Fotoğrafı Ayarla" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adjust Photo"
           }
         }
       }
     },
-    "Tek bir sürüşte 50 km'yi geçtin": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You passed 50 km in a single drive"
+    "Fren Ustası" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Smooth Operator"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tek bir sürüşte 50 km'yi geçtin"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fren Ustası"
           }
         }
       }
     },
-    "Timeline": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Timeline"
+    "Garaj" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Garage"
+          }
+        }
+      }
+    },
+    "Garajın boş" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your garage is empty"
+          }
+        }
+      }
+    },
+    "Gece Kuşu" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Night Owl"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zaman Çizelgesi"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gece Kuşu"
           }
         }
       }
     },
-    "Top Speed": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Top Speed"
+    "Gece yarısı ile 05:00 arasında bir sürüş yaptın" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You drove sometime between midnight and 5 AM"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Maks Hız"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gece yarısı ile 05:00 arasında bir sürüş yaptın"
           }
         }
       }
     },
-    "Toplamda 100 km yol kat ettin": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You've driven 100 km total"
+    "GELİŞTİRİCİ" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DEVELOPER"
+          }
+        }
+      }
+    },
+    "Genel liderlik tablolarına katıl" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Join global leaderboards"
+          }
+        }
+      }
+    },
+    "Global" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Global"
+          }
+        }
+      }
+    },
+    "Global Liderlik" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Global Leaderboard"
+          }
+        }
+      }
+    },
+    "Gönder" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Submit"
+          }
+        }
+      }
+    },
+    "Gönderilemedi. Bağlantını kontrol edip tekrar dene." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't submit. Check your connection and try again."
+          }
+        }
+      }
+    },
+    "GPS Accuracy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GPS Accuracy"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Toplamda 100 km yol kat ettin"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GPS Doğruluğu"
           }
         }
       }
     },
-    "Toplamda 1000 km yol kat ettin": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You've driven 1000 km total"
+    "Harsh Acceleration" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Harsh Acceleration"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Toplamda 1000 km yol kat ettin"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ani Hızlanma"
           }
         }
       }
     },
-    "Toplamda 500 km yol kat ettin": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You've driven 500 km total"
+    "Harsh Braking" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Harsh Braking"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Toplamda 500 km yol kat ettin"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ani Fren"
           }
         }
       }
     },
-    "Trackline": {},
-    "Trackline yolculuğunu kaydeder, pist haritası gibi çizer.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Trackline records your journey, drawing it like a track map."
+    "Henüz bir crew'un yok" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You don't have a crew yet"
           }
         }
       }
     },
-    "Türkçe": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Turkish"
+    "Henüz bir rotan yok" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You don't have a route yet"
           }
         }
       }
     },
-    "Vazgeç": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cancel"
+    "Henüz kaydedilmiş bir sürüşün yok" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You don't have any saved drives yet"
           }
         }
       }
     },
-    "WhatsApp'tan Gönder": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Send via WhatsApp"
+    "Henüz parkur yok" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No courses yet"
+          }
+        }
+      }
+    },
+    "Henüz paylaşılan sürüş yok" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No shared drives yet"
+          }
+        }
+      }
+    },
+    "Henüz segment yok" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No segments yet"
+          }
+        }
+      }
+    },
+    "Henüz yolculuk yok" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No drives yet"
+          }
+        }
+      }
+    },
+    "Her sürüş bir rota." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every drive is a route."
+          }
+        }
+      }
+    },
+    "Her zaman izinli" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Always allowed"
+          }
+        }
+      }
+    },
+    "Herkese Açık Liderlik Tablosuna Ekle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add to Public Leaderboard"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "WhatsApp'tan Gönder"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Herkese Açık Liderlik Tablosuna Ekle"
           }
         }
       }
     },
-    "Yakınlaştırmak için sıkıştır, konumlandırmak için sürükle": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pinch to zoom, drag to reposition"
+    "Hibrit" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hybrid"
           }
         }
       }
     },
-    "Yakınımdakiler": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nearby"
-          }
-        }
-      }
-    },
-    "Yakınımdakiler, Parkur Ara ve herkese açık parkurlar yakında aktif olacak.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nearby, Search, and public segments will be active soon."
+    "Highest Altitude" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Highest Altitude"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Yakınımdakiler, Parkur Ara ve herkese açık parkurlar yakında aktif olacak."
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En Yüksek Rakım"
           }
         }
       }
     },
-    "Yakınında parkur bulunamadı": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No courses found nearby"
+    "Hız" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speed"
           }
         }
       }
     },
-    "Yakınında segment bulunamadı": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No segments found nearby"
+    "Hız değişkenliği yüksek" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "High speed variability"
           }
         }
       }
     },
-    "Yakıt": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fuel"
+    "İlk sen gönder, liderlik tablosunu başlat." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Be the first to submit, start the leaderboard."
           }
         }
       }
     },
-    "Yalnızca uygulama kullanılırken": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Only while using the app"
-          }
-        }
-      }
-    },
-    "Yeni Crew Oluştur": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Create New Crew"
-          }
-        }
-      }
-    },
-    "Yeni Rozet": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "New Badge"
+    "İlk Sürüş" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "First Drive"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Yeni Rozet"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İlk Sürüş"
           }
         }
       }
     },
-    "Yok": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "None"
+    "İlk sürüşünü başlat, rotanı burada gör." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start your first drive, see your route here."
           }
         }
       }
     },
-    "Yıl": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Year"
-          }
-        }
-      }
-    },
-    "Zirve %lld km/h": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Peak %lld km/h"
-          }
-        }
-      }
-    },
-    "km/h": {},
-    "sağdan dön": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "turn right"
-          }
-        }
-      }
-    },
-    "soldan dön": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "turn left"
-          }
-        }
-      }
-    },
-    "· %@": {},
-    "Çevrimiçi Özellik": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Online Feature"
+    "İlk sürüşünü kaydettin" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You recorded your first drive"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Çevrimiçi Özellik"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İlk sürüşünü kaydettin"
           }
         }
       }
     },
-    "Çevrimiçi özellikler yakında aktif olacak.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Online features will be active soon."
+    "İngilizce" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "English"
+          }
+        }
+      }
+    },
+    "İşlem tamamlanamadı. Bağlantını kontrol edip tekrar dene." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't complete the action. Check your connection and try again."
+          }
+        }
+      }
+    },
+    "Kalkışlar ve virajlar kontrollü" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controlled starts and turns"
+          }
+        }
+      }
+    },
+    "Kapat" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close"
+          }
+        }
+      }
+    },
+    "Katılmak için bu kodu okutsun" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Have them scan this code to join"
+          }
+        }
+      }
+    },
+    "Kaydedilmiş bir sürüşten rota oluştur, sonra aynı rotayı tekrar sürmek için kullan." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create a route from a saved drive, then use it to drive the same route again."
+          }
+        }
+      }
+    },
+    "Kaydet" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save"
+          }
+        }
+      }
+    },
+    "Kilometre" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kilometers"
+          }
+        }
+      }
+    },
+    "Kısıtlı" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restricted"
+          }
+        }
+      }
+    },
+    "km/h" : {
+
+    },
+    "Konum İzni" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Location Permission"
+          }
+        }
+      }
+    },
+    "Konum İzni Gerekli" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Location Permission Required"
+          }
+        }
+      }
+    },
+    "Konumu Etkinleştir" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enable Location"
+          }
+        }
+      }
+    },
+    "Kullan" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use"
+          }
+        }
+      }
+    },
+    "Kurucu sensin" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You're the creator"
+          }
+        }
+      }
+    },
+    "Kurucu: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Creator: %@"
+          }
+        }
+      }
+    },
+    "Liderlik" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leaderboard"
+          }
+        }
+      }
+    },
+    "Liderlik Tablosu" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leaderboard"
+          }
+        }
+      }
+    },
+    "Liderlik tablosu yüklenemedi. iCloud'a giriş yaptığından emin ol." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't load the leaderboard. Make sure you're signed into iCloud."
+          }
+        }
+      }
+    },
+    "Liderlik tablosunda görünecek bir isim seç" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose a name to show on the leaderboard"
+          }
+        }
+      }
+    },
+    "Liderlik tablosunu kullanmak için cihazında iCloud hesabına giriş yapmalısın." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You need to be signed into iCloud on this device to use the leaderboard."
+          }
+        }
+      }
+    },
+    "Lowest Altitude" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lowest Altitude"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Çevrimiçi özellikler yakında aktif olacak."
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En Düşük Rakım"
           }
         }
       }
     },
-    "Önce bir sürüş kaydet, sonra ondan bir rota oluşturabilirsin.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Save a drive first, then you can create a route from it."
-          }
-        }
-      }
-    },
-    "Örn. Yakıt Molası": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "E.g. Fuel Stop"
-          }
-        }
-      }
-    },
-    "Üye çıkarılamadı.": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Couldn't remove the member."
-          }
-        }
-      }
-    },
-    "Üyeler": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Members"
-          }
-        }
-      }
-    },
-    "Üyesin": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You're a member"
-          }
-        }
-      }
-    },
-    "örn. Cuma Konvoyu": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "e.g. Friday Convoy"
-          }
-        }
-      }
-    },
-    "örn. Sahil Yolu Düz": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "e.g. Coastal Straight"
-          }
-        }
-      }
-    },
-    "örn. turbo_mert": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "e.g. turbo_mert"
-          }
-        }
-      }
-    },
-    "İlk Sürüş": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "First Drive"
+    "Maraton" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marathon"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "İlk Sürüş"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maraton"
           }
         }
       }
     },
-    "İlk sen gönder, liderlik tablosunu başlat.": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Be the first to submit, start the leaderboard."
+    "Marka" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Make"
           }
         }
       }
     },
-    "İlk sürüşünü başlat, rotanı burada gör.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Start your first drive, see your route here."
-          }
-        }
-      }
-    },
-    "İlk sürüşünü kaydettin": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You recorded your first drive"
+    "Max Acceleration" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Max Acceleration"
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "İlk sürüşünü kaydettin"
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maks İvme"
           }
         }
       }
     },
-    "İngilizce": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "English"
+    "Max Braking" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Max Braking"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maks Fren"
           }
         }
       }
     },
-    "İşlem tamamlanamadı. Bağlantını kontrol edip tekrar dene.": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Couldn't complete the action. Check your connection and try again."
+    "Mesafe" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Distance"
           }
         }
       }
     },
-    "Şimdi ": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Now "
+    "Mesafe Birimi" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Distance Unit"
           }
         }
       }
     },
-    "• %@": {}
+    "Mil" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Miles"
+          }
+        }
+      }
+    },
+    "Model" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model"
+          }
+        }
+      }
+    },
+    "Moving Time" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moving Time"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hareket Süresi"
+          }
+        }
+      }
+    },
+    "Number of Stops" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Number of Stops"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duraklama Sayısı"
+          }
+        }
+      }
+    },
+    "Oluştur ve Davet Et" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create and Invite"
+          }
+        }
+      }
+    },
+    "Oluşturan: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Created by: %@"
+          }
+        }
+      }
+    },
+    "Oluşturduklarım" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Created by Me"
+          }
+        }
+      }
+    },
+    "Önce bir sürüş kaydet, sonra ondan bir rota oluşturabilirsin." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save a drive first, then you can create a route from it."
+          }
+        }
+      }
+    },
+    "örn. Cuma Konvoyu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "e.g. Friday Convoy"
+          }
+        }
+      }
+    },
+    "örn. Sahil Yolu Düz" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "e.g. Coastal Straight"
+          }
+        }
+      }
+    },
+    "örn. turbo_mert" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "e.g. turbo_mert"
+          }
+        }
+      }
+    },
+    "Örn. Yakıt Molası" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "E.g. Fuel Stop"
+          }
+        }
+      }
+    },
+    "Ort. %lld km/h · Zirve %lld km/h" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avg. %lld km/h · Peak %lld km/h"
+          }
+        }
+      }
+    },
+    "Ortalama hız dengeli" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Consistent average speed"
+          }
+        }
+      }
+    },
+    "Oy verilemedi. Bağlantını kontrol edip tekrar dene." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't vote. Check your connection and try again."
+          }
+        }
+      }
+    },
+    "Parkur" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Route"
+          }
+        }
+      }
+    },
+    "Parkur adı" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Course name"
+          }
+        }
+      }
+    },
+    "Parkur Adı" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Course Name"
+          }
+        }
+      }
+    },
+    "Parkur Ara" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search Courses"
+          }
+        }
+      }
+    },
+    "Parkur Eşleşmesi" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Course Match"
+          }
+        }
+      }
+    },
+    "Parkur Oluştur" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create Course"
+          }
+        }
+      }
+    },
+    "Parkur yüklenemedi." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't load the course."
+          }
+        }
+      }
+    },
+    "Parkurunu görüntüle" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View your course"
+          }
+        }
+      }
+    },
+    "Paylaş" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share"
+          }
+        }
+      }
+    },
+    "Reddedildi" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Denied"
+          }
+        }
+      }
+    },
+    "Rota Hazır" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Route Ready"
+          }
+        }
+      }
+    },
+    "Rotalar" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Routes"
+          }
+        }
+      }
+    },
+    "Rotalarım" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "My Routes"
+          }
+        }
+      }
+    },
+    "Rotayı tamamladın!" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You completed the route!"
+          }
+        }
+      }
+    },
+    "Rotayı tamamladın! Süren: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You completed the route! Your time: %@"
+          }
+        }
+      }
+    },
+    "Rotayı tamamladın! Süren: %@ — %@'den %@ geride" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You completed the route! Your time: %@ — %@ behind %@"
+          }
+        }
+      }
+    },
+    "Rotayı tamamladın! Süren: %@ — %@'i %@ farkla geçtin!" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You completed the route! Your time: %@ — you beat %@ by %@!"
+          }
+        }
+      }
+    },
+    "sağdan dön" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "turn right"
+          }
+        }
+      }
+    },
+    "Segment adı" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Segment name"
+          }
+        }
+      }
+    },
+    "Segment Adı" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Segment Name"
+          }
+        }
+      }
+    },
+    "Segment Ara" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search Segments"
+          }
+        }
+      }
+    },
+    "Segment Eşleşmesi" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Segment Match"
+          }
+        }
+      }
+    },
+    "Segment Oluştur" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create Segment"
+          }
+        }
+      }
+    },
+    "Segment oluşturmak için cihazında iCloud hesabına giriş yapmalısın." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You need to be signed into iCloud on your device to create a segment."
+          }
+        }
+      }
+    },
+    "Segment oluşturulamadı. Bağlantını kontrol edip tekrar dene." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't create the segment. Check your connection and try again."
+          }
+        }
+      }
+    },
+    "Segmentini görüntüle" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View your segment"
+          }
+        }
+      }
+    },
+    "SESSION COMPLETE" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SESSION COMPLETE"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OTURUM TAMAMLANDI"
+          }
+        }
+      }
+    },
+    "Sil" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete"
+          }
+        }
+      }
+    },
+    "Silinemedi." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't delete it."
+          }
+        }
+      }
+    },
+    "Şimdi " : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Now "
+          }
+        }
+      }
+    },
+    "Sistem" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System"
+          }
+        }
+      }
+    },
+    "Sık duruşlar yakıt verimliliğini düşürüyor" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frequent stops reduce fuel efficiency"
+          }
+        }
+      }
+    },
+    "Skor için yeterli veri yok" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not enough data for a score"
+          }
+        }
+      }
+    },
+    "soldan dön" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "turn left"
+          }
+        }
+      }
+    },
+    "Son Sürüşler" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recent Drives"
+          }
+        }
+      }
+    },
+    "Sonuç bulunamadı" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No results found"
+          }
+        }
+      }
+    },
+    "Start Time" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start Time"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Başlangıç Saati"
+          }
+        }
+      }
+    },
+    "Started" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Started"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Başladı"
+          }
+        }
+      }
+    },
+    "Steepest Climb" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steepest Climb"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En Dik Yokuş"
+          }
+        }
+      }
+    },
+    "Stop" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duraklama"
+          }
+        }
+      }
+    },
+    "Stopped Time" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stopped Time"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duraklama Süresi"
+          }
+        }
+      }
+    },
+    "Süre" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time"
+          }
+        }
+      }
+    },
+    "Sürüm" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version"
+          }
+        }
+      }
+    },
+    "Sürüş Kaydedilemedi" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drive Not Saved"
+          }
+        }
+      }
+    },
+    "Sürüşe Başla" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start Drive"
+          }
+        }
+      }
+    },
+    "Sürüşe hazır" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ready to drive"
+          }
+        }
+      }
+    },
+    "Sürüşlerim" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "My Drives"
+          }
+        }
+      }
+    },
+    "Sürüşten Rota Oluştur" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create Route From Drive"
+          }
+        }
+      }
+    },
+    "Sürüşü Bitir" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "End Drive"
+          }
+        }
+      }
+    },
+    "Sürüşünü kaydedebilmek için Ayarlar'dan konum iznini etkinleştir." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn on location permission in Settings to record your drive."
+          }
+        }
+      }
+    },
+    "Tamam" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        }
+      }
+    },
+    "Tek bir sürüşte 50 km'yi geçtin" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You passed 50 km in a single drive"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tek bir sürüşte 50 km'yi geçtin"
+          }
+        }
+      }
+    },
+    "Timeline" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Timeline"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zaman Çizelgesi"
+          }
+        }
+      }
+    },
+    "Top Speed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Top Speed"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maks Hız"
+          }
+        }
+      }
+    },
+    "TOP SPEED" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TOP SPEED"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MAKS HIZ"
+          }
+        }
+      }
+    },
+    "Toplamda 100 km yol kat ettin" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You've driven 100 km total"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toplamda 100 km yol kat ettin"
+          }
+        }
+      }
+    },
+    "Toplamda 500 km yol kat ettin" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You've driven 500 km total"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toplamda 500 km yol kat ettin"
+          }
+        }
+      }
+    },
+    "Toplamda 1000 km yol kat ettin" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You've driven 1000 km total"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toplamda 1000 km yol kat ettin"
+          }
+        }
+      }
+    },
+    "Trackline" : {
+
+    },
+    "TRACKLINE" : {
+
+    },
+    "Trackline yolculuğunu kaydeder, pist haritası gibi çizer." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trackline records your journey, drawing it like a track map."
+          }
+        }
+      }
+    },
+    "Türkçe" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turkish"
+          }
+        }
+      }
+    },
+    "Üye çıkarılamadı." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't remove the member."
+          }
+        }
+      }
+    },
+    "Üyeler" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Members"
+          }
+        }
+      }
+    },
+    "Üyesin" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You're a member"
+          }
+        }
+      }
+    },
+    "Vazgeç" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel"
+          }
+        }
+      }
+    },
+    "WhatsApp'tan Gönder" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send via WhatsApp"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WhatsApp'tan Gönder"
+          }
+        }
+      }
+    },
+    "Yakınımdakiler" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nearby"
+          }
+        }
+      }
+    },
+    "Yakınımdakiler, Parkur Ara ve herkese açık parkurlar yakında aktif olacak." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nearby, Search, and public segments will be active soon."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yakınımdakiler, Parkur Ara ve herkese açık parkurlar yakında aktif olacak."
+          }
+        }
+      }
+    },
+    "Yakınında parkur bulunamadı" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No courses found nearby"
+          }
+        }
+      }
+    },
+    "Yakınında segment bulunamadı" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No segments found nearby"
+          }
+        }
+      }
+    },
+    "Yakınlaştırmak için sıkıştır, konumlandırmak için sürükle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pinch to zoom, drag to reposition"
+          }
+        }
+      }
+    },
+    "Yakıt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fuel"
+          }
+        }
+      }
+    },
+    "Yalnızca uygulama kullanılırken" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only while using the app"
+          }
+        }
+      }
+    },
+    "Yeni Crew Oluştur" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create New Crew"
+          }
+        }
+      }
+    },
+    "Yeni Rozet" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Badge"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yeni Rozet"
+          }
+        }
+      }
+    },
+    "Yıl" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Year"
+          }
+        }
+      }
+    },
+    "Yok" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "None"
+          }
+        }
+      }
+    },
+    "Zirve %lld km/h" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Peak %lld km/h"
+          }
+        }
+      }
+    }
   },
-  "version": "1.0"
+  "version" : "1.0"
 }

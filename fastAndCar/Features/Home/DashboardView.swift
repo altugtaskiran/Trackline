@@ -63,20 +63,26 @@ struct DashboardView: View {
                     ghostRouteCoordinates: ghostRouteCoordinates
                 )
                 .ignoresSafeArea()
-            }
 
-            LinearGradient(
-                colors: [
-                    AppColor.background.opacity(0.55),
-                    AppColor.background.opacity(0.1),
-                    AppColor.background.opacity(0.6),
-                    AppColor.background.opacity(0.8),
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
-            .allowsHitTesting(false)
+                // Lighter than before — the flat map underneath is already
+                // faint (LiveRouteMapView renders it at 0.22 opacity), so
+                // the old scrim was stacking on top of that and reading as
+                // just plain dark. Satellite mode (above) stays scrim-free
+                // entirely — its imagery has enough contrast on its own for
+                // the overlaid text/buttons.
+                LinearGradient(
+                    colors: [
+                        AppColor.background.opacity(0.25),
+                        AppColor.background.opacity(0.05),
+                        AppColor.background.opacity(0.35),
+                        AppColor.background.opacity(0.55),
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
+            }
 
             VStack {
                 if isRecording {
