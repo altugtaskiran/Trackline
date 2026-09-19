@@ -20,15 +20,28 @@ struct RoutesTabView: View {
         ZStack {
             AppColor.background.ignoresSafeArea()
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    if localRoutesStore.routes.isEmpty {
+            VStack(spacing: 0) {
+                Button {
+                    showsTripPicker = true
+                } label: {
+                    Label("Sürüşten Rota Oluştur", systemImage: "plus.circle.fill")
+                }
+                .buttonStyle(.glass(.accent))
+                .padding(.horizontal, 20)
+                .padding(.top, 12)
+                .padding(.bottom, 8)
+
+                if localRoutesStore.routes.isEmpty {
+                    ScrollView {
                         emptyState
-                    } else {
-                        VStack(alignment: .leading, spacing: 10) {
-                            Text("Rotalarım")
-                                .font(AppFont.headline)
-                                .foregroundStyle(AppColor.textPrimary)
+                            .padding(20)
+                    }
+                } else {
+                    // List, not ScrollView+VStack — .swipeActions only
+                    // attaches to List rows, and a route needs to be
+                    // deletable from here.
+                    List {
+                        Section {
                             ForEach(localRoutesStore.routes) { segment in
                                 // Pushed onto AppRootView's single shared
                                 // NavigationStack (via .navigationDestination
@@ -37,22 +50,42 @@ struct RoutesTabView: View {
                                 // nested stack's push isn't reliably torn
                                 // down just because this tab's own
                                 // `selectedTab` switches away from it.
-                                NavigationLink(value: segment) {
-                                    SegmentRow(name: segment.name, subtitle: String(format: "%.1f km", segment.lengthMeters / 1000))
+                                // SegmentRow already draws its own trailing
+                                // chevron (shared with the non-List contexts
+                                // it's also used in) — a visible
+                                // NavigationLink(value:) { label } here would
+                                // stack List's automatic disclosure
+                                // indicator on top of that second one. The
+                                // link is kept but made invisible/zero-size
+                                // so SegmentRow's own chevron is the only one
+                                // shown, while the whole row stays tappable.
+                                SegmentRow(name: segment.name, subtitle: String(format: "%.1f km", segment.lengthMeters / 1000))
+                                    .background(
+                                        NavigationLink(value: segment) { EmptyView() }
+                                            .opacity(0)
+                                    )
+                                .listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 10, trailing: 20))
+                                .listRowBackground(Color.clear)
+                                .listRowSeparator(.hidden)
+                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                    Button(role: .destructive) {
+                                        withAnimation { localRoutesStore.remove(segment.id) }
+                                    } label: {
+                                        Label("Sil", systemImage: "trash")
+                                    }
                                 }
-                                .buttonStyle(.plain)
                             }
+                        } header: {
+                            Text("Rotalarım")
+                                .font(AppFont.headline)
+                                .foregroundStyle(AppColor.textPrimary)
+                                .textCase(nil)
+                                .padding(.leading, 20)
                         }
                     }
-
-                    Button {
-                        showsTripPicker = true
-                    } label: {
-                        Label("Sürüşten Rota Oluştur", systemImage: "plus.circle.fill")
-                    }
-                    .buttonStyle(.glass(.accent))
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
                 }
-                .padding(20)
             }
         }
         .navigationTitle("Rotalar")

@@ -2,6 +2,22 @@
   "sourceLanguage": "tr",
   "strings": {
     "": {},
+    "\"%@\" crew'ına katıl: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Join \"%@\": %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\"%@\" crew'ına katıl: %@"
+          }
+        }
+      }
+    },
     "\"%@\" crew'ına katıldın.": {
       "extractionState": "stale",
       "localizations": {
@@ -25,6 +41,7 @@
       }
     },
     "\"%@\" rozetini kazandın!": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -85,6 +102,7 @@
       }
     },
     "%d / %d rozet": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -146,6 +164,7 @@
     },
     "/100": {},
     "7 Gün Üst Üste": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -162,6 +181,7 @@
       }
     },
     "7 gün art arda sürüş yaptın": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -784,6 +804,16 @@
         }
       }
     },
+    "Diğer Yollarla Paylaş": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share Another Way"
+          }
+        }
+      }
+    },
     "Drive Time": {
       "localizations": {
         "en": {
@@ -881,6 +911,7 @@
       }
     },
     "En az 1 km'lik bir sürüşü hiç ani fren yapmadan tamamladın": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -940,6 +971,7 @@
       }
     },
     "Fren Ustası": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1002,6 +1034,7 @@
       }
     },
     "Gece Kuşu": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1018,6 +1051,7 @@
       }
     },
     "Gece yarısı ile 05:00 arasında bir sürüş yaptın": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1210,6 +1244,22 @@
         }
       }
     },
+    "Herkese Açık Liderlik Tablosuna Ekle": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to Public Leaderboard"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Herkese Açık Liderlik Tablosuna Ekle"
+          }
+        }
+      }
+    },
     "Hibrit": {
       "extractionState": "stale",
       "localizations": {
@@ -1275,6 +1325,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Close"
+          }
+        }
+      }
+    },
+    "Katılmak için bu kodu okutsun": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Have them scan this code to join"
           }
         }
       }
@@ -1451,6 +1511,7 @@
       }
     },
     "Maraton": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1539,7 +1600,16 @@
         }
       }
     },
-    "Model": {},
+    "Model": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Model"
+          }
+        }
+      }
+    },
     "Moving Time": {
       "localizations": {
         "en": {
@@ -1749,7 +1819,16 @@
         }
       }
     },
-    "Rotalar": {},
+    "Rotalar": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Routes"
+          }
+        }
+      }
+    },
     "Rotalarım": {
       "localizations": {
         "en": {
@@ -2183,6 +2262,7 @@
       }
     },
     "Tek bir sürüşte 50 km'yi geçtin": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2231,6 +2311,7 @@
       }
     },
     "Toplamda 100 km yol kat ettin": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2247,6 +2328,7 @@
       }
     },
     "Toplamda 1000 km yol kat ettin": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2263,6 +2345,7 @@
       }
     },
     "Toplamda 500 km yol kat ettin": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2310,6 +2393,22 @@
         }
       }
     },
+    "WhatsApp'tan Gönder": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send via WhatsApp"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WhatsApp'tan Gönder"
+          }
+        }
+      }
+    },
     "Yakınlaştırmak için sıkıştır, konumlandırmak için sürükle": {
       "localizations": {
         "en": {
@@ -2326,6 +2425,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nearby"
+          }
+        }
+      }
+    },
+    "Yakınımdakiler, Parkur Ara ve herkese açık parkurlar yakında aktif olacak.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nearby, Search, and public segments will be active soon."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yakınımdakiler, Parkur Ara ve herkese açık parkurlar yakında aktif olacak."
           }
         }
       }
@@ -2383,6 +2498,7 @@
       }
     },
     "Yeni Rozet": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2453,6 +2569,38 @@
       }
     },
     "· %@": {},
+    "Çevrimiçi Özellik": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Online Feature"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çevrimiçi Özellik"
+          }
+        }
+      }
+    },
+    "Çevrimiçi özellikler yakında aktif olacak.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Online features will be active soon."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çevrimiçi özellikler yakında aktif olacak."
+          }
+        }
+      }
+    },
     "Önce bir sürüş kaydet, sonra ondan bir rota oluşturabilirsin.": {
       "localizations": {
         "en": {
@@ -2536,6 +2684,7 @@
       }
     },
     "İlk Sürüş": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2573,6 +2722,7 @@
       }
     },
     "İlk sürüşünü kaydettin": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {

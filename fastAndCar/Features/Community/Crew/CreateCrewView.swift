@@ -46,7 +46,11 @@ struct CreateCrewView: View {
                         }
                     }
                     .buttonStyle(.glass(.accent))
-                    .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || isCreating)
+                    .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || isCreating || !FeatureFlags.crewEnabled)
+
+                    if !FeatureFlags.crewEnabled {
+                        FeatureUnavailableCaption()
+                    }
 
                     Spacer()
                 }

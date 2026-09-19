@@ -5,6 +5,7 @@
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>instagram-stories</string>
+		<string>whatsapp</string>
 	</array>
 	<key>UIBackgroundModes</key>
 	<array>

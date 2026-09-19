@@ -56,7 +56,9 @@ struct CrewDetailView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     header
 
-                    if isLoading {
+                    if !FeatureFlags.crewEnabled {
+                        FeatureUnavailableView()
+                    } else if isLoading {
                         ProgressView().tint(AppColor.accent).padding(.top, 40)
                     } else {
                         memberRoster
@@ -78,6 +80,7 @@ struct CrewDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .preferredColorScheme(.dark)
         .task {
+            guard FeatureFlags.crewEnabled else { return }
             myUserId = try? await CloudKitCrewService.currentUserId()
             await load()
         }
@@ -113,8 +116,9 @@ struct CrewDetailView: View {
                         Task { await presentInvite() }
                     } label: {
                         Image(systemName: "person.badge.plus")
-                            .foregroundStyle(AppColor.accent)
+                            .foregroundStyle(FeatureFlags.crewEnabled ? AppColor.accent : AppColor.textTertiary)
                     }
+                    .disabled(!FeatureFlags.crewEnabled)
                 }
             }
         }

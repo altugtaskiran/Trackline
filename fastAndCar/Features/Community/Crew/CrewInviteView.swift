@@ -30,6 +30,23 @@ struct CrewInviteView: View {
         return QRCodeGenerator.image(from: url.absoluteString)
     }
 
+    /// WhatsApp's own URL scheme takes prefilled message text directly —
+    /// unlike InstagramStoryActivity's image-sticker handoff (which needs
+    /// the pasteboard), no intermediate state to stash. Requires
+    /// "whatsapp" in LSApplicationQueriesSchemes (Config/Info.plist) for
+    /// canOpenURL to see the app is installed at all.
+    private var whatsAppURL: URL? {
+        guard let shareURL = share.url else { return nil }
+        let text = String(format: String.appLocalized("\"%@\" crew'ına katıl: %@"), crewName, shareURL.absoluteString)
+        guard let encoded = text.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else { return nil }
+        return URL(string: "whatsapp://send?text=\(encoded)")
+    }
+
+    private var canOpenWhatsApp: Bool {
+        guard let whatsAppURL else { return false }
+        return UIApplication.shared.canOpenURL(whatsAppURL)
+    }
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -68,12 +85,21 @@ struct CrewInviteView: View {
 
                     Spacer()
 
+                    if canOpenWhatsApp, let whatsAppURL {
+                        Button {
+                            UIApplication.shared.open(whatsAppURL)
+                        } label: {
+                            Label("WhatsApp'tan Gönder", systemImage: "message.fill")
+                        }
+                        .buttonStyle(.glass(.accent))
+                    }
+
                     Button {
                         showsSystemShare = true
                     } label: {
                         Label("Diğer Yollarla Paylaş", systemImage: "square.and.arrow.up")
                     }
-                    .buttonStyle(.glass(.accent))
+                    .buttonStyle(.glass(canOpenWhatsApp ? .neutral : .accent))
                 }
                 .padding(28)
             }

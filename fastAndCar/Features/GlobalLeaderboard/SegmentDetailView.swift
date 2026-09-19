@@ -72,8 +72,11 @@ struct SegmentDetailView: View {
                                         .foregroundStyle(AppColor.textSecondary)
                                 }
                             }
-                            .disabled(hasVoted || isVoting)
+                            .disabled(hasVoted || isVoting || !FeatureFlags.globalLeaderboardEnabled)
                         }
+                    }
+                    if !FeatureFlags.globalLeaderboardEnabled {
+                        FeatureUnavailableCaption()
                     }
 
                     Button {

@@ -29,6 +29,13 @@ struct GlobalLeaderboardListView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
+                    if !FeatureFlags.globalLeaderboardEnabled {
+                        FeatureUnavailableView(
+                            title: "Global Liderlik",
+                            message: "Yakınımdakiler, Parkur Ara ve herkese açık parkurlar yakında aktif olacak."
+                        )
+                    }
+
                     VStack(alignment: .leading, spacing: 10) {
                         Text("Yakınımdakiler")
                             .font(AppFont.headline)
@@ -194,6 +201,16 @@ struct SegmentDetailLoaderView: View {
         Group {
             if let segment {
                 SegmentDetailView(segment: segment, onFollowSegment: onFollowSegment)
+            } else if !FeatureFlags.globalLeaderboardEnabled {
+                // No local fallback for this one — this loader exists only
+                // to fetch a Segment CloudKit hasn't cached locally, so
+                // there's genuinely nothing to show without it. A calm
+                // empty state instead of a spinner that would otherwise
+                // never resolve, and no alert since nothing went wrong.
+                ZStack {
+                    AppColor.background.ignoresSafeArea()
+                    FeatureUnavailableView()
+                }
             } else {
                 ZStack {
                     AppColor.background.ignoresSafeArea()
@@ -216,7 +233,8 @@ struct SegmentDetailLoaderView: View {
         do {
             segment = try await CloudKitSegmentService.fetchSegment(id: segmentId)
         } catch SegmentServiceError.featureNotAvailable {
-            errorMessage = "Bu özellik yakında aktif olacak."
+            // Guarded above — shouldn't reach here, but keep it silent for
+            // the same reason rather than surfacing an alert.
         } catch {
             errorMessage = "Parkur yüklenemedi."
         }

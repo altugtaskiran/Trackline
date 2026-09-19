@@ -23,6 +23,10 @@ struct CreateSegmentFlowView: View {
     @State private var isSubmitting = false
     @State private var errorMessage: String?
     @State private var showsNicknamePrompt = false
+    // Off by default — publishing to the public Global Leaderboard used to
+    // happen automatically on every locally created route, which read as
+    // surprising/unwanted. Now it's the driver's own explicit choice.
+    @State private var publishesGlobally = false
 
     // `trip.samples` decodes the whole recorded route from its stored JSON
     // blob on every access — fine for a one-off read, but this view's two
@@ -110,6 +114,13 @@ struct CreateSegmentFlowView: View {
                             }
                         }
 
+                        GlassCard {
+                            Toggle("Herkese Açık Liderlik Tablosuna Ekle", isOn: $publishesGlobally)
+                                .font(AppFont.headline)
+                                .foregroundStyle(AppColor.textPrimary)
+                                .tint(AppColor.accent)
+                        }
+
                         Button {
                             submit()
                         } label: {
@@ -176,12 +187,18 @@ struct CreateSegmentFlowView: View {
             }
 
             localRoutesStore.add(segment)
-            myCreatedSegmentsStore.record(id: segment.id, name: segment.name)
 
-            if let userId = try? await CloudKitSegmentService.currentUserId() {
-                var publicSegment = segment
-                publicSegment.creatorId = userId
-                try? await CloudKitSegmentService.createSegment(publicSegment)
+            // Only touch the public Global Leaderboard (and its local
+            // "Oluşturduklarım" cache) when the driver explicitly opted in
+            // above — otherwise this route stays exactly what it looked
+            // like it'd be: a private local route, nothing sent anywhere.
+            if publishesGlobally {
+                myCreatedSegmentsStore.record(id: segment.id, name: segment.name)
+                if let userId = try? await CloudKitSegmentService.currentUserId() {
+                    var publicSegment = segment
+                    publicSegment.creatorId = userId
+                    try? await CloudKitSegmentService.createSegment(publicSegment)
+                }
             }
 
             dismiss()
