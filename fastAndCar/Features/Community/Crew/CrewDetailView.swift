@@ -32,6 +32,8 @@ struct CrewDetailView: View {
     @State private var pendingShare: (share: CKShareBox, container: CKContainerBox)?
     @State private var myUserId: String?
     @State private var isLeaving = false
+    @AppStorage("distanceUnit") private var distanceUnitRaw = DistanceUnit.systemDefault.rawValue
+    private var distanceUnit: DistanceUnit { DistanceUnit(rawValue: distanceUnitRaw) ?? .systemDefault }
 
     private var rankings: [MemberRanking] {
         let grouped = Dictionary(grouping: summaries, by: \.userId)
@@ -165,7 +167,7 @@ struct CrewDetailView: View {
                             Text(ranking.nickname)
                                 .font(AppFont.headline)
                                 .foregroundStyle(AppColor.textPrimary)
-                            Text("Zirve \(Int(ranking.bestTopSpeedKph)) km/h")
+                            Text("Zirve \(distanceUnit.speedString(kph: ranking.bestTopSpeedKph))")
                                 .font(AppFont.caption)
                                 .foregroundStyle(AppColor.textSecondary)
                         }

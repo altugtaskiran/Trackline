@@ -22,6 +22,8 @@ struct GlobalLeaderboardListView: View {
     @State private var isLoadingNearby = false
     @State private var didLoadNearby = false
     @State private var errorMessage: String?
+    @AppStorage("distanceUnit") private var distanceUnitRaw = DistanceUnit.systemDefault.rawValue
+    private var distanceUnit: DistanceUnit { DistanceUnit(rawValue: distanceUnitRaw) ?? .systemDefault }
 
     var body: some View {
         ZStack {
@@ -57,7 +59,7 @@ struct GlobalLeaderboardListView: View {
                                 // down just because Liderlik's own tab
                                 // switches away from it.
                                 NavigationLink(value: segment) {
-                                    SegmentRow(name: segment.name, subtitle: String(format: "%.1f km", segment.lengthMeters / 1000))
+                                    SegmentRow(name: segment.name, subtitle: distanceUnit.distanceString(meters: segment.lengthMeters))
                                 }
                                 .buttonStyle(.plain)
                             }
@@ -92,7 +94,7 @@ struct GlobalLeaderboardListView: View {
                         } else {
                             ForEach(searchResults) { segment in
                                 NavigationLink(value: segment) {
-                                    SegmentRow(name: segment.name, subtitle: String(format: "%.1f km", segment.lengthMeters / 1000))
+                                    SegmentRow(name: segment.name, subtitle: distanceUnit.distanceString(meters: segment.lengthMeters))
                                 }
                                 .buttonStyle(.plain)
                             }

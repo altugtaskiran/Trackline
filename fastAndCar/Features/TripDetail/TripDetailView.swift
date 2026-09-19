@@ -13,6 +13,8 @@ struct TripDetailView: View {
     @State private var showsShareSheet = false
     @State private var showsCreateSegment = false
     @Environment(\.locale) private var locale
+    @AppStorage("distanceUnit") private var distanceUnitRaw = DistanceUnit.systemDefault.rawValue
+    private var distanceUnit: DistanceUnit { DistanceUnit(rawValue: distanceUnitRaw) ?? .systemDefault }
 
     init(trip: Trip) {
         _viewModel = State(initialValue: TripDetailViewModel(trip: trip))
@@ -132,7 +134,7 @@ struct TripDetailView: View {
             Text(sample.timestamp.formatted(Date.FormatStyle(date: .omitted, time: .standard).locale(locale)))
                 .font(AppFont.caption.bold())
                 .foregroundStyle(AppColor.textPrimary)
-            Text(String(format: "%.0f km/h", sample.speedKph))
+            Text(distanceUnit.speedString(kph: sample.speedKph))
                 .font(AppFont.caption.bold())
                 .foregroundStyle(AppColor.accent)
         }

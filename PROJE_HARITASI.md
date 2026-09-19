@@ -10,8 +10,10 @@ eklenince.
 ```
 fastAndCarApp.swift          → uygulamanın girişi (WindowGroup, PersistenceController)
   └─ AppRootView.swift       → tek paylaşılan NavigationStack; sırayla:
-       ├─ SplashView         → her açılışta kısa marka animasyonu (rota çizgisi + isim)
-       ├─ OnboardingView     → sadece ilk kurulumda
+       ├─ SplashView         → sadece konum izni zaten verilmişse gösterilir
+       ├─ OnboardingView     → izin henüz verilmemişse (ilk kurulum) SplashView hiç
+       │                       gösterilmeden direkt buraya geçilir — ikisinin
+       │                       animasyonu üst üste binmesin diye (AppRootView.task)
        └─ MainTabBar + 5 sekme (AppTab.swift)
 ```
 
@@ -39,9 +41,9 @@ Bir sürüşe tıklayınca → **Trip Detail** (aşağıda, sekme dışı ekranl
 ### 🗺️ Rotalar (`.routes`)
 | Dosya | Tür | Ne işe yarar |
 |---|---|---|
-| `Features/Routes/RoutesTabView.swift` | **Ekran** | Kendi kaydettiğin sürüşlerden oluşturduğun rotalar ("Rotalarım") |
+| `Features/Routes/RoutesTabView.swift` | **Ekran** | Kendi kaydettiğin sürüşlerden oluşturduğun rotalar ("Rotalarım") — `List` + swipe-to-delete; silince yereldeki gibi (varsa) Global'deki "Oluşturduklarım" kaydı ve CloudKit segmenti de kaldırılıyor |
 | `Features/Routes/PickTripForRouteView.swift` | Sheet | "Sürüşten Rota Oluştur" → hangi sürüş, adım 1 |
-| `Features/GlobalLeaderboard/CreateSegmentFlowView.swift` | Sheet | Adım 2: seçilen sürüşün başlangıç/bitiş aralığını seçip "Parkur" olarak kaydet |
+| `Features/GlobalLeaderboard/CreateSegmentFlowView.swift` | Sheet | Adım 2: başlangıç/bitiş aralığı + isim + **"Herkese Açık Liderlik Tablosuna Ekle" toggle'ı (varsayılan kapalı — opt-in, otomatik yayınlamıyor artık)** |
 | `Core/Leaderboard/LocalRoutesStore.swift` | Servis (yerel) | Bu sekmenin gerçek verisi — CloudKit kapalıyken bile çalışsın diye tamamen cihazda tutuluyor |
 
 Not: Burada segment **arama** yok — "benim rotalarım" burası, "herkesin
@@ -115,6 +117,7 @@ tripViewModel.samples.last?.id)` bloğu, `MapCamera(heading:)`).
 | `Core/Analytics/` | `TripStatsCalculator` (ham örneklerden istatistik — irtifa kazanım/kayıp, en dik eğim, ani fren/hızlanma/viraj sayaçları dahil), `DrivingScoreCalculator` (sürüş skoru, sayaçları artık `TripStats`'tan okuyor) |
 | `Core/Achievements/` | `Achievement` + `AchievementCatalog` (sabit rozet listesi), `AchievementEvaluator` (Trip geçmişi üzerinde saf fonksiyon), `NotifiedAchievementsStore` (hangi rozetler için bildirim gönderildi) — tamamen yerel, CloudKit'e bağımlı değil |
 | `Core/QRCodeGenerator.swift` | Crew davet linkinden QR kod görseli üretir (CoreImage) |
+| `Core/DistanceUnit.swift` | Kilometre/Mil tercihi + format fonksiyonları (`distanceString`, `speedString`, `altitudeString`) — Ayarlar'daki Picker ile paylaşılan `@AppStorage("distanceUnit")` anahtarı, varsayılan `Locale`'e göre |
 | `Core/Geometry/` | `RouteProjector`, `GeoMapProjector`, `FittedRegion`, `GeoMath` — GPS koordinatlarını ekrana/haritaya doğru şekilde oturtan matematik |
 | `Core/Leaderboard/` | Parkur (Segment) sistemi: `Segment`, `SegmentEffort`, `SegmentMatcher`, `SegmentAutoMatcher`, `CloudKitSegmentService`, `Geohash`, `AntiCheat`, `RouteGuidance` + `RouteGuidanceTracker` (basit metin tabanlı yön talimatları), `LocalRoutesStore` (Rotalar sekmesinin yerel verisi), `MyCreatedSegmentsStore`, `NicknameStore`, `RoutePolylinePoint` |
 | `Core/Crew/` | `Crew`, `CrewMembership`, `CrewDriveSummary`, `CrewZoneRef`, `MyCrewsStore`, `CloudKitCrewService` (CKShare tabanlı grup sistemi) |
@@ -127,7 +130,8 @@ tripViewModel.samples.last?.id)` bloğu, `MapCamera(heading:)`).
 `Colors.swift` (palet + hız→renk ısı haritası), `GlassCard.swift` (cam
 kart), `PrimaryGlassButton.swift` (tek buton dili), `Typography.swift`,
 `Haptics.swift`, `RouteMotifShape.swift` (onboarding/splash'teki dekoratif
-rota çizgisi).
+rota çizgisi), `FeatureUnavailableView.swift` (CloudKit kapalıyken
+gösterilen ortak "yakında aktif olacak" boş-durum/uyarı bileşeni).
 
 ## 6. Şu an kapalı ama kodu tamamlanmış özellikler
 
@@ -137,7 +141,29 @@ Developer Program hesabı** olmadan CloudKit/Push entitlement alınamıyor.
 Hesap açılınca bu iki flag `true` yapılıp Liderlik sekmesi tam
 aktif olacak.
 
-## 7. Test/debug kısayolları
+## 7. Bilinen eksikler / App Store hazırlığı
+
+- ✅ **Mesafe birimi (Kilometre/Mil) artık işlevsel** — `Core/DistanceUnit.swift`
+  (taşındı + genişletildi: `distanceString`/`speedString`/`altitudeString`).
+  Tüm sürüş istatistikleri (StatTileGrid, TripRowCard, PlaybackBar,
+  ShareCardRenderer, DashboardView canlı hız, Segment/Crew ekranları — 13
+  dosya) artık bu tercihi okuyor. Varsayılan `Locale.current.measurementSystem`'a
+  göre otomatik seçiliyor (ABD → mil). **Bilerek dokunulmayanlar:** Garaj'daki
+  araç kilometresi (`Car.mileageKm` — elle girilen odometre değeri, farklı bir
+  tasarım kararı gerektiriyor) ve rozet başlıklarındaki sabit "100 km" gibi
+  isimler (`Achievement.swift` — eşik değerleri metre cinsinden aynı kalıyor,
+  sadece görünen isim hâlâ km diyor).
+- `fastAndCar/PrivacyInfo.xcprivacy` eklendi (UserDefaults için
+  `NSPrivacyAccessedAPICategoryUserDefaults` / `CA92.1` beyanı) —
+  App Store submission için zorunluydu, tamam.
+- App Icon eklendi (`Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png`)
+  — tamam.
+- Hâlâ eksik: ücretli Apple Developer Program hesabı aktivasyonu (ödeme
+  yapıldı, Apple tarafında bekleniyor), gerçek cihazda hiç test edilmedi,
+  hiç otomatik test yok (unit/UI test target'ı yok — submission'ı
+  engellemiyor ama regresyon riski).
+
+## 8. Test/debug kısayolları
 
 Simülatörde PhotosPicker gibi dokunmatik akışlar otomatikleştirilemediği
 için, `-uiTestAutoX` şeklinde launch argument'ları var (`AppRootView.swift`

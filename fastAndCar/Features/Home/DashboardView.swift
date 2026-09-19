@@ -18,6 +18,8 @@ struct DashboardView: View {
     @State private var viewModel: HomeViewModel
     @State private var tripViewModel: ActiveTripViewModel
     @State private var showsTooShortAlert = false
+    @AppStorage("distanceUnit") private var distanceUnitRaw = DistanceUnit.systemDefault.rawValue
+    private var distanceUnit: DistanceUnit { DistanceUnit(rawValue: distanceUnitRaw) ?? .systemDefault }
     // Live-drive-only: a 3D satellite chase view following the current GPS
     // fix, offered as an alternative to the flat live route map while
     // actually recording. Not available for reviewing a finished trip — see
@@ -128,20 +130,20 @@ struct DashboardView: View {
 
                 if isRecording {
                     VStack(spacing: 2) {
-                        Text(String(format: "%.0f", tripViewModel.currentSpeedKph))
+                        Text("\(distanceUnit.speedValue(kph: tripViewModel.currentSpeedKph))")
                             .font(AppFont.hero())
                             .foregroundStyle(AppColor.textPrimary)
                             .numeralTracking()
                             .contentTransition(.numericText())
                             .animation(.spring(response: 0.3, dampingFraction: 0.8), value: tripViewModel.currentSpeedKph)
-                        Text("km/h")
+                        Text(distanceUnit.speedSymbol)
                             .font(AppFont.statLabel)
                             .foregroundStyle(AppColor.textSecondary)
                     }
 
                     HStack(spacing: 40) {
                         LiveStatBadge(title: "Süre", value: formattedElapsed)
-                        LiveStatBadge(title: "Mesafe", value: String(format: "%.1f km", tripViewModel.distanceMeters / 1000))
+                        LiveStatBadge(title: "Mesafe", value: distanceUnit.distanceString(meters: tripViewModel.distanceMeters))
                         if let formattedSegmentElapsed {
                             LiveStatBadge(title: "Parkur", value: formattedSegmentElapsed)
                         }

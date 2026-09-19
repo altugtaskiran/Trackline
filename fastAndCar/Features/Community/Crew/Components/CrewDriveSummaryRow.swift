@@ -7,6 +7,8 @@ import SwiftUI
 
 struct CrewDriveSummaryRow: View {
     let summary: CrewDriveSummary
+    @AppStorage("distanceUnit") private var distanceUnitRaw = DistanceUnit.systemDefault.rawValue
+    private var distanceUnit: DistanceUnit { DistanceUnit(rawValue: distanceUnitRaw) ?? .systemDefault }
 
     var body: some View {
         HStack(spacing: 14) {
@@ -22,14 +24,14 @@ struct CrewDriveSummaryRow: View {
                 Text(summary.nickname)
                     .font(AppFont.headline)
                     .foregroundStyle(AppColor.textPrimary)
-                Text("\(summary.distanceMeters / 1000, specifier: "%.1f") km · Ort. \(Int(summary.averageSpeedKph)) km/h")
+                Text("\(distanceUnit.distanceString(meters: summary.distanceMeters)) · Ort. \(distanceUnit.speedString(kph: summary.averageSpeedKph))")
                     .font(AppFont.caption)
                     .foregroundStyle(AppColor.textSecondary)
             }
 
             Spacer()
 
-            Text(String(format: "%.0f km/h", summary.topSpeedKph))
+            Text(distanceUnit.speedString(kph: summary.topSpeedKph))
                 .font(AppFont.statValue(16))
                 .foregroundStyle(AppColor.accent)
         }

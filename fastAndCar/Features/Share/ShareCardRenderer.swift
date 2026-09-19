@@ -36,6 +36,8 @@ private struct ShareCardContent: View {
     // before rendering unless we read it back out explicitly and hand it to
     // the format style ourselves.
     @Environment(\.locale) private var locale
+    @AppStorage("distanceUnit") private var distanceUnitRaw = DistanceUnit.systemDefault.rawValue
+    private var distanceUnit: DistanceUnit { DistanceUnit(rawValue: distanceUnitRaw) ?? .systemDefault }
 
     private var carImage: UIImage? {
         carPhotoData.flatMap { UIImage(data: $0) }
@@ -210,13 +212,13 @@ private struct ShareCardContent: View {
     private var statsBlock: some View {
         VStack(spacing: 16) {
             HStack(spacing: 0) {
-                fireStat(title: "TOP SPEED", value: String(format: "%.0f km/h", trip.topSpeedKph))
+                fireStat(title: "TOP SPEED", value: distanceUnit.speedString(kph: trip.topSpeedKph))
                     .frame(maxWidth: .infinity)
-                shareStat(title: "AVG SPEED", value: String(format: "%.0f km/h", trip.averageSpeedKph))
+                shareStat(title: "AVG SPEED", value: distanceUnit.speedString(kph: trip.averageSpeedKph))
                     .frame(maxWidth: .infinity)
             }
             HStack(spacing: 0) {
-                shareStat(title: "DISTANCE", value: String(format: "%.1f km", trip.distanceMeters / 1000))
+                shareStat(title: "DISTANCE", value: distanceUnit.distanceString(meters: trip.distanceMeters))
                     .frame(maxWidth: .infinity)
                 shareStat(title: "DRIVE TIME", value: formatDuration(trip.driveTime))
                     .frame(maxWidth: .infinity)

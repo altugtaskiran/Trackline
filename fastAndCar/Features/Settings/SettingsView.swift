@@ -8,16 +8,10 @@
 
 import SwiftUI
 
-enum DistanceUnit: String, CaseIterable, Identifiable {
-    case kilometers, miles
-    var id: String { rawValue }
-    var label: String { self == .kilometers ? String.appLocalized("Kilometre") : String.appLocalized("Mil") }
-}
-
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel: SettingsViewModel
-    @AppStorage("distanceUnit") private var distanceUnitRaw = DistanceUnit.kilometers.rawValue
+    @AppStorage("distanceUnit") private var distanceUnitRaw = DistanceUnit.systemDefault.rawValue
     @AppStorage("appLanguage") private var appLanguageRaw = AppLanguage.system.rawValue
     @AppStorage("globalLeaderboardOptIn") private var globalLeaderboardOptIn = false
     #if DEBUG
@@ -30,7 +24,7 @@ struct SettingsView: View {
 
     private var distanceUnit: Binding<DistanceUnit> {
         Binding(
-            get: { DistanceUnit(rawValue: distanceUnitRaw) ?? .kilometers },
+            get: { DistanceUnit(rawValue: distanceUnitRaw) ?? .systemDefault },
             set: { distanceUnitRaw = $0.rawValue }
         )
     }

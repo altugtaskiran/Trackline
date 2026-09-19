@@ -10,12 +10,14 @@ import SwiftUI
 
 struct PlaybackBar: View {
     var viewModel: TripDetailViewModel
+    @AppStorage("distanceUnit") private var distanceUnitRaw = DistanceUnit.systemDefault.rawValue
+    private var distanceUnit: DistanceUnit { DistanceUnit(rawValue: distanceUnitRaw) ?? .systemDefault }
 
     var body: some View {
         VStack(spacing: 16) {
             HStack(spacing: 8) {
-                LiveStatBadge(title: "Hız", value: String(format: "%.0f km/h", viewModel.playbackSample?.speedKph ?? 0))
-                LiveStatBadge(title: "Mesafe", value: String(format: "%.1f km", viewModel.playbackDistanceMeters / 1000))
+                LiveStatBadge(title: "Hız", value: distanceUnit.speedString(kph: viewModel.playbackSample?.speedKph ?? 0))
+                LiveStatBadge(title: "Mesafe", value: distanceUnit.distanceString(meters: viewModel.playbackDistanceMeters))
                 LiveStatBadge(title: "Süre", value: formatted(viewModel.playbackElapsed))
             }
             .frame(maxWidth: .infinity)

@@ -15,6 +15,8 @@ struct RoutesTabView: View {
 
     @State private var localRoutesStore = LocalRoutesStore()
     @State private var showsTripPicker = false
+    @AppStorage("distanceUnit") private var distanceUnitRaw = DistanceUnit.systemDefault.rawValue
+    private var distanceUnit: DistanceUnit { DistanceUnit(rawValue: distanceUnitRaw) ?? .systemDefault }
 
     var body: some View {
         ZStack {
@@ -59,7 +61,7 @@ struct RoutesTabView: View {
                                 // link is kept but made invisible/zero-size
                                 // so SegmentRow's own chevron is the only one
                                 // shown, while the whole row stays tappable.
-                                SegmentRow(name: segment.name, subtitle: String(format: "%.1f km", segment.lengthMeters / 1000))
+                                SegmentRow(name: segment.name, subtitle: distanceUnit.distanceString(meters: segment.lengthMeters))
                                     .background(
                                         NavigationLink(value: segment) { EmptyView() }
                                             .opacity(0)

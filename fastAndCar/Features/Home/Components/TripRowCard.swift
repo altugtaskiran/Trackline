@@ -8,6 +8,8 @@ import SwiftUI
 struct TripRowCard: View {
     let trip: Trip
     @Environment(\.locale) private var locale
+    @AppStorage("distanceUnit") private var distanceUnitRaw = DistanceUnit.systemDefault.rawValue
+    private var distanceUnit: DistanceUnit { DistanceUnit(rawValue: distanceUnitRaw) ?? .systemDefault }
 
     var body: some View {
         HStack(spacing: 16) {
@@ -27,10 +29,10 @@ struct TripRowCard: View {
             Spacer()
 
             VStack(alignment: .trailing, spacing: 4) {
-                Text(String(format: "%.1f km", trip.distanceMeters / 1000))
+                Text(distanceUnit.distanceString(meters: trip.distanceMeters))
                     .font(AppFont.statValue(16))
                     .foregroundStyle(AppColor.textPrimary)
-                Text(String(format: "%.0f km/h", trip.topSpeedKph))
+                Text(distanceUnit.speedString(kph: trip.topSpeedKph))
                     .font(AppFont.caption)
                     .foregroundStyle(AppColor.accent)
             }

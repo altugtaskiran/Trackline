@@ -20,6 +20,8 @@ struct SegmentDetailView: View {
     @State private var hasVoted = false
     @State private var isVoting = false
     @State private var myUserId: String?
+    @AppStorage("distanceUnit") private var distanceUnitRaw = DistanceUnit.systemDefault.rawValue
+    private var distanceUnit: DistanceUnit { DistanceUnit(rawValue: distanceUnitRaw) ?? .systemDefault }
 
     init(segment: Segment, onFollowSegment: @escaping (Segment) -> Void) {
         self.segment = segment
@@ -53,7 +55,7 @@ struct SegmentDetailView: View {
                     GlassCard {
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
-                                Text(String(format: "%.1f km", segment.lengthMeters / 1000))
+                                Text(distanceUnit.distanceString(meters: segment.lengthMeters))
                                     .font(AppFont.statValue(16))
                                     .foregroundStyle(AppColor.textPrimary)
                                 Text("Oluşturan: \(segment.creatorNickname)")

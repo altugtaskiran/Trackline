@@ -28,6 +28,8 @@ struct CreateSegmentFlowView: View {
     // surprising/unwanted. Now it's the driver's own explicit choice.
     @State private var publishesGlobally = false
     @FocusState private var isNameFieldFocused: Bool
+    @AppStorage("distanceUnit") private var distanceUnitRaw = DistanceUnit.systemDefault.rawValue
+    private var distanceUnit: DistanceUnit { DistanceUnit(rawValue: distanceUnitRaw) ?? .systemDefault }
 
     // `trip.samples` decodes the whole recorded route from its stored JSON
     // blob on every access — fine for a one-off read, but this view's two
@@ -97,7 +99,7 @@ struct CreateSegmentFlowView: View {
                                     Slider(value: $endIndex, in: Double(clampedStart + 1)...Double(max(samples.count - 1, 1)))
                                         .tint(AppColor.routeEnd)
                                 }
-                                Text(String(format: "%.1f km", previewDistanceMeters / 1000))
+                                Text(distanceUnit.distanceString(meters: previewDistanceMeters))
                                     .font(AppFont.statValue(16))
                                     .foregroundStyle(AppColor.textPrimary)
                             }

@@ -9,6 +9,8 @@ struct SegmentEffortRow: View {
     let rank: Int
     let effort: SegmentEffort
     var isCurrentUser: Bool = false
+    @AppStorage("distanceUnit") private var distanceUnitRaw = DistanceUnit.systemDefault.rawValue
+    private var distanceUnit: DistanceUnit { DistanceUnit(rawValue: distanceUnitRaw) ?? .systemDefault }
 
     var body: some View {
         HStack(spacing: 14) {
@@ -21,7 +23,7 @@ struct SegmentEffortRow: View {
                 Text(effort.nickname)
                     .font(AppFont.headline)
                     .foregroundStyle(isCurrentUser ? AppColor.accent : AppColor.textPrimary)
-                Text("Ort. \(Int(effort.averageSpeedKph)) km/h · Zirve \(Int(effort.topSpeedKph)) km/h")
+                Text("Ort. \(distanceUnit.speedString(kph: effort.averageSpeedKph)) · Zirve \(distanceUnit.speedString(kph: effort.topSpeedKph))")
                     .font(AppFont.caption)
                     .foregroundStyle(AppColor.textSecondary)
             }
