@@ -190,17 +190,21 @@ struct AppRootView: View {
             }
         }
         .task {
-            // Skips the splash wait entirely during automated test runs so
-            // the debug hooks above aren't slowed down by it.
+            // First launch (permission not decided yet) used to always sit
+            // through the full splash animation *then* have Onboarding's
+            // own animated intro play right after it — the same kind of
+            // "effect" twice in a row. Checked upfront now: if Onboarding
+            // is going to show anyway, skip the splash wait/animation
+            // entirely and go straight there: only one intro, not two.
+            guard appEnvironment.locationManager.hasUsableAuthorization else {
+                showsSplash = false
+                showsOnboarding = true
+                return
+            }
+            // Returning user, permission already usable — splash plays
+            // normally, then straight to Home, Onboarding never shows.
             let isUITest = ProcessInfo.processInfo.arguments.contains { $0.hasPrefix("-uiTest") }
             try? await Task.sleep(for: .seconds(isUITest ? 0.2 : 3.5))
-            // Decided once, right as the splash finishes: permission not
-            // usable yet → reveal Onboarding underneath (it then stays on
-            // screen until the user actually grants/denies, no timer).
-            // Already usable → reveal Home directly, Onboarding never shows.
-            if !appEnvironment.locationManager.hasUsableAuthorization {
-                showsOnboarding = true
-            }
             withAnimation(.easeOut(duration: 0.4)) {
                 showsSplash = false
             }
