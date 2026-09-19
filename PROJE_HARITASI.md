@@ -119,7 +119,7 @@ tripViewModel.samples.last?.id)` bloğu, `MapCamera(heading:)`).
 | `Core/QRCodeGenerator.swift` | Crew davet linkinden QR kod görseli üretir (CoreImage) |
 | `Core/DistanceUnit.swift` | Kilometre/Mil tercihi + format fonksiyonları (`distanceString`, `speedString`, `altitudeString`) — Ayarlar'daki Picker ile paylaşılan `@AppStorage("distanceUnit")` anahtarı, varsayılan `Locale`'e göre |
 | `Core/Geometry/` | `RouteProjector`, `GeoMapProjector`, `FittedRegion`, `GeoMath` — GPS koordinatlarını ekrana/haritaya doğru şekilde oturtan matematik |
-| `Core/Leaderboard/` | Parkur (Segment) sistemi: `Segment`, `SegmentEffort`, `SegmentMatcher`, `SegmentAutoMatcher`, `CloudKitSegmentService`, `Geohash`, `AntiCheat`, `RouteGuidance` + `RouteGuidanceTracker` (basit metin tabanlı yön talimatları), `LocalRoutesStore` (Rotalar sekmesinin yerel verisi), `MyCreatedSegmentsStore`, `NicknameStore`, `RoutePolylinePoint` |
+| `Core/Leaderboard/` | Parkur (Segment) sistemi: `Segment`, `SegmentEffort`, `SegmentMatcher`, `SegmentAutoMatcher`, `CloudKitSegmentService`, `Geohash`, `AntiCheat`, `RouteGuidance` + `RouteGuidanceTracker` (basit metin tabanlı yön talimatları — rotanın başlangıç noktasına henüz varmadıysan "Rota başlangıcı: 18.4 km (KD)" gibi düz-çizgi mesafe+pusula yönü gösterir, tam navigasyon değil; varınca sıradaki dönüş metnine geçer), `LocalRoutesStore` (Rotalar sekmesinin yerel verisi), `MyCreatedSegmentsStore`, `NicknameStore`, `RoutePolylinePoint` |
 | `Core/Crew/` | `Crew`, `CrewMembership`, `CrewDriveSummary`, `CrewZoneRef`, `MyCrewsStore`, `CloudKitCrewService` (CKShare tabanlı grup sistemi) |
 | `Core/AppLanguage.swift` | Ayarlar > Dil override sistemi |
 | `Core/FeatureFlags.swift` | §6'daki kapalı özellik anahtarları |

@@ -19,6 +19,13 @@ final class RouteGuidanceTracker {
 
     private(set) var nextTurn: TurnInstruction?
     private(set) var distanceToNextTurnMeters: Double?
+    /// Straight-line distance/bearing from the driver's current position to
+    /// the segment's own first point — only meaningful (and only updated)
+    /// while `!hasStarted`. Not a routed distance (no MapKit Directions),
+    /// just "as the crow flies" — enough for "which way, roughly how far"
+    /// without pretending to be real navigation.
+    private(set) var distanceToStartMeters: Double?
+    private(set) var bearingToStartDegrees: Double?
     private(set) var isCompleted = false
     /// Flips true the moment a sample lands within `startLineThresholdMeters`
     /// of the segment's own first point — this, not "Sürüşe Başla", is the
@@ -51,10 +58,17 @@ final class RouteGuidanceTracker {
     func update(with sample: LocationSample) {
         guard !coordinates.isEmpty else { return }
 
-        if !hasStarted, let start = coordinates.first,
-           GeoMath.distanceMeters(from: sample.coordinate, to: start) <= Self.startLineThresholdMeters {
-            hasStarted = true
-            startTimestamp = sample.timestamp
+        if !hasStarted, let start = coordinates.first {
+            let distanceToStart = GeoMath.distanceMeters(from: sample.coordinate, to: start)
+            if distanceToStart <= Self.startLineThresholdMeters {
+                hasStarted = true
+                startTimestamp = sample.timestamp
+                distanceToStartMeters = nil
+                bearingToStartDegrees = nil
+            } else {
+                distanceToStartMeters = distanceToStart
+                bearingToStartDegrees = GeoMath.bearingDegrees(from: sample.coordinate, to: start)
+            }
         }
 
         let searchEnd = min(progressIndex + Self.searchWindow, coordinates.count)
@@ -88,12 +102,36 @@ final class RouteGuidanceTracker {
 
     var instructionText: String? {
         if isCompleted { return completionText }
+        // Not at the segment's own start line yet — a route created
+        // somewhere across town (or in another city entirely) otherwise
+        // showed nothing at all here until the driver got close, doubly so
+        // for a short/straight route with no detected turns (`nextTurn`
+        // would just stay nil forever). This isn't real navigation (no
+        // MapKit Directions, no routed path) — just straight-line distance
+        // and an 8-point compass bearing, same as a "your friend is 3km
+        // northeast" style pointer.
+        if !hasStarted, let distanceToStartMeters, let bearingToStartDegrees {
+            return String(format: String.appLocalized("Rota başlangıcı: %@ (%@)"), DistanceUnit.current.distanceString(meters: distanceToStartMeters), Self.compassAbbreviation(forBearing: bearingToStartDegrees))
+        }
         guard let nextTurn, let distanceToNextTurnMeters else { return nil }
         let directionText = nextTurn.direction == .left ? String.appLocalized("soldan dön") : String.appLocalized("sağdan dön")
         if distanceToNextTurnMeters < Self.arrivalThresholdMeters {
             return String.appLocalized("Şimdi ") + directionText
         }
         return String(format: String.appLocalized("%.0fm sonra %@"), distanceToNextTurnMeters, directionText)
+    }
+
+    /// 8-point compass, rounded to the nearest 45° slice — plenty of
+    /// precision for "roughly which way", no need for 16/32-point finesse.
+    private static func compassAbbreviation(forBearing bearing: Double) -> String {
+        let normalized = bearing.truncatingRemainder(dividingBy: 360)
+        let positive = normalized < 0 ? normalized + 360 : normalized
+        let index = Int((positive / 45).rounded()) % 8
+        let labels = [
+            String.appLocalized("K"), String.appLocalized("KD"), String.appLocalized("D"), String.appLocalized("GD"),
+            String.appLocalized("G"), String.appLocalized("GB"), String.appLocalized("B"), String.appLocalized("KB"),
+        ]
+        return labels[index]
     }
 
     /// "You vs. the creator" the instant the attempt finishes — no
