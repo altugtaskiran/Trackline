@@ -139,15 +139,16 @@ struct CreateSegmentFlowView: View {
                         .disabled(trimmedName.isEmpty || isSubmitting || previewSamples.count < 2)
                     }
                     .padding(20)
-                    // contentShape makes the gaps between cards tappable
-                    // too, not just the cards themselves — tapping anywhere
-                    // on this screen dismisses the keyboard, not only the
-                    // "Parkur Oluştur" button at the bottom, which meant
-                    // scrolling all the way down was the only way out.
-                    .contentShape(Rectangle())
-                    .onTapGesture { isNameFieldFocused = false }
                 }
-                .scrollDismissesKeyboard(.immediately)
+                // A tap-dismiss gesture directly on the VStack above (with
+                // .contentShape making its empty gaps hit-testable too) was
+                // the first attempt here — it silently ate the TextField's
+                // own tap-to-focus along with it, since both are competing
+                // for the same touch inside the same container. A drag —
+                // even a tiny one, starting literally anywhere including on
+                // the field — dismisses the keyboard without that conflict,
+                // since it's a distinct gesture from a plain tap.
+                .scrollDismissesKeyboard(.interactively)
             }
             .navigationTitle("Parkur Oluştur")
             .navigationBarTitleDisplayMode(.inline)
@@ -211,6 +212,21 @@ struct CreateSegmentFlowView: View {
                     var publicSegment = segment
                     publicSegment.creatorId = userId
                     try? await CloudKitSegmentService.createSegment(publicSegment)
+
+                    // The creator's own drive is exactly what the segment
+                    // was carved out of — without submitting it as an
+                    // effort too, the leaderboard stayed empty ("henüz
+                    // kimse yok") right after creation, even though the
+                    // creator had, by definition, already driven it.
+                    if let match = SegmentMatcher.match(trip: samples, against: publicSegment) {
+                        try? await CloudKitSegmentService.submitEffort(
+                            segmentId: publicSegment.id,
+                            userId: userId,
+                            nickname: nicknameStore.nickname,
+                            match: match,
+                            drivingScore: trip.drivingScoreValue
+                        )
+                    }
                 }
             }
 

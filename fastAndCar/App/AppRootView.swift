@@ -43,12 +43,22 @@ struct AppRootView: View {
                                     onSelectTrip: { trip in path.append(trip.id) }
                                 )
                             case .dashboard:
+                                // .id() forces a fresh DashboardView (and its
+                                // internal ActiveTripViewModel) whenever a
+                                // *different* route gets armed — without it,
+                                // switching back to an already-materialized
+                                // Dashboard reused the previous
+                                // ActiveTripViewModel, silently keeping its
+                                // stale (or absent) guidanceTracker instead
+                                // of picking up the route "Bu Rotayı Sür"
+                                // just armed.
                                 DashboardView(
                                     locationManager: appEnvironment.locationManager,
                                     isRecording: $isRecording,
                                     guidanceSegment: guidanceSegment,
                                     onTripEnded: handleTripEnded
                                 )
+                                .id(guidanceSegment?.id)
                             case .garage:
                                 GarageView()
                             case .community:
@@ -250,6 +260,12 @@ struct AppRootView: View {
     /// initial value, so isRecording has to go true *after* Dashboard has
     /// already mounted with isRecording still false.
     private func followSegment(_ segment: Segment) {
+        // Cleared here rather than left to the .onChange(of: selectedTab)
+        // side effect below — popping the pushed Segment detail screen and
+        // switching the visible tab in the same synchronous step avoids a
+        // brief window where the tab has changed but the stack is still
+        // showing the old push on top of it.
+        path = NavigationPath()
         guidanceSegment = segment
         selectedTab = .dashboard
         Task {

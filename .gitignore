@@ -9,6 +9,8 @@ DerivedData/
 *.ipa
 *.dSYM.zip
 *.dSYM
+*.xcarchive
+build/
 
 # Swift Package Manager
 .build/

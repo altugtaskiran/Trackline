@@ -85,6 +85,22 @@ struct GlobalLeaderboardListView: View {
                             .font(AppFont.headline)
                             .foregroundStyle(AppColor.textPrimary)
 
+                        // A manual field, not .searchable — .searchable
+                        // attaches its system search bar to the single
+                        // NavigationStack AppRootView shares across every
+                        // tab, so its (unstyled, light) chrome kept bleeding
+                        // through as a stray white bar at the bottom of
+                        // other tabs (Dashboard while recording, notably)
+                        // even after switching away from Liderlik.
+                        HStack(spacing: 8) {
+                            Image(systemName: "magnifyingglass")
+                                .foregroundStyle(AppColor.textSecondary)
+                            TextField("Parkur adı", text: $searchText)
+                                .foregroundStyle(AppColor.textPrimary)
+                        }
+                        .padding(12)
+                        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(AppColor.surfaceElevated))
+
                         if isSearching {
                             ProgressView().tint(AppColor.accent)
                         } else if !searchText.trimmingCharacters(in: .whitespaces).isEmpty && searchResults.isEmpty {
@@ -110,7 +126,6 @@ struct GlobalLeaderboardListView: View {
         }
         .navigationTitle("Global Liderlik")
         .navigationBarTitleDisplayMode(.inline)
-        .searchable(text: $searchText, prompt: "Parkur adı")
         .onChange(of: searchText) { _, newValue in
             search(for: newValue)
         }
