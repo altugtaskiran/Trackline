@@ -29,6 +29,7 @@ struct TripDetailView: View {
                     routeHero
                     PlaybackBar(viewModel: viewModel)
                     DrivingScoreCard(score: viewModel.score)
+                    SpeedDistributionView(samples: viewModel.samples)
                     StatTileGrid(stats: viewModel.stats)
 
                     VStack(alignment: .leading, spacing: 4) {
@@ -58,21 +59,27 @@ struct TripDetailView: View {
             // Adjacent .topBarTrailing items still merge into one shared
             // glass capsule on their own — separate ToolbarItems alone
             // don't break that grouping, a ToolbarSpacer in between does,
-            // giving Segment and Share their own distinct circles.
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    showsCreateSegment = true
-                } label: {
-                    Image(systemName: "ruler")
-                        .foregroundStyle(AppColor.accent)
-                }
-            }
-            ToolbarSpacer(.fixed, placement: .topBarTrailing)
+            // giving Share and Segment their own distinct circles. Share
+            // comes first (camera icon — it produces a photo card) with
+            // Segment second (a route/navigation icon — it turns this trip
+            // into a followable route), swapped from the old ruler/share
+            // ordering which read backwards for what each button actually does.
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     showsShareSheet = true
                 } label: {
-                    Image(systemName: "square.and.arrow.up")
+                    Image(systemName: "camera.fill")
+                        .foregroundStyle(AppColor.accent)
+                }
+            }
+            if #available(iOS 26.0, *) {
+                ToolbarSpacer(.fixed, placement: .topBarTrailing)
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    showsCreateSegment = true
+                } label: {
+                    Image(systemName: "arrow.triangle.turn.up.right.diamond.fill")
                         .foregroundStyle(AppColor.accent)
                 }
             }

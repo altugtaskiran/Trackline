@@ -9,7 +9,7 @@
 
 import Foundation
 
-struct Crew: Identifiable, Codable {
+struct Crew: Identifiable, Codable, Hashable {
     let id: String
     var name: String
     var creatorId: String

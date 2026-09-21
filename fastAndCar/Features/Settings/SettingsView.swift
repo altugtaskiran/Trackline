@@ -6,6 +6,7 @@
 //  from a small icon on Home rather than a tab bar.
 //
 
+import PhotosUI
 import SwiftUI
 
 struct SettingsView: View {
@@ -13,6 +14,15 @@ struct SettingsView: View {
     @State private var viewModel: SettingsViewModel
     @AppStorage("distanceUnit") private var distanceUnitRaw = DistanceUnit.systemDefault.rawValue
     @AppStorage("appLanguage") private var appLanguageRaw = AppLanguage.system.rawValue
+    @State private var profilePhotoData: Data? = UserDefaults.standard.data(forKey: "profilePhotoData")
+    @State private var photoItem: PhotosPickerItem?
+    @State private var pickedImageForCrop: IdentifiableImage?
+    @State private var isUploadingPhoto = false
+    @State private var nicknameStore = NicknameStore()
+    @State private var didCopyHandle = false
+    @State private var nicknameDraft = ""
+    @State private var isSavingNickname = false
+    @State private var isEditingNickname = false
     #if DEBUG
     @State private var debugAutoOpenLanguage = false
     #endif
@@ -42,6 +52,77 @@ struct SettingsView: View {
 
                 ScrollView {
                     VStack(spacing: 14) {
+                        GlassCard {
+                            HStack(spacing: 14) {
+                                PhotosPicker(selection: $photoItem, matching: .images) {
+                                    ZStack {
+                                        AvatarView(image: profilePhotoData.flatMap(UIImage.init), initial: nil, size: 56)
+                                        if isUploadingPhoto {
+                                            ProgressView().tint(AppColor.accent)
+                                        }
+                                    }
+                                }
+                                .buttonStyle(.plain)
+
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Profil Fotoğrafı")
+                                        .font(AppFont.headline)
+                                        .foregroundStyle(AppColor.textPrimary)
+                                    Text("Liderlik tablolarında görünür")
+                                        .font(AppFont.caption)
+                                        .foregroundStyle(AppColor.textSecondary)
+                                    if isEditingNickname {
+                                        HStack(spacing: 8) {
+                                            TextField("kullanıcı adı", text: $nicknameDraft)
+                                                .font(AppFont.caption.weight(.semibold))
+                                                .foregroundStyle(AppColor.textPrimary)
+                                                .autocorrectionDisabled()
+                                                .textInputAutocapitalization(.never)
+                                                .padding(.horizontal, 8)
+                                                .padding(.vertical, 4)
+                                                .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(AppColor.surfaceElevated))
+                                            Button {
+                                                Task {
+                                                    await saveNickname()
+                                                    isEditingNickname = false
+                                                }
+                                            } label: {
+                                                if isSavingNickname {
+                                                    ProgressView()
+                                                } else {
+                                                    Image(systemName: "checkmark")
+                                                }
+                                            }
+                                            .disabled(isSavingNickname || nicknameDraft.trimmingCharacters(in: .whitespaces).isEmpty)
+                                        }
+                                        .foregroundStyle(AppColor.accent)
+                                    } else if nicknameStore.hasNickname {
+                                        HStack(spacing: 8) {
+                                            Button {
+                                                UIPasteboard.general.string = nicknameStore.handle
+                                                didCopyHandle = true
+                                            } label: {
+                                                HStack(spacing: 4) {
+                                                    Text(nicknameStore.handle)
+                                                    Image(systemName: didCopyHandle ? "checkmark" : "doc.on.doc")
+                                                }
+                                            }
+                                            Button {
+                                                nicknameDraft = nicknameStore.nickname
+                                                isEditingNickname = true
+                                            } label: {
+                                                Image(systemName: "pencil")
+                                            }
+                                            .padding(.leading, 10)
+                                        }
+                                        .font(AppFont.caption.weight(.semibold))
+                                        .foregroundStyle(AppColor.accent)
+                                    }
+                                }
+                                Spacer()
+                            }
+                        }
+
                         GlassCard {
                             HStack {
                                 VStack(alignment: .leading, spacing: 4) {
@@ -125,6 +206,24 @@ struct SettingsView: View {
             #endif
         }
         .preferredColorScheme(.dark)
+        .task(id: photoItem) {
+            guard let photoItem,
+                  let data = try? await photoItem.loadTransferable(type: Data.self),
+                  let uiImage = UIImage(data: data) else { return }
+            try? await Task.sleep(for: .milliseconds(250))
+            pickedImageForCrop = IdentifiableImage(image: uiImage)
+        }
+        .sheet(item: $pickedImageForCrop) { wrapped in
+            PhotoCropView(image: wrapped.image, aspectRatio: 1) { croppedData in
+                profilePhotoData = croppedData
+                UserDefaults.standard.set(croppedData, forKey: "profilePhotoData")
+                Task {
+                    isUploadingPhoto = true
+                    defer { isUploadingPhoto = false }
+                    try? await CloudKitProfileService.uploadMyPhoto(data: croppedData)
+                }
+            }
+        }
         #if DEBUG
         .task {
             guard ProcessInfo.processInfo.arguments.contains("-uiTestAutoLanguage") else { return }
@@ -132,5 +231,15 @@ struct SettingsView: View {
             debugAutoOpenLanguage = true
         }
         #endif
+    }
+
+    private func saveNickname() async {
+        let trimmed = nicknameDraft.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { return }
+        isSavingNickname = true
+        defer { isSavingNickname = false }
+        let previous = nicknameStore.nickname
+        nicknameStore.nickname = trimmed
+        try? await CloudKitProfileService.syncHandle(nickname: trimmed, tag: nicknameStore.tag, previousNickname: previous)
     }
 }

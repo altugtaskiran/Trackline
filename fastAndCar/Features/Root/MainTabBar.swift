@@ -53,6 +53,8 @@ struct MainTabBar: View {
                 Text(label)
                     .font(.system(size: 11, weight: .medium, design: .rounded))
                     .foregroundStyle(isSelected ? AppColor.textPrimary : AppColor.textTertiary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
             }
             .frame(maxWidth: .infinity)
         }

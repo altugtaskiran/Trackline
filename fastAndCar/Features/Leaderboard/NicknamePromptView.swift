@@ -38,6 +38,9 @@ struct NicknamePromptView: View {
 
                     Button("Kaydet") {
                         nicknameStore.nickname = draft.trimmingCharacters(in: .whitespaces)
+                        let nickname = nicknameStore.nickname
+                        let tag = nicknameStore.tag
+                        Task { try? await CloudKitProfileService.syncHandle(nickname: nickname, tag: tag) }
                         dismiss()
                         onSaved()
                     }

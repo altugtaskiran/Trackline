@@ -186,7 +186,11 @@ struct GlobalLeaderboardListView: View {
             didLoadNearby = true
         }
         guard let coordinate = await currentCoordinate() else { return }
-        let fetched = (try? await CloudKitSegmentService.fetchNearbySegments(candidateGeohashes: Geohash.nearbyCells(around: coordinate))) ?? []
+        // TEMPORARY test widening — 30km real-distance radius instead of
+        // the geohash grid's normal ~1-2km reach. See
+        // CloudKitSegmentService.fetchSegments(within:of:) for why. Revert
+        // to fetchNearbySegments(candidateGeohashes:) once testing's done.
+        let fetched = (try? await CloudKitSegmentService.fetchSegments(within: 30_000, of: coordinate)) ?? []
         // My own routes already live in "Oluşturduklarım" just below —
         // showing them here too just duplicated them under a section meant
         // for discovering *other* people's routes.

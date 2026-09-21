@@ -84,9 +84,17 @@ struct CreateSegmentFlowView: View {
 
                 ScrollView {
                     VStack(spacing: 20) {
-                        RouteCanvas(samples: previewSamples, lineWidth: 3, showsEndpoints: true, padding: 20)
-                            .frame(height: 220)
-                            .glassCard(cornerRadius: 22, padding: 0)
+                        GeometryReader { proxy in
+                            let rect = CGRect(origin: .zero, size: proxy.size)
+                            let region = FittedRegion.fitting(samples: previewSamples, aspectRatio: rect.width / max(rect.height, 1))
+                            let projector = GeoMapProjector.projector(region: region)
+                            ZStack {
+                                RouteMapBackdrop(region: region)
+                                RouteCanvas(samples: previewSamples, lineWidth: 3, showsEndpoints: true, padding: 20, projector: projector)
+                            }
+                        }
+                        .frame(height: 220)
+                        .glassCard(cornerRadius: 22, padding: 0)
 
                         GlassCard {
                             VStack(alignment: .leading, spacing: 16) {
@@ -272,10 +280,11 @@ struct CreateSegmentFlowView: View {
                 for crewRef in myCrewsStore.crews where selectedCrewIds.contains(crewRef.id) {
                     var crewSegment = segment
                     crewSegment.creatorId = crewUserId
-                    try? await CloudKitCrewService.createSegment(crewSegment, zoneRef: crewRef.zoneRef)
+                    try? await CloudKitCrewService.createSegment(crewSegment, crewId: crewRef.crew.id, zoneRef: crewRef.zoneRef)
                     if let match = SegmentMatcher.match(trip: samples, against: crewSegment) {
                         try? await CloudKitCrewService.submitEffort(
                             segmentId: crewSegment.id,
+                            crewId: crewRef.crew.id,
                             userId: crewUserId,
                             nickname: nicknameStore.nickname,
                             match: match,

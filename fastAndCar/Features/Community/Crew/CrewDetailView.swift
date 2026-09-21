@@ -16,16 +16,16 @@ import SwiftUI
 
 struct CrewDetailView: View {
     let crewRef: MyCrewRef
-    var onFollowCrewSegment: (Segment, CrewZoneRef) -> Void
+    var onFollowCrewSegment: (Segment, String, CrewZoneRef) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var members: [CrewMembership] = []
     @State private var segments: [Segment] = []
     @State private var isLoading = true
     @State private var errorMessage: String?
-    @State private var showsInvite = false
-    @State private var pendingShare: (share: CKShareBox, container: CKContainerBox)?
+    @State private var pendingShare: CKShareBox?
     @State private var myUserId: String?
+    @State private var photoCache = ProfilePhotoCache.shared
     @State private var isLeaving = false
     @AppStorage("distanceUnit") private var distanceUnitRaw = DistanceUnit.systemDefault.rawValue
     private var distanceUnit: DistanceUnit { DistanceUnit(rawValue: distanceUnitRaw) ?? .systemDefault }
@@ -73,10 +73,8 @@ struct CrewDetailView: View {
         } message: {
             Text(errorMessage ?? "")
         }
-        .sheet(isPresented: $showsInvite) {
-            if let pendingShare {
-                CrewInviteView(crewName: crewRef.crew.name, share: pendingShare.share.value, container: pendingShare.container.value)
-            }
+        .sheet(item: $pendingShare) { box in
+            CrewInviteByNameView(crewId: crewRef.crew.id, crewName: crewRef.crew.name, share: box.value)
         }
     }
 
@@ -93,8 +91,12 @@ struct CrewDetailView: View {
                 }
                 Spacer()
                 if crewRef.zoneRef.isOwnedByThisDevice {
+                    // QR/link invite is deactivated — CKShare's system link
+                    // handoff is unreliable for an app that isn't on the
+                    // App Store yet (see CrewInviteByNameView's header
+                    // comment). Only the by-name flow is reachable now.
                     Button {
-                        Task { await presentInvite() }
+                        Task { await presentInviteByName() }
                     } label: {
                         Image(systemName: "person.badge.plus")
                             .foregroundStyle(FeatureFlags.crewEnabled ? AppColor.accent : AppColor.textTertiary)
@@ -111,21 +113,23 @@ struct CrewDetailView: View {
                 .font(AppFont.headline)
                 .foregroundStyle(AppColor.textPrimary)
             ForEach(members) { member in
-                HStack {
-                    Text(member.nickname)
-                        .font(AppFont.body)
-                        .foregroundStyle(AppColor.textPrimary)
-                    Spacer()
-                    if crewRef.zoneRef.isOwnedByThisDevice, member.userId != myUserId {
-                        Button {
-                            Task { await removeMember(member) }
-                        } label: {
-                            Image(systemName: "person.badge.minus")
-                                .foregroundStyle(Color(hex: 0xFF3B30))
+                GlassCard {
+                    HStack(spacing: 12) {
+                        AvatarView(image: photoCache.image(for: member.userId), initial: member.nickname.first, size: 40)
+                        Text(member.nickname)
+                            .font(AppFont.body)
+                            .foregroundStyle(AppColor.textPrimary)
+                        Spacer()
+                        if crewRef.zoneRef.isOwnedByThisDevice, member.userId != myUserId {
+                            Button {
+                                Task { await removeMember(member) }
+                            } label: {
+                                Image(systemName: "person.badge.minus")
+                                    .foregroundStyle(Color(hex: 0xFF3B30))
+                            }
                         }
                     }
                 }
-                .padding(.horizontal, 4)
             }
         }
     }
@@ -136,9 +140,7 @@ struct CrewDetailView: View {
                 .font(AppFont.headline)
                 .foregroundStyle(AppColor.textPrimary)
             ForEach(segments) { segment in
-                NavigationLink {
-                    CrewSegmentDetailView(segment: segment, zoneRef: crewRef.zoneRef, onFollowSegment: onFollowCrewSegment)
-                } label: {
+                NavigationLink(value: CrewSegmentPush(segment: segment, crewId: crewRef.crew.id, zoneRef: crewRef.zoneRef)) {
                     SegmentRow(name: segment.name, subtitle: distanceUnit.distanceString(meters: segment.lengthMeters))
                 }
                 .buttonStyle(.plain)
@@ -186,6 +188,7 @@ struct CrewDetailView: View {
             async let segmentsResult = CloudKitCrewService.fetchSegments(zoneRef: crewRef.zoneRef)
             members = try await membersResult
             segments = try await segmentsResult
+            await photoCache.prefetch(userIds: members.map(\.userId))
         } catch CrewServiceError.featureNotAvailable {
             errorMessage = "Bu özellik yakında aktif olacak."
         } catch {
@@ -193,19 +196,23 @@ struct CrewDetailView: View {
         }
     }
 
-    private func presentInvite() async {
+    private func presentInviteByName() async {
+        guard let ckShare = await fetchShareForInvite() else { return }
+        pendingShare = CKShareBox(ckShare)
+    }
+
+    private func fetchShareForInvite() async -> CKShare? {
         do {
             let record = try await CKContainer.default().privateCloudDatabase.record(for: CKRecord.ID(recordName: crewRef.crew.id, zoneID: crewRef.zoneRef.zoneID))
             guard let shareReference = record.share else {
                 errorMessage = "Davet linki bulunamadı."
-                return
+                return nil
             }
             let share = try await CKContainer.default().privateCloudDatabase.record(for: shareReference.recordID)
-            guard let ckShare = share as? CKShare else { return }
-            pendingShare = (CKShareBox(ckShare), CKContainerBox(CKContainer.default()))
-            showsInvite = true
+            return share as? CKShare
         } catch {
             errorMessage = "Davet açılamadı."
+            return nil
         }
     }
 
@@ -238,5 +245,26 @@ struct CrewDetailView: View {
 /// CKShare/CKContainer aren't Equatable in a way SwiftUI's diffing loves —
 /// boxing them keeps the sheet's optional state simple to update in one
 /// assignment above.
-struct CKShareBox { let value: CKShare; init(_ value: CKShare) { self.value = value } }
+/// Identifiable so it can drive `.sheet(item:)` directly — a single
+/// optional driving presentation, instead of a separate Bool alongside it,
+/// avoids a real race we hit where the sheet could animate in before this
+/// value was set, rendering a blank/gray sheet on the first tap that only
+/// fixed itself the second time.
+struct CKShareBox: Identifiable {
+    let value: CKShare
+    var id: String { value.recordID.recordName }
+    init(_ value: CKShare) { self.value = value }
+}
 struct CKContainerBox { let value: CKContainer; init(_ value: CKContainer) { self.value = value } }
+
+/// Everything CrewSegmentDetailView needs, bundled into one Hashable value
+/// so "Bu Rotayı Sür"'s push goes through AppRootView's single shared
+/// NavigationStack instead of a NavigationStack local to the Crew tab — a
+/// nested stack's pushed screen doesn't reliably tear down when
+/// onFollowCrewSegment flips selectedTab away from it (same bug the public
+/// Global Leaderboard's segment pushes were fixed for earlier).
+struct CrewSegmentPush: Hashable {
+    let segment: Segment
+    let crewId: String
+    let zoneRef: CrewZoneRef
+}

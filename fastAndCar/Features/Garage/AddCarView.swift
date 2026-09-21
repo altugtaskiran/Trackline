@@ -2,8 +2,9 @@
 //  AddCarView.swift
 //  fastAndCar
 //
-//  Simple add-car form: photo picker + specs. No editing yet — delete and
-//  re-add covers corrections for now.
+//  Add-car form; also doubles as the edit form — pass an existingCar and
+//  every field preloads from it, and Save updates that same SwiftData
+//  object in place instead of inserting a new one.
 //
 
 import PhotosUI
@@ -19,15 +20,30 @@ struct AddCarView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
 
-    @State private var make = ""
-    @State private var model = ""
-    @State private var year = Calendar.current.component(.year, from: Date())
-    @State private var horsepower = 200
-    @State private var fuelType: FuelType = .gasoline
-    @State private var mileageKm = 0
+    let existingCar: Car?
+
+    @State private var make: String
+    @State private var model: String
+    @State private var year: Int
+    @State private var horsepower: Int
+    @State private var fuelType: FuelType
+    @State private var mileageKm: Int
     @State private var photoItem: PhotosPickerItem?
     @State private var photoData: Data?
     @State private var pickedImageForCrop: IdentifiableImage?
+    @State private var showsBrandPicker = false
+    @State private var showsModelPicker = false
+
+    init(existingCar: Car? = nil) {
+        self.existingCar = existingCar
+        _make = State(initialValue: existingCar?.make ?? "")
+        _model = State(initialValue: existingCar?.model ?? "")
+        _year = State(initialValue: existingCar?.year ?? Calendar.current.component(.year, from: Date()))
+        _horsepower = State(initialValue: existingCar?.horsepower ?? 200)
+        _fuelType = State(initialValue: existingCar?.fuelType ?? .gasoline)
+        _mileageKm = State(initialValue: existingCar?.mileageKm ?? 0)
+        _photoData = State(initialValue: existingCar?.photoData)
+    }
 
     var body: some View {
         NavigationStack {
@@ -40,15 +56,15 @@ struct AddCarView: View {
 
                         GlassCard {
                             VStack(alignment: .leading, spacing: 14) {
-                                labeledField("Marka", text: $make)
-                                labeledField("Model", text: $model)
+                                pickerField("Marka", value: make, placeholder: "Marka") { showsBrandPicker = true }
+                                pickerField("Model", value: model, placeholder: "Model") { showsModelPicker = true }
                             }
                         }
 
                         GlassCard {
                             VStack(alignment: .leading, spacing: 14) {
                                 HStack(spacing: 12) {
-                                    numericField("Yıl", value: $year)
+                                    yearField
                                     numericField("Beygir Gücü", value: $horsepower)
                                 }
                                 numericField("Kilometre", value: $mileageKm, groupsThousands: true)
@@ -71,7 +87,7 @@ struct AddCarView: View {
                     .padding(20)
                 }
             }
-            .navigationTitle("Araç Ekle")
+            .navigationTitle(existingCar == nil ? "Araç Ekle" : "Aracı Düzenle")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -107,6 +123,17 @@ struct AddCarView: View {
                 photoData = croppedData
             }
         }
+        .sheet(isPresented: $showsBrandPicker) {
+            CarPickerSheet(title: "Marka", items: CarCatalog.brands) { picked in
+                if picked != make { model = "" }
+                make = picked
+            }
+        }
+        .sheet(isPresented: $showsModelPicker) {
+            CarPickerSheet(title: "Model", items: CarCatalog.models(for: make)) { picked in
+                model = picked
+            }
+        }
         #if DEBUG
         .task {
             // Test-only hook: launching with -uiTestAutoCropTest opens the
@@ -137,34 +164,100 @@ struct AddCarView: View {
                         .scaledToFill()
                 } else {
                     ZStack {
-                        AppColor.surfaceElevated
-                        VStack(spacing: 8) {
-                            Image(systemName: "camera.fill").font(.system(size: 28))
-                            Text("Araç Fotoğrafı Ekle").font(AppFont.caption)
+                        LinearGradient(
+                            colors: [AppColor.surfaceElevated, AppColor.surfaceElevated.opacity(0.5)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                        VStack(spacing: 12) {
+                            ZStack {
+                                Circle()
+                                    .fill(AppColor.accent.opacity(0.15))
+                                    .frame(width: 56, height: 56)
+                                Image(systemName: "camera.fill")
+                                    .font(.system(size: 22, weight: .semibold))
+                                    .foregroundStyle(AppColor.accent)
+                            }
+                            Text("Araç Fotoğrafı Ekle")
+                                .font(AppFont.caption.weight(.semibold))
+                                .foregroundStyle(AppColor.textSecondary)
                         }
-                        .foregroundStyle(AppColor.textSecondary)
                     }
                 }
             }
             .frame(height: 180)
             .frame(maxWidth: .infinity)
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .overlay {
+                if photoData == nil {
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .strokeBorder(AppColor.glassBorder, style: StrokeStyle(lineWidth: 1.5, dash: [7, 6]))
+                }
+            }
             .clipped()
         }
         .buttonStyle(.plain)
     }
 
-    private func labeledField(_ title: LocalizedStringKey, text: Binding<String>) -> some View {
+    private func pickerField(_ title: LocalizedStringKey, value: String, placeholder: LocalizedStringKey, action: @escaping () -> Void) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
                 .font(AppFont.caption)
                 .foregroundStyle(AppColor.textSecondary)
-            TextField(title, text: text)
+            Button(action: action) {
+                HStack {
+                    if value.isEmpty {
+                        Text(placeholder)
+                            .foregroundStyle(AppColor.textTertiary)
+                    } else {
+                        Text(value)
+                            .foregroundStyle(AppColor.textPrimary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(AppColor.textTertiary)
+                }
                 .font(AppFont.body)
-                .foregroundStyle(AppColor.textPrimary)
                 .padding(10)
+                .frame(maxWidth: .infinity)
                 .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(AppColor.surfaceElevated))
+            }
+            .buttonStyle(.plain)
         }
+    }
+
+    private var yearField: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Yıl")
+                .font(AppFont.caption)
+                .foregroundStyle(AppColor.textSecondary)
+            // A plain .pickerStyle(.menu) Picker hugs its label's content
+            // width instead of respecting .frame(maxWidth: .infinity) the
+            // way TextField does, which is why this used to render
+            // narrower than Beygir Gücü next to it — a Menu with the same
+            // HStack+padding+background structure as numericField's
+            // TextField forces identical, symmetric sizing instead.
+            Menu {
+                ForEach((1970...Calendar.current.component(.year, from: Date())).reversed(), id: \.self) { yearOption in
+                    Button(String(yearOption)) { year = yearOption }
+                }
+            } label: {
+                HStack {
+                    Text(String(year))
+                        .font(AppFont.body)
+                        .foregroundStyle(AppColor.textPrimary)
+                    Spacer()
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(AppColor.textSecondary)
+                }
+                .padding(10)
+                .frame(maxWidth: .infinity)
+                .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(AppColor.surfaceElevated))
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func numericField(_ title: LocalizedStringKey, value: Binding<Int>, groupsThousands: Bool = false) -> some View {
@@ -184,16 +277,26 @@ struct AddCarView: View {
     }
 
     private func save() {
-        let car = Car(
-            make: make,
-            model: model,
-            year: year,
-            horsepower: horsepower,
-            fuelType: fuelType,
-            mileageKm: mileageKm,
-            photoData: photoData
-        )
-        modelContext.insert(car)
+        if let existingCar {
+            existingCar.make = make
+            existingCar.model = model
+            existingCar.year = year
+            existingCar.horsepower = horsepower
+            existingCar.fuelType = fuelType
+            existingCar.mileageKm = mileageKm
+            existingCar.photoData = photoData
+        } else {
+            let car = Car(
+                make: make,
+                model: model,
+                year: year,
+                horsepower: horsepower,
+                fuelType: fuelType,
+                mileageKm: mileageKm,
+                photoData: photoData
+            )
+            modelContext.insert(car)
+        }
         dismiss()
     }
 }

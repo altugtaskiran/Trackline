@@ -13,7 +13,7 @@ struct SegmentRow: View {
         HStack(spacing: 14) {
             ZStack {
                 Circle().fill(AppColor.accent.opacity(0.16))
-                Image(systemName: "ruler")
+                Image(systemName: "arrow.triangle.turn.up.right.diamond.fill")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(AppColor.accent)
             }

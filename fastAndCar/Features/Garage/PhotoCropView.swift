@@ -14,12 +14,13 @@ import SwiftUI
 struct PhotoCropView: View {
     @Environment(\.dismiss) private var dismiss
     let image: UIImage
+    /// width:height — defaults to ShareCardRenderer's 360×640 (9:16) hero
+    /// canvas (the car-photo use this view was built for). Profile photos
+    /// pass 1:1 for a square, avatar-ready crop instead.
+    var aspectRatio: CGFloat = 360.0 / 640.0
     var onCrop: (Data) -> Void
 
-    // Matches ShareCardRenderer's fixed 360×640 (9:16) hero canvas — that
-    // full-bleed use is the one where "car's too small/far away" actually
-    // bites, so the crop tool composes for that aspect ratio specifically.
-    private let cropSize = CGSize(width: 280, height: 280 * 640 / 360)
+    private var cropSize: CGSize { CGSize(width: 280, height: 280 / aspectRatio) }
     private let minScale: CGFloat = 1
     private let maxScale: CGFloat = 4
 

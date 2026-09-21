@@ -12,54 +12,62 @@ import CloudKit
 import SwiftUI
 
 struct CrewHomeView: View {
-    var onFollowCrewSegment: (Segment, CrewZoneRef) -> Void
+    var onFollowCrewSegment: (Segment, String, CrewZoneRef) -> Void
 
     @State private var myCrewsStore = MyCrewsStore()
     @State private var showsCreateCrew = false
     @State private var showsInvite = false
+    @State private var showsInvitesInbox = false
     @State private var pendingShare: (share: CKShareBox, container: CKContainerBox)?
     @State private var pendingCrewName = ""
+    @State private var pendingInviteCount = 0
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                AppColor.background.ignoresSafeArea()
+        ZStack {
+            AppColor.background.ignoresSafeArea()
 
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 16) {
-                        if myCrewsStore.crews.isEmpty {
-                            emptyState
-                        } else {
-                            ForEach(myCrewsStore.crews) { ref in
-                                NavigationLink {
-                                    CrewDetailView(crewRef: ref, onFollowCrewSegment: onFollowCrewSegment)
-                                } label: {
-                                    CrewRow(name: ref.crew.name, subtitle: ref.zoneRef.isOwnedByThisDevice ? "Kurucu sensin" : "Üyesin")
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    if pendingInviteCount > 0 {
                         Button {
-                            showsCreateCrew = true
+                            showsInvitesInbox = true
                         } label: {
-                            Label("Yeni Crew Oluştur", systemImage: "plus.circle.fill")
+                            Label("Bekleyen Davetler (\(pendingInviteCount))", systemImage: "tray.full.fill")
+                                .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(.glass(.accent))
                     }
-                    .padding(20)
+
+                    if myCrewsStore.crews.isEmpty {
+                        emptyState
+                    } else {
+                        ForEach(myCrewsStore.crews) { ref in
+                            NavigationLink(value: ref) {
+                                CrewRow(name: ref.crew.name, subtitle: ref.zoneRef.isOwnedByThisDevice ? "Kurucu sensin" : "Üyesin")
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+
+                    Button {
+                        showsCreateCrew = true
+                    } label: {
+                        Label("Yeni Crew Oluştur", systemImage: "plus.circle.fill")
+                    }
+                    .buttonStyle(.glass(.accent))
                 }
+                .padding(20)
             }
-            .navigationTitle("Crew")
-            .navigationBarTitleDisplayMode(.inline)
         }
+        .navigationTitle("Crew")
+        .navigationBarTitleDisplayMode(.inline)
         .preferredColorScheme(.dark)
         .sheet(isPresented: $showsCreateCrew) {
-            CreateCrewView { ref, share in
+            // QR/link invite (showsInvite/CrewInviteView) is deactivated —
+            // just record the crew now; inviting happens from
+            // CrewDetailView's by-name search instead.
+            CreateCrewView { ref, _ in
                 myCrewsStore.record(ref.crew, zoneRef: ref.zoneRef)
-                pendingCrewName = ref.crew.name
-                pendingShare = (CKShareBox(share), CKContainerBox(CKContainer.default()))
-                showsInvite = true
             }
         }
         .sheet(isPresented: $showsInvite) {
@@ -67,8 +75,16 @@ struct CrewHomeView: View {
                 CrewInviteView(crewName: pendingCrewName, share: pendingShare.share.value, container: pendingShare.container.value)
             }
         }
+        .sheet(isPresented: $showsInvitesInbox) {
+            CrewInvitesInboxView { crew, zoneRef in
+                myCrewsStore.record(crew, zoneRef: zoneRef)
+            }
+        }
         .onChange(of: CrewInviteAcceptance.shared.lastAcceptedCrew?.id) { _, _ in
             myCrewsStore = MyCrewsStore()
+        }
+        .onChange(of: showsInvitesInbox) { wasShowing, isShowing in
+            if wasShowing, !isShowing { Task { await loadPendingInviteCount() } }
         }
         .onAppear {
             // Reload from disk every time this list becomes visible again —
@@ -76,6 +92,7 @@ struct CrewHomeView: View {
             // CrewDetailView, whose own MyCrewsStore() instance is separate
             // from this one's in-memory copy.
             myCrewsStore = MyCrewsStore()
+            Task { await loadPendingInviteCount() }
         }
         #if DEBUG
         .task {
@@ -88,6 +105,12 @@ struct CrewHomeView: View {
             myCrewsStore.record(fakeCrew, zoneRef: fakeZoneRef)
         }
         #endif
+    }
+
+    private func loadPendingInviteCount() async {
+        guard FeatureFlags.crewEnabled else { return }
+        guard let userId = try? await CloudKitCrewService.currentUserId() else { return }
+        pendingInviteCount = (try? await CloudKitCrewService.fetchPendingInvites(userId: userId).count) ?? 0
     }
 
     private var emptyState: some View {

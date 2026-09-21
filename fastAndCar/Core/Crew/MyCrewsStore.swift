@@ -11,7 +11,7 @@
 import Foundation
 import Observation
 
-struct MyCrewRef: Codable, Identifiable {
+struct MyCrewRef: Codable, Identifiable, Hashable {
     let crew: Crew
     let zoneRef: CrewZoneRef
     var id: String { crew.id }

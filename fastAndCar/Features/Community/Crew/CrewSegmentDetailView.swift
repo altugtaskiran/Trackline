@@ -14,12 +14,14 @@ import SwiftUI
 
 struct CrewSegmentDetailView: View {
     let segment: Segment
+    let crewId: String
     let zoneRef: CrewZoneRef
-    var onFollowSegment: (Segment, CrewZoneRef) -> Void
+    var onFollowSegment: (Segment, String, CrewZoneRef) -> Void
 
     @State private var entries: [SegmentEffort] = []
     @State private var isLoading = true
     @State private var errorMessage: String?
+    @State private var photoCache = ProfilePhotoCache.shared
     @AppStorage("distanceUnit") private var distanceUnitRaw = DistanceUnit.systemDefault.rawValue
     private var distanceUnit: DistanceUnit { DistanceUnit(rawValue: distanceUnitRaw) ?? .systemDefault }
 
@@ -42,9 +44,17 @@ struct CrewSegmentDetailView: View {
 
             ScrollView {
                 VStack(spacing: 16) {
-                    RouteCanvas(samples: previewSamples, lineWidth: 3, showsEndpoints: true, padding: 20)
-                        .frame(height: 200)
-                        .glassCard(cornerRadius: 22, padding: 0)
+                    GeometryReader { proxy in
+                        let rect = CGRect(origin: .zero, size: proxy.size)
+                        let region = FittedRegion.fitting(samples: previewSamples, aspectRatio: rect.width / max(rect.height, 1))
+                        let projector = GeoMapProjector.projector(region: region)
+                        ZStack {
+                            RouteMapBackdrop(region: region)
+                            RouteCanvas(samples: previewSamples, lineWidth: 3, showsEndpoints: true, padding: 20, projector: projector)
+                        }
+                    }
+                    .frame(height: 200)
+                    .glassCard(cornerRadius: 22, padding: 0)
 
                     GlassCard {
                         VStack(alignment: .leading, spacing: 4) {
@@ -59,7 +69,7 @@ struct CrewSegmentDetailView: View {
                     }
 
                     Button {
-                        onFollowSegment(segment, zoneRef)
+                        onFollowSegment(segment, crewId, zoneRef)
                     } label: {
                         Label("Bu Rotayı Sür", systemImage: "arrow.triangle.turn.up.right.diamond.fill")
                     }
@@ -72,7 +82,7 @@ struct CrewSegmentDetailView: View {
                     } else {
                         LazyVStack(spacing: 12) {
                             ForEach(Array(entries.enumerated()), id: \.element.id) { index, entry in
-                                SegmentEffortRow(rank: index + 1, effort: entry)
+                                SegmentEffortRow(rank: index + 1, effort: entry, avatar: photoCache.image(for: entry.userId))
                             }
                         }
                     }
@@ -116,6 +126,7 @@ struct CrewSegmentDetailView: View {
         defer { isLoading = false }
         do {
             entries = try await CloudKitCrewService.fetchSegmentLeaderboard(segmentId: segment.id, zoneRef: zoneRef)
+            await photoCache.prefetch(userIds: entries.map(\.userId))
         } catch CrewServiceError.featureNotAvailable {
             // Same as SegmentDetailView — not a real error, falls through
             // to the empty state instead of a blocking alert.

@@ -27,6 +27,7 @@ struct AppRootView: View {
     /// the finished drive as an effort into that crew's own zone, not just
     /// run the public Global Leaderboard auto-matcher.
     @State private var guidanceCrewZoneRef: CrewZoneRef?
+    @State private var guidanceCrewId: String?
     @Environment(\.modelContext) private var modelContext
 
     var body: some View {
@@ -61,7 +62,12 @@ struct AppRootView: View {
                                     locationManager: appEnvironment.locationManager,
                                     isRecording: $isRecording,
                                     guidanceSegment: guidanceSegment,
-                                    onTripEnded: handleTripEnded
+                                    onTripEnded: handleTripEnded,
+                                    onCancelRoute: {
+                                        guidanceSegment = nil
+                                        guidanceCrewZoneRef = nil
+                                        guidanceCrewId = nil
+                                    }
                                 )
                                 .id(guidanceSegment?.id)
                             case .garage:
@@ -110,6 +116,16 @@ struct AppRootView: View {
                 }
                 .navigationDestination(for: String.self) { segmentId in
                     SegmentDetailLoaderView(segmentId: segmentId, onFollowSegment: followSegment)
+                }
+                // Same shared-stack fix, applied to Crew's screens — they
+                // used to live in their own NavigationStack nested inside
+                // CommunityView, which is exactly the pattern that broke
+                // "Bu Rotayı Sür" not visually switching to Dashboard.
+                .navigationDestination(for: MyCrewRef.self) { ref in
+                    CrewDetailView(crewRef: ref, onFollowCrewSegment: followCrewSegment)
+                }
+                .navigationDestination(for: CrewSegmentPush.self) { push in
+                    CrewSegmentDetailView(segment: push.segment, crewId: push.crewId, zoneRef: push.zoneRef, onFollowSegment: followCrewSegment)
                 }
             }
             .environment(appEnvironment)
@@ -205,6 +221,63 @@ struct AppRootView: View {
             }
         }
         .task {
+            // Ask for notification permission here, at launch, rather than
+            // waiting until the first drive actually finishes and needs to
+            // post one (SegmentAutoMatcher used to be the only caller) —
+            // requestAuthorization's system prompt is async and doesn't
+            // block, so a notification that needs to go out moments after
+            // the very first prompt appears was racing the user's answer
+            // and silently getting dropped if they hadn't responded yet.
+            // Asking on launch gives that prompt plenty of time to resolve
+            // before it's ever actually needed.
+            LocalNotifier.requestAuthorizationIfNeeded()
+        }
+        #if DEBUG
+        .task {
+            // Test-only: jumps straight to a synthetic Segment's detail
+            // screen (SegmentDetailView's own -uiTestSeedFakeLeaderboard
+            // hook fills the ranked list) so the leaderboard's visual
+            // design can be checked without needing several real CloudKit
+            // accounts to race each other first.
+            guard ProcessInfo.processInfo.arguments.contains("-uiTestAutoOpenFakeLeaderboard") else { return }
+            try? await Task.sleep(for: .milliseconds(300))
+            let fakeSegment = Segment(
+                id: "fake-segment",
+                name: "Test Parkuru",
+                creatorId: "fake-creator",
+                creatorNickname: "turbo",
+                polyline: [
+                    RoutePolylinePoint(lat: 41.02, lon: 28.97),
+                    RoutePolylinePoint(lat: 41.03, lon: 28.98),
+                ],
+                minLatitude: 41.02, minLongitude: 28.97,
+                maxLatitude: 41.03, maxLongitude: 28.98,
+                toleranceMeters: 25, bearingDegrees: 45,
+                geohashes: [], createdAt: Date(),
+                creatorDurationSeconds: 60, voteCount: 3
+            )
+            path.append(fakeSegment)
+        }
+        #endif
+        .task {
+            // Best-effort, once per launch. Two cases:
+            // - Local nickname already set: publish it (covers anyone who
+            //   picked a nickname before the by-name crew invite feature
+            //   existed and so never had their handle synced to CloudKit).
+            // - No local nickname (first launch, or a delete-and-reinstall
+            //   that wiped UserDefaults): try to recover an existing handle
+            //   from CloudKit first, keyed by the CloudKit userId which
+            //   survives reinstalls — so a friend's saved "nickname#tag"
+            //   for this person, and this person's own identity, don't
+            //   silently break just because the app was reinstalled.
+            let store = NicknameStore()
+            if store.hasNickname {
+                try? await CloudKitProfileService.syncHandle(nickname: store.nickname, tag: store.tag)
+            } else if let recovered = try? await CloudKitProfileService.fetchMyHandle() {
+                store.restore(nickname: recovered.nickname, tag: recovered.tag)
+            }
+        }
+        .task {
             // First launch (permission not decided yet) used to always sit
             // through the full splash animation *then* have Onboarding's
             // own animated intro play right after it — the same kind of
@@ -239,7 +312,7 @@ struct AppRootView: View {
         // a general "was I near any public segment" auto-detect) — already
         // know exactly which segment and zone, so submit straight to it
         // rather than searching.
-        if let crewZoneRef = guidanceCrewZoneRef, let followedSegment = guidanceSegment {
+        if let crewZoneRef = guidanceCrewZoneRef, let crewId = guidanceCrewId, let followedSegment = guidanceSegment {
             let samples = trip.samples
             let score = trip.drivingScoreValue
             Task {
@@ -248,6 +321,7 @@ struct AppRootView: View {
                 guard let userId = try? await CloudKitCrewService.currentUserId() else { return }
                 try? await CloudKitCrewService.submitEffort(
                     segmentId: followedSegment.id,
+                    crewId: crewId,
                     userId: userId,
                     nickname: nickname,
                     match: match,
@@ -260,6 +334,7 @@ struct AppRootView: View {
         // A followed route only applies to the one drive it was armed for.
         guidanceSegment = nil
         guidanceCrewZoneRef = nil
+        guidanceCrewId = nil
     }
 
     /// Re-evaluates the full badge set against every trip on disk (cheap —
@@ -277,15 +352,11 @@ struct AppRootView: View {
     }
 
     /// "Bu Rotayı Sür" in a Segment's detail screen — arms Dashboard with
-    /// this route (ghost overlay + turn hints), switches to it, and starts
-    /// recording immediately: unlike the tab bar's own Ana Sayfa button,
-    /// tapping "follow this route" *is* the explicit "start driving" action.
-    /// The short delay before flipping isRecording matters — Dashboard's
-    /// ActiveTripViewModel only reads guidanceSegment when it's first
-    /// constructed (right as .dashboard becomes selectedTab), and its
-    /// .onChange(of: isRecording) only fires on an actual change, not the
-    /// initial value, so isRecording has to go true *after* Dashboard has
-    /// already mounted with isRecording still false.
+    /// this route (ghost overlay + turn hints) and switches to it, but does
+    /// NOT start recording automatically: the driver lands on Ana Sayfa in
+    /// the "Rota Hazır" state and has to explicitly tap Sürüşe Başla (or
+    /// Rotayı İptal Et to back out) — armed and driving are two separate,
+    /// user-confirmed steps.
     private func followSegment(_ segment: Segment) {
         // Cleared here rather than left to the .onChange(of: selectedTab)
         // side effect below — popping the pushed Segment detail screen and
@@ -296,23 +367,16 @@ struct AppRootView: View {
         guidanceSegment = segment
         guidanceCrewZoneRef = nil
         selectedTab = .dashboard
-        Task {
-            try? await Task.sleep(for: .milliseconds(400))
-            isRecording = true
-        }
     }
 
     /// Same as followSegment, just also remembers which crew zone to
     /// submit the finished drive's effort into (see handleTripEnded).
-    private func followCrewSegment(_ segment: Segment, zoneRef: CrewZoneRef) {
+    private func followCrewSegment(_ segment: Segment, crewId: String, zoneRef: CrewZoneRef) {
         path = NavigationPath()
         guidanceSegment = segment
         guidanceCrewZoneRef = zoneRef
+        guidanceCrewId = crewId
         selectedTab = .dashboard
-        Task {
-            try? await Task.sleep(for: .milliseconds(400))
-            isRecording = true
-        }
     }
 
     private func fetchTrip(id: UUID) -> Trip? {

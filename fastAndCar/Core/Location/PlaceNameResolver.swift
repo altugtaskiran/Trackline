@@ -15,9 +15,18 @@ import MapKit
 enum PlaceNameResolver {
     static func resolve(coordinate: CLLocationCoordinate2D) async -> String? {
         let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-        guard let request = MKReverseGeocodingRequest(location: location) else { return nil }
-        guard let mapItem = try? await request.mapItems.first else { return nil }
-        return format(city: mapItem.addressRepresentations?.cityName, country: mapItem.addressRepresentations?.regionName)
+        if #available(iOS 26.0, *) {
+            guard let request = MKReverseGeocodingRequest(location: location) else { return nil }
+            guard let mapItem = try? await request.mapItems.first else { return nil }
+            return format(city: mapItem.addressRepresentations?.cityName, country: mapItem.addressRepresentations?.regionName)
+        } else {
+            // Pre-iOS 26 fallback — CLGeocoder is older/coarser but covers
+            // the same "City, Country" need for devices below the new
+            // MapKit reverse-geocoding API's floor (added to support
+            // iPhone XR, capped at iOS 18).
+            guard let placemark = try? await CLGeocoder().reverseGeocodeLocation(location).first else { return nil }
+            return format(city: placemark.locality, country: placemark.country)
+        }
     }
 
     private static func format(city: String?, country: String?) -> String? {

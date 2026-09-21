@@ -12,6 +12,7 @@ struct GarageView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Car.createdAt, order: .reverse) private var cars: [Car]
     @State private var showsAddCar = false
+    @State private var editingCar: Car?
 
     var body: some View {
         NavigationStack {
@@ -25,6 +26,8 @@ struct GarageView: View {
                         } else {
                             ForEach(cars) { car in
                                 CarCard(car: car) {
+                                    editingCar = car
+                                } onDelete: {
                                     modelContext.delete(car)
                                 }
                             }
@@ -49,6 +52,9 @@ struct GarageView: View {
         }
         .sheet(isPresented: $showsAddCar) {
             AddCarView()
+        }
+        .sheet(item: $editingCar) { car in
+            AddCarView(existingCar: car)
         }
         #if DEBUG
         .task {

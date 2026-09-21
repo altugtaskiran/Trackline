@@ -9,6 +9,7 @@
 //
 
 import CloudKit
+import CoreLocation
 import Foundation
 
 enum SegmentServiceError: Error {
@@ -99,6 +100,40 @@ enum CloudKitSegmentService {
         }
     }
 
+    /// Test-only widening of "nearby": the geohash grid in
+    /// fetchNearbySegments is precision-6 cells (~1-2km total reach) and
+    /// scaling that grid out to a real 30km radius would mean thousands of
+    /// candidate cells in one predicate — impractical. This instead fetches
+    /// every public Segment and filters by actual great-circle distance
+    /// from each segment's bounding-box center, which is exact and fine at
+    /// today's small test-data scale. Not meant to replace
+    /// fetchNearbySegments once there are enough public segments that
+    /// fetching all of them stops being cheap.
+    static func fetchSegments(within radiusMeters: Double, of coordinate: CLLocationCoordinate2D) async throws -> [Segment] {
+        guard FeatureFlags.globalLeaderboardEnabled else { throw SegmentServiceError.featureNotAvailable }
+        let query = CKQuery(recordType: segmentRecordType, predicate: NSPredicate(value: true))
+        let center = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+
+        do {
+            let (matchResults, _) = try await database.records(matching: query)
+            let segments = matchResults.compactMap { _, result -> Segment? in
+                guard case .success(let record) = result else { return nil }
+                return mapSegment(record)
+            }
+            return segments.filter { segment in
+                let segmentCenter = CLLocation(
+                    latitude: (segment.minLatitude + segment.maxLatitude) / 2,
+                    longitude: (segment.minLongitude + segment.maxLongitude) / 2
+                )
+                return center.distance(from: segmentCenter) <= radiusMeters
+            }.sorted { $0.voteCount > $1.voteCount }
+        } catch let error as CKError where error.code == .notAuthenticated {
+            throw SegmentServiceError.notSignedIntoiCloud
+        } catch {
+            throw SegmentServiceError.underlying(error)
+        }
+    }
+
     /// Sorted by vote count descending — the best-rated matches for the
     /// searched name surface first, not just whatever order CloudKit
     /// happened to return them in.
@@ -123,13 +158,23 @@ enum CloudKitSegmentService {
 
     // MARK: - Voting
 
+    /// One vote record per (segment, user), recordName = "segmentId_userId"
+    /// so it's a direct-by-ID lookup — not a CKQuery. CloudKit queries have
+    /// repeatedly proven unreliable in this container (see
+    /// CloudKitProfileService's header comment for the full story); a
+    /// deterministic ID sidesteps that entirely for both checking and
+    /// removing a vote.
+    private static func voteRecordID(segmentId: String, userId: String) -> CKRecord.ID {
+        CKRecord.ID(recordName: "\(segmentId)_\(userId)")
+    }
+
     static func hasVoted(segmentId: String, userId: String) async throws -> Bool {
         guard FeatureFlags.globalLeaderboardEnabled else { throw SegmentServiceError.featureNotAvailable }
-        let predicate = NSPredicate(format: "segmentId == %@ AND userId == %@", segmentId, userId)
-        let query = CKQuery(recordType: voteRecordType, predicate: predicate)
         do {
-            let (matchResults, _) = try await database.records(matching: query)
-            return !matchResults.isEmpty
+            _ = try await database.record(for: voteRecordID(segmentId: segmentId, userId: userId))
+            return true
+        } catch let error as CKError where error.code == .unknownItem {
+            return false
         } catch let error as CKError where error.code == .notAuthenticated {
             throw SegmentServiceError.notSignedIntoiCloud
         } catch {
@@ -146,7 +191,7 @@ enum CloudKitSegmentService {
         guard try await !hasVoted(segmentId: segmentId, userId: userId) else { return }
 
         do {
-            let voteRecord = CKRecord(recordType: voteRecordType)
+            let voteRecord = CKRecord(recordType: voteRecordType, recordID: voteRecordID(segmentId: segmentId, userId: userId))
             voteRecord["segmentId"] = segmentId as CKRecordValue
             voteRecord["userId"] = userId as CKRecordValue
             voteRecord["createdAt"] = Date() as CKRecordValue
@@ -155,6 +200,25 @@ enum CloudKitSegmentService {
             let segmentRecord = try await database.record(for: CKRecord.ID(recordName: segmentId))
             let currentVotes = segmentRecord["voteCount"] as? Int ?? 0
             segmentRecord["voteCount"] = (currentVotes + 1) as CKRecordValue
+            _ = try await database.save(segmentRecord)
+        } catch let error as CKError where error.code == .notAuthenticated {
+            throw SegmentServiceError.notSignedIntoiCloud
+        } catch {
+            throw SegmentServiceError.underlying(error)
+        }
+    }
+
+    /// Undo — deletes this device's vote record and decrements the
+    /// Segment's cached voteCount (clamped at 0, same non-atomic
+    /// fetch-then-save trade as voteForSegment).
+    static func unvoteSegment(segmentId: String, userId: String) async throws {
+        guard FeatureFlags.globalLeaderboardEnabled else { throw SegmentServiceError.featureNotAvailable }
+        do {
+            _ = try? await database.deleteRecord(withID: voteRecordID(segmentId: segmentId, userId: userId))
+
+            let segmentRecord = try await database.record(for: CKRecord.ID(recordName: segmentId))
+            let currentVotes = segmentRecord["voteCount"] as? Int ?? 0
+            segmentRecord["voteCount"] = max(0, currentVotes - 1) as CKRecordValue
             _ = try await database.save(segmentRecord)
         } catch let error as CKError where error.code == .notAuthenticated {
             throw SegmentServiceError.notSignedIntoiCloud

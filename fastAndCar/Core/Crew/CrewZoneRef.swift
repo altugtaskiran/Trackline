@@ -13,7 +13,7 @@
 import CloudKit
 import Foundation
 
-struct CrewZoneRef: Codable, Equatable {
+struct CrewZoneRef: Codable, Equatable, Hashable {
     let zoneName: String
     /// nil when this device is the crew's creator (zone lives in
     /// CKContainer.default().privateCloudDatabase); set to the owner's

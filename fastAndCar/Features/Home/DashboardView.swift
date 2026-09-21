@@ -29,18 +29,21 @@ struct DashboardView: View {
     @Binding var isRecording: Bool
     let locationManager: LocationManager
     var onTripEnded: (ActiveTripViewModel.TripResult) -> Void
+    var onCancelRoute: () -> Void
 
     init(
         locationManager: LocationManager,
         isRecording: Binding<Bool>,
         guidanceSegment: Segment? = nil,
-        onTripEnded: @escaping (ActiveTripViewModel.TripResult) -> Void
+        onTripEnded: @escaping (ActiveTripViewModel.TripResult) -> Void,
+        onCancelRoute: @escaping () -> Void = {}
     ) {
         self.locationManager = locationManager
         _viewModel = State(initialValue: HomeViewModel(locationManager: locationManager))
         _tripViewModel = State(initialValue: ActiveTripViewModel(locationManager: locationManager, guidanceSegment: guidanceSegment))
         _isRecording = isRecording
         self.onTripEnded = onTripEnded
+        self.onCancelRoute = onCancelRoute
     }
 
     private var ghostRouteCoordinates: [CLLocationCoordinate2D] {
@@ -183,7 +186,17 @@ struct DashboardView: View {
                     }
                 }
                 .buttonStyle(.glass(isRecording ? .destructive : .accent))
-                .padding(.bottom, isRecording ? 40 : 100)
+                .padding(.bottom, (!isRecording && tripViewModel.guidanceTracker?.segment != nil) ? 12 : (isRecording ? 40 : 100))
+
+                if !isRecording, tripViewModel.guidanceTracker?.segment != nil {
+                    Button {
+                        onCancelRoute()
+                    } label: {
+                        Label("Rotayı İptal Et", systemImage: "xmark")
+                    }
+                    .buttonStyle(.glass(.destructive))
+                    .padding(.bottom, 100)
+                }
             }
             .animation(.spring(response: 0.35, dampingFraction: 0.85), value: isRecording)
 

@@ -7,6 +7,7 @@ import SwiftUI
 
 struct CarCard: View {
     let car: Car
+    var onEdit: () -> Void
     var onDelete: () -> Void
 
     var body: some View {
@@ -33,7 +34,12 @@ struct CarCard: View {
         .background(AppColor.surface)
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).strokeBorder(AppColor.glassBorder, lineWidth: 1))
+        .contentShape(Rectangle())
+        .onTapGesture(perform: onEdit)
         .contextMenu {
+            Button(action: onEdit) {
+                Label("Düzenle", systemImage: "pencil")
+            }
             Button(role: .destructive, action: onDelete) {
                 Label("Sil", systemImage: "trash")
             }

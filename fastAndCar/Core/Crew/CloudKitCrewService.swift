@@ -31,6 +31,8 @@ enum CloudKitCrewService {
     // or index work.
     private static let segmentRecordType = "Segment"
     private static let effortRecordType = "SegmentEffort"
+    private static let inviteRequestRecordType = "CrewInviteRequest"
+    private static var publicDatabase: CKDatabase { CKContainer.default().publicCloudDatabase }
 
     // MARK: - Create
 
@@ -66,6 +68,13 @@ enum CloudKitCrewService {
             share.publicPermission = .readWrite
 
             let membershipRecord = CKRecord(recordType: membershipRecordType, recordID: CKRecord.ID(recordName: UUID().uuidString, zoneID: zone.zoneID))
+            // Without a parent link to the Crew record, this membership
+            // record isn't part of the shared hierarchy — invited
+            // participants querying the zone via their own shared database
+            // can't see it (they only see records that ARE linked), even
+            // though the owner always has full, unconditional access to
+            // their own private zone regardless of parent.
+            membershipRecord.parent = CKRecord.Reference(recordID: recordID, action: .none)
             membershipRecord["crewId"] = crewId as CKRecordValue
             membershipRecord["userId"] = creatorId as CKRecordValue
             membershipRecord["nickname"] = creatorNickname as CKRecordValue
@@ -106,19 +115,204 @@ enum CloudKitCrewService {
 
             let sharedDatabase = CKContainer.default().sharedCloudDatabase
             let rootRecordID = metadata.hierarchicalRootRecordID ?? metadata.share.recordID
-            let rootRecord = try await sharedDatabase.record(for: rootRecordID)
+            let rootRecord: CKRecord
+            do {
+                rootRecord = try await sharedDatabase.record(for: rootRecordID)
+            } catch {
+                throw CrewServiceError.underlying(NSError(domain: "AcceptShare.readRoot", code: 0, userInfo: [NSUnderlyingErrorKey: error]))
+            }
             guard let crew = mapCrew(rootRecord) else { throw CrewServiceError.underlying(URLError(.cannotParseResponse)) }
 
             let zoneRef = CrewZoneRef(zoneName: rootRecordID.zoneID.zoneName, ownerName: rootRecordID.zoneID.ownerName)
 
             let membershipRecord = CKRecord(recordType: membershipRecordType, recordID: CKRecord.ID(recordName: UUID().uuidString, zoneID: rootRecordID.zoneID))
+            // Without this, CloudKit doesn't recognize the new record as
+            // part of the shared hierarchy rooted at the Crew record — a
+            // readWrite participant's CREATE gets rejected for anything
+            // that isn't linked to the share root, even though the zone
+            // itself is shared to them with write access.
+            membershipRecord.parent = CKRecord.Reference(recordID: rootRecordID, action: .none)
             membershipRecord["crewId"] = crew.id as CKRecordValue
             membershipRecord["userId"] = userId as CKRecordValue
             membershipRecord["nickname"] = nickname as CKRecordValue
             membershipRecord["joinedAt"] = Date() as CKRecordValue
-            _ = try await sharedDatabase.save(membershipRecord)
+            do {
+                _ = try await sharedDatabase.save(membershipRecord)
+            } catch {
+                throw CrewServiceError.underlying(NSError(domain: "AcceptShare.writeMembership", code: 0, userInfo: [NSUnderlyingErrorKey: error]))
+            }
 
             return (crew, zoneRef)
+        } catch let error as CKError where error.code == .notAuthenticated {
+            throw CrewServiceError.notSignedIntoiCloud
+        } catch {
+            throw CrewServiceError.underlying(error)
+        }
+    }
+
+    // MARK: - Invite by name
+
+    /// Explicitly adds a known user (by their CloudKit userId, found via
+    /// CloudKitProfileService.findUser) as a real, named CKShare.Participant
+    /// with readWrite — rather than relying on them "walking in" through
+    /// share.publicPermission when they accept the link. That publicPermission
+    /// path turned out to grant read access but NOT create/write access to
+    /// new records in the shared zone (confirmed live: CrewMembership writes
+    /// failed with "CREATE operation not permitted" even after a successful
+    /// accept). An explicitly named participant with .readWrite is the
+    /// standard, fully-supported CloudKit sharing pattern and doesn't have
+    /// that gap. Must run on the crew owner's device (only the share's
+    /// owner/manager can add participants) — called right before sending
+    /// the CrewInviteRequest, so by the time it's accepted, real write
+    /// access is already in place.
+    static func addParticipant(userId: String, to share: CKShare) async throws {
+        guard FeatureFlags.crewEnabled else { throw CrewServiceError.featureNotAvailable }
+        let lookupInfo = CKUserIdentity.LookupInfo(userRecordID: CKRecord.ID(recordName: userId))
+
+        do {
+            let participant: CKShare.Participant = try await withCheckedThrowingContinuation { continuation in
+                let operation = CKFetchShareParticipantsOperation(userIdentityLookupInfos: [lookupInfo])
+                var found: CKShare.Participant?
+                operation.perShareParticipantResultBlock = { _, result in
+                    if case .success(let participant) = result { found = participant }
+                }
+                operation.fetchShareParticipantsResultBlock = { result in
+                    switch result {
+                    case .success:
+                        if let found { continuation.resume(returning: found) }
+                        else { continuation.resume(throwing: URLError(.cannotParseResponse)) }
+                    case .failure(let error):
+                        continuation.resume(throwing: error)
+                    }
+                }
+                CKContainer.default().add(operation)
+            }
+            participant.permission = .readWrite
+            share.addParticipant(participant)
+            _ = try await CKContainer.default().privateCloudDatabase.save(share)
+        } catch let error as CKError where error.code == .notAuthenticated {
+            throw CrewServiceError.notSignedIntoiCloud
+        } catch {
+            throw CrewServiceError.underlying(error)
+        }
+    }
+
+    /// Looks up the CKShare a given crew's members already join through —
+    /// same lookup CrewDetailView.presentInvite does for the QR/link sheet,
+    /// factored out so the by-name invite flow can attach its own
+    /// CrewInviteRequest to the exact same share.url.
+    static func fetchShare(crewId: String, zoneRef: CrewZoneRef) async throws -> CKShare {
+        guard FeatureFlags.crewEnabled else { throw CrewServiceError.featureNotAvailable }
+        do {
+            let rootRecord = try await zoneRef.database.record(for: CKRecord.ID(recordName: crewId, zoneID: zoneRef.zoneID))
+            guard let shareReference = rootRecord.share else { throw CrewServiceError.underlying(URLError(.badServerResponse)) }
+            let shareRecord = try await zoneRef.database.record(for: shareReference.recordID)
+            guard let share = shareRecord as? CKShare else { throw CrewServiceError.underlying(URLError(.badServerResponse)) }
+            return share
+        } catch let error as CKError where error.code == .notAuthenticated {
+            throw CrewServiceError.notSignedIntoiCloud
+        } catch let error as CrewServiceError {
+            throw error
+        } catch {
+            throw CrewServiceError.underlying(error)
+        }
+    }
+
+    /// Sent to a specific person by their known CloudKit userId (found via
+    /// CloudKitProfileService.findUser) rather than handing out share.url
+    /// as a raw link — the recipient sees this as a "Kabul Et" request
+    /// inside the app instead of tapping an external link.
+    /// recordID is deterministic (crewId+targetUserId), not a random UUID —
+    /// re-inviting the same person to the same crew overwrites their one
+    /// existing pending invite instead of stacking up duplicates in their
+    /// inbox every time "Davet Gönder" gets tapped again.
+    static func sendInviteRequest(crewId: String, crewName: String, shareURL: URL, fromNickname: String, targetUserId: String) async throws {
+        guard FeatureFlags.crewEnabled else { throw CrewServiceError.featureNotAvailable }
+        let recordID = CKRecord.ID(recordName: "\(crewId)_\(targetUserId)")
+        let record = (try? await publicDatabase.record(for: recordID)) ?? CKRecord(recordType: inviteRequestRecordType, recordID: recordID)
+        record["crewId"] = crewId as CKRecordValue
+        record["crewName"] = crewName as CKRecordValue
+        record["shareURL"] = shareURL.absoluteString as CKRecordValue
+        record["fromNickname"] = fromNickname as CKRecordValue
+        record["targetUserId"] = targetUserId as CKRecordValue
+        record["createdAt"] = Date() as CKRecordValue
+        do {
+            _ = try await publicDatabase.save(record)
+        } catch let error as CKError where error.code == .notAuthenticated {
+            throw CrewServiceError.notSignedIntoiCloud
+        } catch {
+            throw CrewServiceError.underlying(error)
+        }
+    }
+
+    /// Every request addressed to this user — there's no separate
+    /// "pending/accepted" status field to filter on; accepting or declining
+    /// deletes the record (see respond(to:)), so anything found here is by
+    /// definition still open.
+    static func fetchPendingInvites(userId: String) async throws -> [CrewInviteRequest] {
+        guard FeatureFlags.crewEnabled else { throw CrewServiceError.featureNotAvailable }
+        let predicate = NSPredicate(format: "targetUserId == %@", userId)
+        let query = CKQuery(recordType: inviteRequestRecordType, predicate: predicate)
+        do {
+            let (matchResults, _) = try await publicDatabase.records(matching: query)
+            return matchResults.compactMap { _, result in
+                guard case .success(let record) = result else { return nil }
+                return mapInviteRequest(record)
+            }
+        } catch let error as CKError where error.code == .notAuthenticated {
+            throw CrewServiceError.notSignedIntoiCloud
+        } catch {
+            throw CrewServiceError.underlying(error)
+        }
+    }
+
+    /// Accepting fetches the CKShare's metadata straight through the
+    /// CloudKit API (CKFetchShareMetadataOperation over the URL stored in
+    /// the invite record) instead of iOS's system share-link handoff —
+    /// that's the whole point of this flow: it never touches the "does the
+    /// App Store have a newer version" check that link taps go through,
+    /// because nothing here opens a URL, it's a pure API call from inside
+    /// the already-running app.
+    static func acceptInviteRequest(_ invite: CrewInviteRequest, userId: String, nickname: String) async throws -> (crew: Crew, zoneRef: CrewZoneRef) {
+        guard FeatureFlags.crewEnabled else { throw CrewServiceError.featureNotAvailable }
+        guard let url = URL(string: invite.shareURL) else { throw CrewServiceError.underlying(URLError(.badURL)) }
+
+        do {
+            let metadata: CKShare.Metadata = try await withCheckedThrowingContinuation { continuation in
+                let operation = CKFetchShareMetadataOperation(shareURLs: [url])
+                var result: CKShare.Metadata?
+                operation.perShareMetadataResultBlock = { _, metadataResult in
+                    if case .success(let metadata) = metadataResult { result = metadata }
+                }
+                operation.fetchShareMetadataResultBlock = { opResult in
+                    switch opResult {
+                    case .success:
+                        if let result {
+                            continuation.resume(returning: result)
+                        } else {
+                            continuation.resume(throwing: URLError(.cannotParseResponse))
+                        }
+                    case .failure(let error):
+                        continuation.resume(throwing: error)
+                    }
+                }
+                CKContainer.default().add(operation)
+            }
+
+            let (crew, zoneRef) = try await acceptShare(metadata: metadata, userId: userId, nickname: nickname)
+            try? await publicDatabase.deleteRecord(withID: CKRecord.ID(recordName: invite.id))
+            return (crew, zoneRef)
+        } catch let error as CKError where error.code == .notAuthenticated {
+            throw CrewServiceError.notSignedIntoiCloud
+        } catch {
+            throw CrewServiceError.underlying(error)
+        }
+    }
+
+    static func declineInviteRequest(_ invite: CrewInviteRequest) async throws {
+        guard FeatureFlags.crewEnabled else { throw CrewServiceError.featureNotAvailable }
+        do {
+            _ = try await publicDatabase.deleteRecord(withID: CKRecord.ID(recordName: invite.id))
         } catch let error as CKError where error.code == .notAuthenticated {
             throw CrewServiceError.notSignedIntoiCloud
         } catch {
@@ -194,9 +388,14 @@ enum CloudKitCrewService {
     /// private zone (same zone Crew/CrewMembership live in), reachable by
     /// every participant through their own copy of the share, not the
     /// public Global Leaderboard.
-    static func createSegment(_ segment: Segment, zoneRef: CrewZoneRef) async throws {
+    static func createSegment(_ segment: Segment, crewId: String, zoneRef: CrewZoneRef) async throws {
         guard FeatureFlags.crewEnabled else { throw CrewServiceError.featureNotAvailable }
         let record = CKRecord(recordType: segmentRecordType, recordID: CKRecord.ID(recordName: segment.id, zoneID: zoneRef.zoneID))
+        // Same "must be linked to the share root" requirement as
+        // CrewMembership — a joined (non-owner) participant creating a
+        // Segment here without this parent reference gets the same silent
+        // "CREATE operation not permitted" rejection.
+        record.parent = CKRecord.Reference(recordID: CKRecord.ID(recordName: crewId, zoneID: zoneRef.zoneID), action: .none)
         record["name"] = segment.name as CKRecordValue
         record["creatorId"] = segment.creatorId as CKRecordValue
         record["creatorNickname"] = segment.creatorNickname as CKRecordValue
@@ -238,12 +437,13 @@ enum CloudKitCrewService {
         }
     }
 
-    static func submitEffort(segmentId: String, userId: String, nickname: String, match: SegmentMatcher.Match, drivingScore: Int, zoneRef: CrewZoneRef) async throws {
+    static func submitEffort(segmentId: String, crewId: String, userId: String, nickname: String, match: SegmentMatcher.Match, drivingScore: Int, zoneRef: CrewZoneRef) async throws {
         guard FeatureFlags.crewEnabled else { throw CrewServiceError.featureNotAvailable }
         guard AntiCheat.isPlausible(topSpeedKph: match.topSpeedKph, averageSpeedKph: match.averageSpeedKph) else {
             throw CrewServiceError.underlying(URLError(.badServerResponse))
         }
         let record = CKRecord(recordType: effortRecordType, recordID: CKRecord.ID(recordName: UUID().uuidString, zoneID: zoneRef.zoneID))
+        record.parent = CKRecord.Reference(recordID: CKRecord.ID(recordName: crewId, zoneID: zoneRef.zoneID), action: .none)
         record["segmentId"] = segmentId as CKRecordValue
         record["userId"] = userId as CKRecordValue
         record["nickname"] = nickname as CKRecordValue
@@ -358,6 +558,24 @@ enum CloudKitCrewService {
               let creatorNickname = record["creatorNickname"] as? String,
               let createdAt = record["createdAt"] as? Date else { return nil }
         return Crew(id: record.recordID.recordName, name: name, creatorId: creatorId, creatorNickname: creatorNickname, createdAt: createdAt)
+    }
+
+    private static func mapInviteRequest(_ record: CKRecord) -> CrewInviteRequest? {
+        guard let crewId = record["crewId"] as? String,
+              let crewName = record["crewName"] as? String,
+              let shareURL = record["shareURL"] as? String,
+              let fromNickname = record["fromNickname"] as? String,
+              let targetUserId = record["targetUserId"] as? String,
+              let createdAt = record["createdAt"] as? Date else { return nil }
+        return CrewInviteRequest(
+            id: record.recordID.recordName,
+            crewId: crewId,
+            crewName: crewName,
+            shareURL: shareURL,
+            fromNickname: fromNickname,
+            targetUserId: targetUserId,
+            createdAt: createdAt
+        )
     }
 
     private static func mapMembership(_ record: CKRecord) -> CrewMembership? {
