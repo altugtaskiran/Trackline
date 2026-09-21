@@ -26,6 +26,7 @@ private enum CommunitySection: String, CaseIterable, Identifiable {
 struct CommunityView: View {
     @State private var section: CommunitySection = .global
     var onFollowSegment: (Segment) -> Void
+    var onFollowCrewSegment: (Segment, CrewZoneRef) -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -44,7 +45,7 @@ struct CommunityView: View {
                 case .global:
                     GlobalLeaderboardListView(onFollowSegment: onFollowSegment)
                 case .crew:
-                    CrewHomeView()
+                    CrewHomeView(onFollowCrewSegment: onFollowCrewSegment)
                 }
             }
         }

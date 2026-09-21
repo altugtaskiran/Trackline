@@ -12,6 +12,8 @@ import CloudKit
 import SwiftUI
 
 struct CrewHomeView: View {
+    var onFollowCrewSegment: (Segment, CrewZoneRef) -> Void
+
     @State private var myCrewsStore = MyCrewsStore()
     @State private var showsCreateCrew = false
     @State private var showsInvite = false
@@ -30,7 +32,7 @@ struct CrewHomeView: View {
                         } else {
                             ForEach(myCrewsStore.crews) { ref in
                                 NavigationLink {
-                                    CrewDetailView(crewRef: ref)
+                                    CrewDetailView(crewRef: ref, onFollowCrewSegment: onFollowCrewSegment)
                                 } label: {
                                     CrewRow(name: ref.crew.name, subtitle: ref.zoneRef.isOwnedByThisDevice ? "Kurucu sensin" : "Üyesin")
                                 }

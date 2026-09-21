@@ -17,6 +17,7 @@ struct CreateSegmentFlowView: View {
     @State private var nicknameStore = NicknameStore()
     @State private var myCreatedSegmentsStore = MyCreatedSegmentsStore()
     @State private var localRoutesStore = LocalRoutesStore()
+    @State private var myCrewsStore = MyCrewsStore()
     @State private var startIndex: Double = 0
     @State private var endIndex: Double
     @State private var name = ""
@@ -27,6 +28,10 @@ struct CreateSegmentFlowView: View {
     // happen automatically on every locally created route, which read as
     // surprising/unwanted. Now it's the driver's own explicit choice.
     @State private var publishesGlobally = false
+    // Which of the driver's crews (if any) should get this route too —
+    // separate from publishesGlobally, a route can go to a crew without
+    // ever touching the public Global Leaderboard.
+    @State private var selectedCrewIds: Set<String> = []
     @FocusState private var isNameFieldFocused: Bool
     @AppStorage("distanceUnit") private var distanceUnitRaw = DistanceUnit.systemDefault.rawValue
     private var distanceUnit: DistanceUnit { DistanceUnit(rawValue: distanceUnitRaw) ?? .systemDefault }
@@ -124,6 +129,35 @@ struct CreateSegmentFlowView: View {
                                 .font(AppFont.headline)
                                 .foregroundStyle(AppColor.textPrimary)
                                 .tint(AppColor.accent)
+                        }
+
+                        if FeatureFlags.crewEnabled && !myCrewsStore.crews.isEmpty {
+                            GlassCard {
+                                VStack(alignment: .leading, spacing: 12) {
+                                    Text("Crew'larla Paylaş")
+                                        .font(AppFont.headline)
+                                        .foregroundStyle(AppColor.textPrimary)
+                                    ForEach(myCrewsStore.crews) { crewRef in
+                                        Button {
+                                            if selectedCrewIds.contains(crewRef.id) {
+                                                selectedCrewIds.remove(crewRef.id)
+                                            } else {
+                                                selectedCrewIds.insert(crewRef.id)
+                                            }
+                                        } label: {
+                                            HStack {
+                                                Text(crewRef.crew.name)
+                                                    .font(AppFont.body)
+                                                    .foregroundStyle(AppColor.textPrimary)
+                                                Spacer()
+                                                Image(systemName: selectedCrewIds.contains(crewRef.id) ? "checkmark.circle.fill" : "circle")
+                                                    .foregroundStyle(selectedCrewIds.contains(crewRef.id) ? AppColor.accent : AppColor.textTertiary)
+                                            }
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
+                                }
+                            }
                         }
 
                         Button {
@@ -225,6 +259,28 @@ struct CreateSegmentFlowView: View {
                             nickname: nicknameStore.nickname,
                             match: match,
                             drivingScore: trip.drivingScoreValue
+                        )
+                    }
+                }
+            }
+
+            // Same best-effort pattern, just against each selected crew's
+            // own private zone instead of the public database — a crew
+            // member's copy of this route, so they can "Bu Rotayı Sür" on
+            // it too. Independent of publishesGlobally.
+            if !selectedCrewIds.isEmpty, let crewUserId = try? await CloudKitCrewService.currentUserId() {
+                for crewRef in myCrewsStore.crews where selectedCrewIds.contains(crewRef.id) {
+                    var crewSegment = segment
+                    crewSegment.creatorId = crewUserId
+                    try? await CloudKitCrewService.createSegment(crewSegment, zoneRef: crewRef.zoneRef)
+                    if let match = SegmentMatcher.match(trip: samples, against: crewSegment) {
+                        try? await CloudKitCrewService.submitEffort(
+                            segmentId: crewSegment.id,
+                            userId: crewUserId,
+                            nickname: nicknameStore.nickname,
+                            match: match,
+                            drivingScore: trip.drivingScoreValue,
+                            zoneRef: crewRef.zoneRef
                         )
                     }
                 }

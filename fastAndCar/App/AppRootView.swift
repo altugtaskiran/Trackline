@@ -22,6 +22,11 @@ struct AppRootView: View {
     // flip it on before revealing anything underneath.
     @State private var showsOnboarding = false
     @State private var guidanceSegment: Segment?
+    /// Set alongside guidanceSegment only when it was armed via a crew
+    /// route (followCrewSegment) — tells handleTripEnded to also submit
+    /// the finished drive as an effort into that crew's own zone, not just
+    /// run the public Global Leaderboard auto-matcher.
+    @State private var guidanceCrewZoneRef: CrewZoneRef?
     @Environment(\.modelContext) private var modelContext
 
     var body: some View {
@@ -62,7 +67,7 @@ struct AppRootView: View {
                             case .garage:
                                 GarageView()
                             case .community:
-                                CommunityView(onFollowSegment: followSegment)
+                                CommunityView(onFollowSegment: followSegment, onFollowCrewSegment: followCrewSegment)
                             case .routes:
                                 RoutesTabView(onFollowSegment: followSegment)
                             }
@@ -230,9 +235,31 @@ struct AppRootView: View {
         path.append(trip.id)
         resolvePlaceNames(for: trip)
         Task { await SegmentAutoMatcher.run(for: trip) }
+        // This drive was explicitly following one specific crew route (not
+        // a general "was I near any public segment" auto-detect) — already
+        // know exactly which segment and zone, so submit straight to it
+        // rather than searching.
+        if let crewZoneRef = guidanceCrewZoneRef, let followedSegment = guidanceSegment {
+            let samples = trip.samples
+            let score = trip.drivingScoreValue
+            Task {
+                guard let match = SegmentMatcher.match(trip: samples, against: followedSegment) else { return }
+                let nickname = NicknameStore().nickname
+                guard let userId = try? await CloudKitCrewService.currentUserId() else { return }
+                try? await CloudKitCrewService.submitEffort(
+                    segmentId: followedSegment.id,
+                    userId: userId,
+                    nickname: nickname,
+                    match: match,
+                    drivingScore: score,
+                    zoneRef: crewZoneRef
+                )
+            }
+        }
         checkForNewlyUnlockedAchievements()
         // A followed route only applies to the one drive it was armed for.
         guidanceSegment = nil
+        guidanceCrewZoneRef = nil
     }
 
     /// Re-evaluates the full badge set against every trip on disk (cheap —
@@ -267,6 +294,20 @@ struct AppRootView: View {
         // showing the old push on top of it.
         path = NavigationPath()
         guidanceSegment = segment
+        guidanceCrewZoneRef = nil
+        selectedTab = .dashboard
+        Task {
+            try? await Task.sleep(for: .milliseconds(400))
+            isRecording = true
+        }
+    }
+
+    /// Same as followSegment, just also remembers which crew zone to
+    /// submit the finished drive's effort into (see handleTripEnded).
+    private func followCrewSegment(_ segment: Segment, zoneRef: CrewZoneRef) {
+        path = NavigationPath()
+        guidanceSegment = segment
+        guidanceCrewZoneRef = zoneRef
         selectedTab = .dashboard
         Task {
             try? await Task.sleep(for: .milliseconds(400))

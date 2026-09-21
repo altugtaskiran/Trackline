@@ -2,30 +2,25 @@
 //  CrewDetailView.swift
 //  fastAndCar
 //
-//  Member roster + a per-member personal-best ranking (best driving score
-//  each member has posted) rather than a raw, ever-growing feed of every
-//  single drive — a Crew is comparing who's driving well, not scrolling
-//  through a timeline. Recent drives still show below for the "did anyone
-//  do anything lately" glance, each deletable by whoever posted it.
+//  Member roster + the routes this crew is racing — a route shared here
+//  (from Trip Detail's "Bu rotadan parkur oluştur" flow) gets its own
+//  crew-scoped leaderboard (CrewSegmentDetailView), the same "everyone
+//  drives the same road, fastest time wins" mechanic as the public Global
+//  Leaderboard, just private to this crew's own zone. Replaces the earlier
+//  one-off "share a stat card" mechanic (CrewDriveSummary) — comparing a
+//  single trip's numbers in isolation wasn't a race.
 //
 
 import CloudKit
 import SwiftUI
 
-private struct MemberRanking: Identifiable {
-    let userId: String
-    let nickname: String
-    let bestScore: Int
-    let bestTopSpeedKph: Double
-    var id: String { userId }
-}
-
 struct CrewDetailView: View {
     let crewRef: MyCrewRef
+    var onFollowCrewSegment: (Segment, CrewZoneRef) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var members: [CrewMembership] = []
-    @State private var summaries: [CrewDriveSummary] = []
+    @State private var segments: [Segment] = []
     @State private var isLoading = true
     @State private var errorMessage: String?
     @State private var showsInvite = false
@@ -34,21 +29,6 @@ struct CrewDetailView: View {
     @State private var isLeaving = false
     @AppStorage("distanceUnit") private var distanceUnitRaw = DistanceUnit.systemDefault.rawValue
     private var distanceUnit: DistanceUnit { DistanceUnit(rawValue: distanceUnitRaw) ?? .systemDefault }
-
-    private var rankings: [MemberRanking] {
-        let grouped = Dictionary(grouping: summaries, by: \.userId)
-        return grouped.compactMap { userId, entries in
-            guard let nickname = entries.first?.nickname,
-                  let bestScore = entries.map(\.drivingScore).max(),
-                  let bestTopSpeedKph = entries.map(\.topSpeedKph).max() else { return nil }
-            return MemberRanking(userId: userId, nickname: nickname, bestScore: bestScore, bestTopSpeedKph: bestTopSpeedKph)
-        }
-        .sorted { $0.bestScore > $1.bestScore }
-    }
-
-    private var recentSummaries: [CrewDriveSummary] {
-        Array(summaries.sorted { $0.createdAt > $1.createdAt }.prefix(10))
-    }
 
     var body: some View {
         ZStack {
@@ -65,11 +45,10 @@ struct CrewDetailView: View {
                     } else {
                         memberRoster
 
-                        if summaries.isEmpty {
+                        if segments.isEmpty {
                             emptyState
                         } else {
-                            rankingSection
-                            recentSection
+                            routesSection
                         }
 
                         leaveOrDeleteButton
@@ -151,57 +130,18 @@ struct CrewDetailView: View {
         }
     }
 
-    private var rankingSection: some View {
+    private var routesSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Crew Sıralaması")
+            Text("Rotalar")
                 .font(AppFont.headline)
                 .foregroundStyle(AppColor.textPrimary)
-            LazyVStack(spacing: 12) {
-                ForEach(Array(rankings.enumerated()), id: \.element.id) { index, ranking in
-                    HStack(spacing: 14) {
-                        Text("#\(index + 1)")
-                            .font(AppFont.statValue(16))
-                            .foregroundStyle(index == 0 ? AppColor.accent : AppColor.textSecondary)
-                            .frame(width: 34, alignment: .leading)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(ranking.nickname)
-                                .font(AppFont.headline)
-                                .foregroundStyle(AppColor.textPrimary)
-                            Text("Zirve \(distanceUnit.speedString(kph: ranking.bestTopSpeedKph))")
-                                .font(AppFont.caption)
-                                .foregroundStyle(AppColor.textSecondary)
-                        }
-                        Spacer()
-                        Text("\(ranking.bestScore)")
-                            .font(AppFont.statValue(18))
-                            .foregroundStyle(AppColor.accent)
-                    }
-                    .glassCard(cornerRadius: 18, padding: 14)
+            ForEach(segments) { segment in
+                NavigationLink {
+                    CrewSegmentDetailView(segment: segment, zoneRef: crewRef.zoneRef, onFollowSegment: onFollowCrewSegment)
+                } label: {
+                    SegmentRow(name: segment.name, subtitle: distanceUnit.distanceString(meters: segment.lengthMeters))
                 }
-            }
-        }
-    }
-
-    private var recentSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Son Sürüşler")
-                .font(AppFont.headline)
-                .foregroundStyle(AppColor.textPrimary)
-            LazyVStack(spacing: 12) {
-                ForEach(recentSummaries) { summary in
-                    HStack(spacing: 0) {
-                        CrewDriveSummaryRow(summary: summary)
-                        if summary.userId == myUserId {
-                            Button {
-                                Task { await deleteSummary(summary) }
-                            } label: {
-                                Image(systemName: "trash")
-                                    .foregroundStyle(AppColor.textTertiary)
-                            }
-                            .padding(.leading, 10)
-                        }
-                    }
-                }
+                .buttonStyle(.plain)
             }
         }
     }
@@ -223,13 +163,13 @@ struct CrewDetailView: View {
 
     private var emptyState: some View {
         VStack(spacing: 14) {
-            Image(systemName: "person.3")
+            Image(systemName: "flag.checkered")
                 .font(.system(size: 36))
                 .foregroundStyle(AppColor.textTertiary)
-            Text("Henüz paylaşılan sürüş yok")
+            Text("Henüz bir rota yok")
                 .font(AppFont.headline)
                 .foregroundStyle(AppColor.textPrimary)
-            Text("Bir sürüş bitirip paylaşırken bu crew ile paylaşmayı seçersen burada görünür.")
+            Text("Bir sürüş detayında rotandan parkur oluştururken bu crew'a eklemeyi seçersen burada görünür.")
                 .font(AppFont.body)
                 .foregroundStyle(AppColor.textSecondary)
                 .multilineTextAlignment(.center)
@@ -243,9 +183,9 @@ struct CrewDetailView: View {
         defer { isLoading = false }
         do {
             async let membersResult = CloudKitCrewService.fetchMembers(zoneRef: crewRef.zoneRef)
-            async let summariesResult = CloudKitCrewService.fetchDriveSummaries(zoneRef: crewRef.zoneRef)
+            async let segmentsResult = CloudKitCrewService.fetchSegments(zoneRef: crewRef.zoneRef)
             members = try await membersResult
-            summaries = try await summariesResult
+            segments = try await segmentsResult
         } catch CrewServiceError.featureNotAvailable {
             errorMessage = "Bu özellik yakında aktif olacak."
         } catch {
@@ -277,17 +217,6 @@ struct CrewDetailView: View {
             errorMessage = "Bu özellik yakında aktif olacak."
         } catch {
             errorMessage = "Üye çıkarılamadı."
-        }
-    }
-
-    private func deleteSummary(_ summary: CrewDriveSummary) async {
-        do {
-            try await CloudKitCrewService.deleteDriveSummary(id: summary.id, zoneRef: crewRef.zoneRef)
-            summaries.removeAll { $0.id == summary.id }
-        } catch CrewServiceError.featureNotAvailable {
-            errorMessage = "Bu özellik yakında aktif olacak."
-        } catch {
-            errorMessage = "Silinemedi."
         }
     }
 

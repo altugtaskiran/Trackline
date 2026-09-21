@@ -23,6 +23,14 @@ enum CloudKitCrewService {
     private static let crewRecordType = "Crew"
     private static let membershipRecordType = "CrewMembership"
     private static let summaryRecordType = "CrewDriveSummary"
+    // Same record type names (and the same recordName/segmentId/
+    // durationSeconds indexes) as CloudKitSegmentService's public-database
+    // Segment/SegmentEffort — CloudKit record type schemas aren't
+    // per-database, so a crew's private zone can hold its own Segment/
+    // SegmentEffort records under these same types without any new schema
+    // or index work.
+    private static let segmentRecordType = "Segment"
+    private static let effortRecordType = "SegmentEffort"
 
     // MARK: - Create
 
@@ -50,6 +58,12 @@ enum CloudKitCrewService {
 
             let share = CKShare(rootRecord: record)
             share[CKShare.SystemFieldKey.title] = name as CKRecordValue
+            // Defaults to .none — CrewInviteView hands out share.url
+            // directly via QR/WhatsApp without ever routing through
+            // UICloudSharingController's own permission UI, so without this
+            // explicit opt-in nobody who taps the link (any delivery
+            // method) can actually join.
+            share.publicPermission = .readWrite
 
             let membershipRecord = CKRecord(recordType: membershipRecordType, recordID: CKRecord.ID(recordName: UUID().uuidString, zoneID: zone.zoneID))
             membershipRecord["crewId"] = crewId as CKRecordValue
@@ -174,6 +188,99 @@ enum CloudKitCrewService {
         }
     }
 
+    // MARK: - Crew routes (Segment/SegmentEffort in the crew's own zone)
+
+    /// Shares a route with this crew — writes it into the crew's own
+    /// private zone (same zone Crew/CrewMembership live in), reachable by
+    /// every participant through their own copy of the share, not the
+    /// public Global Leaderboard.
+    static func createSegment(_ segment: Segment, zoneRef: CrewZoneRef) async throws {
+        guard FeatureFlags.crewEnabled else { throw CrewServiceError.featureNotAvailable }
+        let record = CKRecord(recordType: segmentRecordType, recordID: CKRecord.ID(recordName: segment.id, zoneID: zoneRef.zoneID))
+        record["name"] = segment.name as CKRecordValue
+        record["creatorId"] = segment.creatorId as CKRecordValue
+        record["creatorNickname"] = segment.creatorNickname as CKRecordValue
+        record["minLatitude"] = segment.minLatitude as CKRecordValue
+        record["minLongitude"] = segment.minLongitude as CKRecordValue
+        record["maxLatitude"] = segment.maxLatitude as CKRecordValue
+        record["maxLongitude"] = segment.maxLongitude as CKRecordValue
+        record["toleranceMeters"] = segment.toleranceMeters as CKRecordValue
+        record["bearingDegrees"] = segment.bearingDegrees as CKRecordValue
+        record["geohashes"] = segment.geohashes as CKRecordValue
+        record["createdAt"] = segment.createdAt as CKRecordValue
+        record["voteCount"] = segment.voteCount as CKRecordValue
+        record["creatorDurationSeconds"] = segment.creatorDurationSeconds as CKRecordValue
+        if let polylineData = try? JSONEncoder().encode(segment.polyline) {
+            record["polyline"] = polylineData as CKRecordValue
+        }
+        do {
+            _ = try await zoneRef.database.save(record)
+        } catch let error as CKError where error.code == .notAuthenticated {
+            throw CrewServiceError.notSignedIntoiCloud
+        } catch {
+            throw CrewServiceError.underlying(error)
+        }
+    }
+
+    static func fetchSegments(zoneRef: CrewZoneRef) async throws -> [Segment] {
+        guard FeatureFlags.crewEnabled else { throw CrewServiceError.featureNotAvailable }
+        let query = CKQuery(recordType: segmentRecordType, predicate: NSPredicate(value: true))
+        do {
+            let (matchResults, _) = try await zoneRef.database.records(matching: query, inZoneWith: zoneRef.zoneID)
+            return matchResults.compactMap { _, result in
+                guard case .success(let record) = result else { return nil }
+                return mapSegment(record)
+            }
+        } catch let error as CKError where error.code == .notAuthenticated {
+            throw CrewServiceError.notSignedIntoiCloud
+        } catch {
+            throw CrewServiceError.underlying(error)
+        }
+    }
+
+    static func submitEffort(segmentId: String, userId: String, nickname: String, match: SegmentMatcher.Match, drivingScore: Int, zoneRef: CrewZoneRef) async throws {
+        guard FeatureFlags.crewEnabled else { throw CrewServiceError.featureNotAvailable }
+        guard AntiCheat.isPlausible(topSpeedKph: match.topSpeedKph, averageSpeedKph: match.averageSpeedKph) else {
+            throw CrewServiceError.underlying(URLError(.badServerResponse))
+        }
+        let record = CKRecord(recordType: effortRecordType, recordID: CKRecord.ID(recordName: UUID().uuidString, zoneID: zoneRef.zoneID))
+        record["segmentId"] = segmentId as CKRecordValue
+        record["userId"] = userId as CKRecordValue
+        record["nickname"] = nickname as CKRecordValue
+        record["durationSeconds"] = match.durationSeconds as CKRecordValue
+        record["averageSpeedKph"] = match.averageSpeedKph as CKRecordValue
+        record["topSpeedKph"] = match.topSpeedKph as CKRecordValue
+        record["drivingScore"] = drivingScore as CKRecordValue
+        record["createdAt"] = Date() as CKRecordValue
+        do {
+            _ = try await zoneRef.database.save(record)
+        } catch let error as CKError where error.code == .notAuthenticated {
+            throw CrewServiceError.notSignedIntoiCloud
+        } catch {
+            throw CrewServiceError.underlying(error)
+        }
+    }
+
+    /// Ranked by elapsed time ascending, same as the Global Leaderboard's
+    /// per-segment ranking — just scoped to this crew's own zone.
+    static func fetchSegmentLeaderboard(segmentId: String, zoneRef: CrewZoneRef) async throws -> [SegmentEffort] {
+        guard FeatureFlags.crewEnabled else { throw CrewServiceError.featureNotAvailable }
+        let predicate = NSPredicate(format: "segmentId == %@", segmentId)
+        let query = CKQuery(recordType: effortRecordType, predicate: predicate)
+        query.sortDescriptors = [NSSortDescriptor(key: "durationSeconds", ascending: true)]
+        do {
+            let (matchResults, _) = try await zoneRef.database.records(matching: query, inZoneWith: zoneRef.zoneID)
+            return matchResults.compactMap { _, result in
+                guard case .success(let record) = result else { return nil }
+                return mapEffort(record)
+            }
+        } catch let error as CKError where error.code == .notAuthenticated {
+            throw CrewServiceError.notSignedIntoiCloud
+        } catch {
+            throw CrewServiceError.underlying(error)
+        }
+    }
+
     // MARK: - Members & summaries
 
     static func fetchMembers(zoneRef: CrewZoneRef) async throws -> [CrewMembership] {
@@ -259,6 +366,66 @@ enum CloudKitCrewService {
               let nickname = record["nickname"] as? String,
               let joinedAt = record["joinedAt"] as? Date else { return nil }
         return CrewMembership(id: record.recordID.recordName, crewId: crewId, userId: userId, nickname: nickname, joinedAt: joinedAt)
+    }
+
+    /// Mirrors CloudKitSegmentService's own mapSegment — same record shape,
+    /// just read out of a crew's private zone instead of the public
+    /// database.
+    private static func mapSegment(_ record: CKRecord) -> Segment? {
+        guard let name = record["name"] as? String,
+              let creatorId = record["creatorId"] as? String,
+              let creatorNickname = record["creatorNickname"] as? String,
+              let minLatitude = record["minLatitude"] as? Double,
+              let minLongitude = record["minLongitude"] as? Double,
+              let maxLatitude = record["maxLatitude"] as? Double,
+              let maxLongitude = record["maxLongitude"] as? Double,
+              let toleranceMeters = record["toleranceMeters"] as? Double,
+              let bearingDegrees = record["bearingDegrees"] as? Double,
+              let geohashes = record["geohashes"] as? [String],
+              let createdAt = record["createdAt"] as? Date,
+              let polylineData = record["polyline"] as? Data,
+              let polyline = try? JSONDecoder().decode([RoutePolylinePoint].self, from: polylineData) else { return nil }
+
+        return Segment(
+            id: record.recordID.recordName,
+            name: name,
+            creatorId: creatorId,
+            creatorNickname: creatorNickname,
+            polyline: polyline,
+            minLatitude: minLatitude,
+            minLongitude: minLongitude,
+            maxLatitude: maxLatitude,
+            maxLongitude: maxLongitude,
+            toleranceMeters: toleranceMeters,
+            bearingDegrees: bearingDegrees,
+            geohashes: geohashes,
+            createdAt: createdAt,
+            creatorDurationSeconds: record["creatorDurationSeconds"] as? Double ?? 0,
+            voteCount: record["voteCount"] as? Int ?? 0
+        )
+    }
+
+    private static func mapEffort(_ record: CKRecord) -> SegmentEffort? {
+        guard let segmentId = record["segmentId"] as? String,
+              let userId = record["userId"] as? String,
+              let nickname = record["nickname"] as? String,
+              let durationSeconds = record["durationSeconds"] as? Double,
+              let averageSpeedKph = record["averageSpeedKph"] as? Double,
+              let topSpeedKph = record["topSpeedKph"] as? Double,
+              let drivingScore = record["drivingScore"] as? Int,
+              let createdAt = record["createdAt"] as? Date else { return nil }
+
+        return SegmentEffort(
+            id: record.recordID.recordName,
+            segmentId: segmentId,
+            userId: userId,
+            nickname: nickname,
+            durationSeconds: durationSeconds,
+            averageSpeedKph: averageSpeedKph,
+            topSpeedKph: topSpeedKph,
+            drivingScore: drivingScore,
+            createdAt: createdAt
+        )
     }
 
     private static func mapSummary(_ record: CKRecord) -> CrewDriveSummary? {

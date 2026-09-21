@@ -15,6 +15,7 @@ struct GlobalLeaderboardListView: View {
     @Environment(AppEnvironment.self) private var appEnvironment
     var onFollowSegment: (Segment) -> Void
     @State private var myCreatedSegmentsStore = MyCreatedSegmentsStore()
+    @State private var drivenSegmentsStore = DrivenSegmentsStore()
     @State private var searchText = ""
     @State private var searchResults: [Segment] = []
     @State private var isSearching = false
@@ -80,6 +81,24 @@ struct GlobalLeaderboardListView: View {
                         }
                     }
 
+                    // A segment someone else created only surfaces in
+                    // Yakınımdakiler while you're physically near it —
+                    // without this, driving away lost your only way back to
+                    // a route you'd already raced.
+                    if !drivenSegmentsStore.segments.isEmpty {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("Sürdüklerim")
+                                .font(AppFont.headline)
+                                .foregroundStyle(AppColor.textPrimary)
+                            ForEach(drivenSegmentsStore.segments) { ref in
+                                NavigationLink(value: ref.id) {
+                                    SegmentRow(name: ref.name, subtitle: "Parkurunu görüntüle")
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+
                     VStack(alignment: .leading, spacing: 10) {
                         Text("Parkur Ara")
                             .font(AppFont.headline)
@@ -117,7 +136,7 @@ struct GlobalLeaderboardListView: View {
                         }
                     }
 
-                    if myCreatedSegmentsStore.segments.isEmpty && nearbySegments.isEmpty && searchResults.isEmpty && searchText.isEmpty && didLoadNearby {
+                    if myCreatedSegmentsStore.segments.isEmpty && drivenSegmentsStore.segments.isEmpty && nearbySegments.isEmpty && searchResults.isEmpty && searchText.isEmpty && didLoadNearby {
                         emptyState
                     }
                 }
@@ -167,7 +186,12 @@ struct GlobalLeaderboardListView: View {
             didLoadNearby = true
         }
         guard let coordinate = await currentCoordinate() else { return }
-        nearbySegments = (try? await CloudKitSegmentService.fetchNearbySegments(candidateGeohashes: Geohash.nearbyCells(around: coordinate))) ?? []
+        let fetched = (try? await CloudKitSegmentService.fetchNearbySegments(candidateGeohashes: Geohash.nearbyCells(around: coordinate))) ?? []
+        // My own routes already live in "Oluşturduklarım" just below —
+        // showing them here too just duplicated them under a section meant
+        // for discovering *other* people's routes.
+        let myUserId = try? await CloudKitSegmentService.currentUserId()
+        nearbySegments = fetched.filter { $0.creatorId != myUserId }
     }
 
     private func currentCoordinate() async -> CLLocationCoordinate2D? {
