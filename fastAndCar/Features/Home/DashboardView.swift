@@ -82,15 +82,7 @@ struct DashboardView: View {
                     .ignoresSafeArea()
             } else {
                 LiveRouteMapView(
-                    // Idle: one live point from our own LocationManager
-                    // (kept warm via startIdleMapTracking, see .onAppear/
-                    // .task below) — not MapKit's own UserAnnotation, which
-                    // ran a second, independent CLLocationManager and
-                    // measurably slowed down this one's fix right when
-                    // recording started (confirmed live). One point (not
-                    // an empty array) draws just the position dot, no line
-                    // — RouteOverlayCanvas only draws a route once it has 2+.
-                    samples: isRecording ? tripViewModel.samples : Array(locationManager.latestSample.map { [$0] } ?? []),
+                    samples: isRecording ? tripViewModel.samples : [],
                     cameraPosition: $cameraPosition,
                     ghostRouteCoordinates: ghostRouteCoordinates,
                     crewMarkers: isRecording ? crewMarkers : [],
@@ -105,7 +97,13 @@ struct DashboardView: View {
                         guard !isRecording else { return }
                         Task { await loadDiscoverySegments(around: region) }
                     },
-                    mapOpacity: isRecording ? 0.22 : 1.0
+                    mapOpacity: isRecording ? 0.22 : 1.0,
+                    // Kept warm by startIdleMapTracking (own LocationManager,
+                    // same single source recording uses) — drawn as native
+                    // Annotation content, not our screen-space Canvas, so it
+                    // tracks a drag perfectly instead of lagging behind it
+                    // (confirmed live).
+                    idlePositionCoordinate: isRecording ? nil : locationManager.latestSample?.coordinate
                 )
                 .ignoresSafeArea()
 

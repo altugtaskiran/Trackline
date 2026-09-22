@@ -60,20 +60,22 @@ struct LiveRouteMapView: View {
     /// wash *them* out too. Idle/browsing mode wants a genuinely legible
     /// map anyway (it's a real navigable surface now), so it passes 1.0.
     var mapOpacity: Double = 0.22
+    /// The idle "you are here" marker's coordinate — from our own
+    /// LocationManager (kept warm by DashboardView's startIdleMapTracking),
+    /// never MapKit's own UserAnnotation. Two reasons: (1) UserAnnotation
+    /// runs a second, independent CLLocationManager alongside ours, and the
+    /// two concurrent location clients measurably slowed down our own
+    /// manager's fix right when a drive started (confirmed live); (2) it's
+    /// native Annotation content, not the screen-space Canvas below — a
+    /// single point drawn in that Canvas visibly lagged/slid during an
+    /// interactive drag (confirmed live: the reprojection there is driven
+    /// by a TimelineView tick, not the drag gesture itself), while native
+    /// content repositions immediately, every frame, for free.
+    var idlePositionCoordinate: CLLocationCoordinate2D?
 
     var body: some View {
         MapReader { proxy in
             ZStack {
-                // No UserAnnotation here — even while idle. That would run
-                // a second, independent CLLocationManager (MapKit's own,
-                // for the blue dot) alongside our own LocationManager, and
-                // the two concurrent location clients measurably slowed
-                // down our own manager's fix right when a drive started
-                // (confirmed live). The idle position dot below is drawn
-                // from the exact same `samples`/LocationManager the
-                // recording route line uses — one source, always in sync,
-                // never a second GPS client to contend with.
-                //
                 // Discovery routes are native MapPolyline/Annotation content
                 // here (not the screen-space Canvas below) on purpose: an
                 // earlier attempt drew them in the Canvas and used a SwiftUI
@@ -83,6 +85,15 @@ struct LiveRouteMapView: View {
                 // (confirmed live). Native Map content has no such conflict;
                 // annotations are designed to coexist with map gestures.
                 Map(position: $cameraPosition, interactionModes: interactionModes) {
+                    if let idlePositionCoordinate {
+                        Annotation("Konum", coordinate: idlePositionCoordinate) {
+                            Circle()
+                                .fill(AppColor.accent)
+                                .frame(width: 16, height: 16)
+                                .overlay(Circle().stroke(.white, lineWidth: 2))
+                                .shadow(color: .black.opacity(0.35), radius: 4, y: 2)
+                        }
+                    }
                     ForEach(discoverySegments) { segment in
                         discoveryMapContent(for: segment)
                     }
