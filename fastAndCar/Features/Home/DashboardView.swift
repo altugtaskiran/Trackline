@@ -403,18 +403,40 @@ struct DashboardView: View {
     /// Refetches nearby popular routes for the map's current viewport —
     /// called on first appear and after every pan/zoom (LiveRouteMapView's
     /// onRegionChange, itself only firing once per completed gesture).
+    ///
+    /// Two zoom-dependent quirks fixed here (both confirmed live):
+    /// - Zoomed in tight, a route already partly on screen could still
+    ///   disappear — the query region matched the viewport exactly, and a
+    ///   route's own (downsampled, ~40-point) geohash tags don't cover
+    ///   every point along it, so a tiny viewport could miss the one
+    ///   tagged cell nearby. Padding the query region fixes it.
+    /// - Zoomed out past ~60 precision-6 cells' worth of area, the query
+    ///   just silently stopped updating (see the old comment below) —
+    ///   routes already drawn stayed frozen in place while newly-panned-to
+    ///   ones never loaded. Now it switches to the same coarse
+    ///   (precision-4) cells "Yakınımdakiler" uses once the viewport gets
+    ///   that wide, so the search never actually stops, just gets coarser.
     private func loadDiscoverySegments(around region: MKCoordinateRegion) async {
         guard FeatureFlags.globalLeaderboardEnabled else { return }
-        guard let cells = Geohash.cells(covering: region) else {
-            // Zoomed out too far for a cheap query — just leave whatever
-            // was already drawn rather than firing a huge predicate.
-            return
+        let padded = MKCoordinateRegion(
+            center: region.center,
+            span: MKCoordinateSpan(latitudeDelta: region.span.latitudeDelta * 1.6, longitudeDelta: region.span.longitudeDelta * 1.6)
+        )
+        if let cells = Geohash.cells(covering: padded) {
+            discoverySegments = (try? await CloudKitSegmentService.fetchNearbySegments(
+                candidateGeohashes: cells,
+                minVoteCount: discoveryMinVoteCount,
+                limit: discoveryLimit
+            )) ?? discoverySegments
+        } else if let coarseCells = Geohash.cells(covering: padded, precision: Geohash.coarsePrecision) {
+            discoverySegments = (try? await CloudKitSegmentService.fetchNearbySegmentsWide(
+                candidateCoarseGeohashes: coarseCells,
+                minVoteCount: discoveryMinVoteCount,
+                limit: discoveryLimit
+            )) ?? discoverySegments
         }
-        discoverySegments = (try? await CloudKitSegmentService.fetchNearbySegments(
-            candidateGeohashes: cells,
-            minVoteCount: discoveryMinVoteCount,
-            limit: discoveryLimit
-        )) ?? discoverySegments
+        // Else: zoomed out past even the coarse grid's 60-cell cap (a
+        // whole-country-scale view) — leave whatever's already drawn.
     }
 
     private var formattedElapsed: String {
