@@ -48,7 +48,23 @@ struct AppRootView: View {
                             case .trips:
                                 TripsListView(
                                     locationManager: appEnvironment.locationManager,
-                                    onSelectTrip: { trip in path.append(trip.id) }
+                                    onSelectTrip: { trip in
+                                        // Set, not append: this row is only
+                                        // tappable while the list itself is
+                                        // showing, i.e. path is already
+                                        // meant to be empty here. Appending
+                                        // trusted whatever was already in
+                                        // path — if the system's back
+                                        // gesture/button hadn't fully
+                                        // committed its pop yet (a real,
+                                        // intermittent SwiftUI timing race,
+                                        // confirmed live: "bazen oluyor
+                                        // bazen olmuyor"), a stale trip id
+                                        // was still sitting in path and this
+                                        // new one landed on top of it,
+                                        // stacking up over repeated opens.
+                                        path = NavigationPath([trip.id])
+                                    }
                                 )
                             case .dashboard:
                                 // .id() forces a fresh DashboardView (and its
