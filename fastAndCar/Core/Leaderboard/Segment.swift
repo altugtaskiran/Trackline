@@ -55,6 +55,16 @@ struct Segment: Identifiable, Codable, Equatable, Hashable {
         polyline.last.map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon) }
     }
 
+    /// Where the Home map's discovery layer places this route's tap
+    /// target (RouteDiscoveryOverlay) — the geometric middle of the
+    /// recorded points, not a true midpoint-by-distance, but close enough
+    /// to land visually on the line for any reasonably-shaped route.
+    var midpointCoordinate: CLLocationCoordinate2D? {
+        guard !polyline.isEmpty else { return nil }
+        let point = polyline[polyline.count / 2]
+        return CLLocationCoordinate2D(latitude: point.lat, longitude: point.lon)
+    }
+
     var lengthMeters: Double {
         guard polyline.count > 1 else { return 0 }
         var total = 0.0

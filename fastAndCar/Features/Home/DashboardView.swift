@@ -96,7 +96,8 @@ struct DashboardView: View {
                     onRegionChange: { region in
                         guard !isRecording else { return }
                         Task { await loadDiscoverySegments(around: region) }
-                    }
+                    },
+                    mapOpacity: isRecording ? 0.22 : 1.0
                 )
                 .ignoresSafeArea()
 

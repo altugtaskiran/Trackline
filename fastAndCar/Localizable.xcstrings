@@ -104,6 +104,16 @@
         }
       }
     },
+    "%@ → %@" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ → %2$@"
+          }
+        }
+      }
+    },
     "%@ davet etti" : {
 
     },
@@ -465,6 +475,9 @@
           }
         }
       }
+    },
+    "Beğeni" : {
+
     },
     "Bekleyen davetin yok" : {
 
@@ -2781,6 +2794,9 @@
           }
         }
       }
+    },
+    "Tahmini Süre" : {
+
     },
     "Tamam" : {
       "localizations" : {
