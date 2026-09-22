@@ -25,6 +25,7 @@ struct GlobalLeaderboardListView: View {
     @State private var errorMessage: String?
     @AppStorage("distanceUnit") private var distanceUnitRaw = DistanceUnit.systemDefault.rawValue
     private var distanceUnit: DistanceUnit { DistanceUnit(rawValue: distanceUnitRaw) ?? .systemDefault }
+    @AppStorage("nearbySearchRadiusKm") private var nearbySearchRadiusKm: NearbySearchRadius = .km100
 
     var body: some View {
         ZStack {
@@ -47,9 +48,16 @@ struct GlobalLeaderboardListView: View {
                         if isLoadingNearby {
                             ProgressView().tint(AppColor.accent)
                         } else if didLoadNearby && nearbySegments.isEmpty {
-                            Text("Yakınında parkur bulunamadı")
-                                .font(AppFont.body)
-                                .foregroundStyle(AppColor.textSecondary)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Yakınında (\(nearbySearchRadiusKm.label) içinde) parkur bulunamadı")
+                                    .font(AppFont.body)
+                                    .foregroundStyle(AppColor.textSecondary)
+                                if nearbySearchRadiusKm != .km100 {
+                                    Text("Ayarlar'dan arama mesafesini artırabilirsin.")
+                                        .font(AppFont.caption)
+                                        .foregroundStyle(AppColor.accent)
+                                }
+                            }
                         } else {
                             ForEach(nearbySegments) { segment in
                                 // Pushed onto AppRootView's single shared
@@ -148,7 +156,7 @@ struct GlobalLeaderboardListView: View {
         .onChange(of: searchText) { _, newValue in
             search(for: newValue)
         }
-        .task { await loadNearby() }
+        .task(id: nearbySearchRadiusKm) { await loadNearby() }
         .alert(
             "Bir Sorun Oluştu",
             isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })
@@ -197,7 +205,20 @@ struct GlobalLeaderboardListView: View {
         // showing them here too just duplicated them under a section meant
         // for discovering *other* people's routes.
         let myUserId = try? await CloudKitSegmentService.currentUserId()
-        nearbySegments = fetched.filter { $0.creatorId != myUserId }
+        let userLocation = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+        let radiusMeters = nearbySearchRadiusKm.meters
+        // The coarse-cell fetch above always pulls the same ~100km-wide
+        // candidate set (fixed 3x3 coarse-geohash grid) regardless of the
+        // user's chosen radius — a smaller radius is just a real-distance
+        // filter on top of it, not a separate/cheaper query.
+        nearbySegments = fetched.filter { segment in
+            guard segment.creatorId != myUserId else { return false }
+            let segmentCenter = CLLocation(
+                latitude: (segment.minLatitude + segment.maxLatitude) / 2,
+                longitude: (segment.minLongitude + segment.maxLongitude) / 2
+            )
+            return userLocation.distance(from: segmentCenter) <= radiusMeters
+        }
     }
 
     private func currentCoordinate() async -> CLLocationCoordinate2D? {

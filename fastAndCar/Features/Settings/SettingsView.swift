@@ -12,6 +12,7 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel: SettingsViewModel
     @AppStorage("distanceUnit") private var distanceUnitRaw = DistanceUnit.systemDefault.rawValue
+    @AppStorage("nearbySearchRadiusKm") private var nearbySearchRadiusKm: NearbySearchRadius = .km100
     @AppStorage("sharesLiveLocationWithCrew") private var sharesLiveLocationWithCrew = false
     @AppStorage("appLanguage") private var appLanguageRaw = AppLanguage.system.rawValue
     @Environment(AppEnvironment.self) private var appEnvironment
@@ -91,6 +92,23 @@ struct SettingsView: View {
                                     }
                                 }
                                 .pickerStyle(.segmented)
+                            }
+                        }
+
+                        GlassCard {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("Yakınımdakiler Arama Mesafesi")
+                                    .font(AppFont.headline)
+                                    .foregroundStyle(AppColor.textPrimary)
+                                Picker("Arama Mesafesi", selection: $nearbySearchRadiusKm) {
+                                    ForEach(NearbySearchRadius.allCases) { radius in
+                                        Text(radius.label).tag(radius)
+                                    }
+                                }
+                                .pickerStyle(.segmented)
+                                Text("Global rotalarda \"Yakınımdakiler\" listesinin ne kadar uzağa bakacağını belirler.")
+                                    .font(AppFont.caption)
+                                    .foregroundStyle(AppColor.textSecondary)
                             }
                         }
 
