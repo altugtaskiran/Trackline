@@ -39,6 +39,21 @@ struct LiveRouteMapView: View {
     /// dots on top of this same map — "is anyone I know nearby / headed
     /// the same way", without leaving the driving screen.
     var crewMarkers: [CrewMapMarker] = []
+    /// Locked (`[]`) while actively recording — the whole point is a
+    /// steady chase-cam, not something to pan away from mid-drive. The
+    /// idle/browsing state (DashboardView, not recording) passes
+    /// `[.pan, .zoom]` so route discovery can work like a normal map.
+    var interactionModes: MapInteractionModes = []
+    /// Nearby popular routes to draw as tappable colored lines — only
+    /// populated while idle (see DashboardView's route-discovery layer).
+    var discoverySegments: [Segment] = []
+    var selectedSegmentId: String?
+    var onSelectSegment: ((String?) -> Void)?
+    /// Forwards the map's own settled viewport after a pan/zoom gesture
+    /// ends — DashboardView uses this to refetch nearby routes for the
+    /// newly visible area. `.onEnd` already only fires once per gesture,
+    /// so no extra debouncing is needed on top of it.
+    var onRegionChange: ((MKCoordinateRegion) -> Void)?
 
     var body: some View {
         MapReader { proxy in
@@ -50,16 +65,75 @@ struct LiveRouteMapView: View {
                 // sit on. The current-position dot is drawn in the same Canvas
                 // below, from the same `samples` array, so it and the route
                 // always agree exactly.
-                Map(position: $cameraPosition, interactionModes: []) { }
+                Map(position: $cameraPosition, interactionModes: interactionModes) { }
                     .mapStyle(.standard(elevation: .flat, emphasis: .muted, pointsOfInterest: .excludingAll, showsTraffic: false))
                     .environment(\.colorScheme, .light)
                     .opacity(0.22)
+                    .onMapCameraChange(frequency: .onEnd) { context in
+                        onRegionChange?(context.region)
+                    }
 
-                RouteOverlayCanvas(samples: samples, ghostRouteCoordinates: ghostRouteCoordinates, crewMarkers: crewMarkers, proxy: proxy)
-                    .allowsHitTesting(false)
+                RouteOverlayCanvas(
+                    samples: samples,
+                    ghostRouteCoordinates: ghostRouteCoordinates,
+                    crewMarkers: crewMarkers,
+                    discoverySegments: discoverySegments,
+                    selectedSegmentId: selectedSegmentId,
+                    proxy: proxy
+                )
+                    .allowsHitTesting(!discoverySegments.isEmpty)
+                    .gesture(
+                        SpatialTapGesture()
+                            .onEnded { value in
+                                onSelectSegment?(nearestDiscoverySegment(to: value.location, proxy: proxy))
+                            }
+                    )
             }
         }
     }
+
+    /// Nearest-point-on-polyline hit test in screen space — SwiftUI's `Map`
+    /// gives no tap callback for `MapPolyline` content, so route selection
+    /// has to be done by hand the same way the route/crew dots above are
+    /// drawn by hand (MapReader's `proxy.convert`, not native map content).
+    private func nearestDiscoverySegment(to point: CGPoint, proxy: MapProxy) -> String? {
+        let tapRadius: CGFloat = 22
+        var bestId: String?
+        var bestDistance = tapRadius
+        for segment in discoverySegments {
+            let points = segment.polyline.compactMap { proxy.convert(CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon), to: .local) }
+            guard points.count > 1 else { continue }
+            for index in 1..<points.count {
+                let distance = point.distanceToSegment(from: points[index - 1], to: points[index])
+                if distance < bestDistance {
+                    bestDistance = distance
+                    bestId = segment.id
+                }
+            }
+        }
+        return bestId
+    }
+}
+
+private extension CGPoint {
+    /// Shortest distance from this point to the line segment a—b.
+    func distanceToSegment(from a: CGPoint, to b: CGPoint) -> CGFloat {
+        let dx = b.x - a.x
+        let dy = b.y - a.y
+        let lengthSquared = dx * dx + dy * dy
+        guard lengthSquared > 0 else { return hypot(x - a.x, y - a.y) }
+        let t = max(0, min(1, ((x - a.x) * dx + (y - a.y) * dy) / lengthSquared))
+        let projectedX = a.x + t * dx
+        let projectedY = a.y + t * dy
+        return hypot(x - projectedX, y - projectedY)
+    }
+}
+
+/// Deterministic per-route color — the same segment always renders the same
+/// hue across launches/sessions, and different routes visibly differ.
+func routeDiscoveryColor(for segmentId: String) -> Color {
+    let hue = Double(abs(segmentId.hashValue) % 360) / 360.0
+    return Color(hue: hue, saturation: 0.75, brightness: 0.95)
 }
 
 /// Draws the heatmap-colored route in screen space using MapReader's live
@@ -69,11 +143,22 @@ private struct RouteOverlayCanvas: View {
     let samples: [LocationSample]
     var ghostRouteCoordinates: [CLLocationCoordinate2D] = []
     var crewMarkers: [CrewMapMarker] = []
+    var discoverySegments: [Segment] = []
+    var selectedSegmentId: String?
     let proxy: MapProxy
 
     var body: some View {
-        TimelineView(.animation(paused: samples.count < 2 && ghostRouteCoordinates.isEmpty && crewMarkers.isEmpty)) { _ in
+        TimelineView(.animation(paused: samples.count < 2 && ghostRouteCoordinates.isEmpty && crewMarkers.isEmpty && discoverySegments.isEmpty)) { _ in
             Canvas { context, _ in
+                // Unselected routes drawn first (dimmer, thinner) so the
+                // selected one — drawn last, below — always sits on top.
+                for segment in discoverySegments where segment.id != selectedSegmentId {
+                    drawDiscoverySegment(segment, isSelected: false, context: context)
+                }
+                if let selectedSegmentId, let selected = discoverySegments.first(where: { $0.id == selectedSegmentId }) {
+                    drawDiscoverySegment(selected, isSelected: true, context: context)
+                }
+
                 if ghostRouteCoordinates.count > 1 {
                     let ghostPoints = ghostRouteCoordinates.map { proxy.convert($0, to: .local) }
                     var ghostPath = Path()
@@ -149,5 +234,21 @@ private struct RouteOverlayCanvas: View {
                 }
             }
         }
+    }
+
+    private func drawDiscoverySegment(_ segment: Segment, isSelected: Bool, context: GraphicsContext) {
+        let points = segment.polyline.compactMap { proxy.convert(CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon), to: .local) }
+        guard points.count > 1 else { return }
+        var path = Path()
+        path.move(to: points[0])
+        for point in points.dropFirst() {
+            path.addLine(to: point)
+        }
+        let color = routeDiscoveryColor(for: segment.id)
+        context.stroke(
+            path,
+            with: .color(isSelected ? color : color.opacity(0.45)),
+            style: StrokeStyle(lineWidth: isSelected ? 7 : 4, lineCap: .round, lineJoin: .round)
+        )
     }
 }

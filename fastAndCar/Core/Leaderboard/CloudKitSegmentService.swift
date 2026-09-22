@@ -80,7 +80,13 @@ enum CloudKitSegmentService {
     /// Pre-filtered by geohash cell, not distance — the public database has
     /// no native geo query, so this is a coarse "could plausibly be nearby"
     /// pass; SegmentMatcher does the real distance/bearing check afterward.
-    static func fetchNearbySegments(candidateGeohashes: [String]) async throws -> [Segment] {
+    /// `minVoteCount`/`limit` exist for the Home map's route-discovery
+    /// layer (RouteDiscoveryOverlay) — showing every low-effort/unrated
+    /// segment on the map would clutter it fast, so that caller passes a
+    /// real threshold. Defaults (0, unlimited) preserve every existing
+    /// caller's behavior (Global Leaderboard's "nearby" search, which
+    /// should still surface brand-new routes).
+    static func fetchNearbySegments(candidateGeohashes: [String], minVoteCount: Int = 0, limit: Int = Int.max) async throws -> [Segment] {
         guard FeatureFlags.globalLeaderboardEnabled else { throw SegmentServiceError.featureNotAvailable }
         guard !candidateGeohashes.isEmpty else { return [] }
         let predicate = NSPredicate(format: "ANY geohashes IN %@", candidateGeohashes)
@@ -92,7 +98,8 @@ enum CloudKitSegmentService {
                 guard case .success(let record) = result else { return nil }
                 return mapSegment(record)
             }
-            return segments.sorted { $0.voteCount > $1.voteCount }
+            let filtered = segments.filter { $0.voteCount >= minVoteCount }.sorted { $0.voteCount > $1.voteCount }
+            return Array(filtered.prefix(limit))
         } catch let error as CKError where error.code == .notAuthenticated {
             throw SegmentServiceError.notSignedIntoiCloud
         } catch {

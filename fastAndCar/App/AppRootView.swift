@@ -69,7 +69,8 @@ struct AppRootView: View {
                                         guidanceSegment = nil
                                         guidanceCrewZoneRef = nil
                                         guidanceCrewId = nil
-                                    }
+                                    },
+                                    onFollowSegment: followSegment
                                 )
                                 .id(guidanceSegment?.id)
                             case .garage:

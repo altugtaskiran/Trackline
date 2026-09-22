@@ -32,17 +32,29 @@ struct DashboardView: View {
     // recording, to avoid an idle-screen background task.
     @State private var crewMarkers: [CrewMapMarker] = []
     @State private var myUserId: String?
+    // Route discovery — only active while idle (not recording): nearby
+    // popular routes drawn as tappable colored lines, refetched as the
+    // user pans the map. A minimum vote count keeps unrated/spam routes
+    // off the map entirely (they still exist in Global Rotalar, just not
+    // rendered here) — see CloudKitSegmentService.fetchNearbySegments.
+    @State private var discoverySegments: [Segment] = []
+    @State private var selectedSegmentId: String?
+    @State private var previewSegment: Segment?
+    private let discoveryMinVoteCount = 3
+    private let discoveryLimit = 30
     @Binding var isRecording: Bool
     let locationManager: LocationManager
     var onTripEnded: (ActiveTripViewModel.TripResult) -> Void
     var onCancelRoute: () -> Void
+    var onFollowSegment: (Segment) -> Void
 
     init(
         locationManager: LocationManager,
         isRecording: Binding<Bool>,
         guidanceSegment: Segment? = nil,
         onTripEnded: @escaping (ActiveTripViewModel.TripResult) -> Void,
-        onCancelRoute: @escaping () -> Void = {}
+        onCancelRoute: @escaping () -> Void = {},
+        onFollowSegment: @escaping (Segment) -> Void = { _ in }
     ) {
         self.locationManager = locationManager
         _viewModel = State(initialValue: HomeViewModel(locationManager: locationManager))
@@ -50,6 +62,7 @@ struct DashboardView: View {
         _isRecording = isRecording
         self.onTripEnded = onTripEnded
         self.onCancelRoute = onCancelRoute
+        self.onFollowSegment = onFollowSegment
     }
 
     private var ghostRouteCoordinates: [CLLocationCoordinate2D] {
@@ -72,7 +85,18 @@ struct DashboardView: View {
                     samples: isRecording ? tripViewModel.samples : [],
                     cameraPosition: $cameraPosition,
                     ghostRouteCoordinates: ghostRouteCoordinates,
-                    crewMarkers: isRecording ? crewMarkers : []
+                    crewMarkers: isRecording ? crewMarkers : [],
+                    interactionModes: isRecording ? [] : [.pan, .zoom],
+                    discoverySegments: isRecording ? [] : discoverySegments,
+                    selectedSegmentId: selectedSegmentId,
+                    onSelectSegment: { id in
+                        selectedSegmentId = id
+                        previewSegment = id.flatMap { selectedId in discoverySegments.first { $0.id == selectedId } }
+                    },
+                    onRegionChange: { region in
+                        guard !isRecording else { return }
+                        Task { await loadDiscoverySegments(around: region) }
+                    }
                 )
                 .ignoresSafeArea()
 
@@ -234,10 +258,27 @@ struct DashboardView: View {
             if recording {
                 tripViewModel.start()
                 withAnimation { cameraPosition = .automatic }
+                discoverySegments = []
+                selectedSegmentId = nil
+                previewSegment = nil
             } else {
                 showsSatelliteChase = false
                 crewMarkers = []
             }
+        }
+        .sheet(item: $previewSegment, onDismiss: { selectedSegmentId = nil }) { segment in
+            RoutePreviewSheet(
+                segment: segment,
+                onFollow: { followed in
+                    previewSegment = nil
+                    selectedSegmentId = nil
+                    onFollowSegment(followed)
+                },
+                onDismiss: { previewSegment = nil }
+            )
+            .presentationDetents([.height(320)])
+            .presentationDragIndicator(.visible)
+            .preferredColorScheme(.dark)
         }
         .task(id: isRecording) {
             guard isRecording, FeatureFlags.crewEnabled else { return }
@@ -332,6 +373,23 @@ struct DashboardView: View {
             }
         }
         #endif
+    }
+
+    /// Refetches nearby popular routes for the map's current viewport —
+    /// called on first appear and after every pan/zoom (LiveRouteMapView's
+    /// onRegionChange, itself only firing once per completed gesture).
+    private func loadDiscoverySegments(around region: MKCoordinateRegion) async {
+        guard FeatureFlags.globalLeaderboardEnabled else { return }
+        guard let cells = Geohash.cells(covering: region) else {
+            // Zoomed out too far for a cheap query — just leave whatever
+            // was already drawn rather than firing a huge predicate.
+            return
+        }
+        discoverySegments = (try? await CloudKitSegmentService.fetchNearbySegments(
+            candidateGeohashes: cells,
+            minVoteCount: discoveryMinVoteCount,
+            limit: discoveryLimit
+        )) ?? discoverySegments
     }
 
     private var formattedElapsed: String {
