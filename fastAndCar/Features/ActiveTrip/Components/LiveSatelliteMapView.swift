@@ -18,14 +18,20 @@ import SwiftUI
 struct LiveSatelliteMapView: View {
     var samples: [LocationSample]
     var crewMarkers: [CrewMapMarker] = []
+    /// The target Segment's own route, drawn as a fixed "ghost" reference
+    /// line — same purple dashed styling as the 2D map's Route Following
+    /// mode, just as native MapPolyline content instead of a Canvas overlay
+    /// (this map has no MapReader/proxy layer to draw one in).
+    var ghostRouteCoordinates: [CLLocationCoordinate2D] = []
 
     @State private var cameraPosition: MapCameraPosition
 
     private var last: LocationSample? { samples.last }
 
-    init(samples: [LocationSample], crewMarkers: [CrewMapMarker] = []) {
+    init(samples: [LocationSample], crewMarkers: [CrewMapMarker] = [], ghostRouteCoordinates: [CLLocationCoordinate2D] = []) {
         self.samples = samples
         self.crewMarkers = crewMarkers
+        self.ghostRouteCoordinates = ghostRouteCoordinates
         // Seeded from the real starting position (when one's already known)
         // instead of `.automatic` — `.automatic` briefly resolves to
         // MapKit's own default region before the first onChange can correct
@@ -42,6 +48,10 @@ struct LiveSatelliteMapView: View {
 
     var body: some View {
         Map(position: $cameraPosition, interactionModes: []) {
+            if ghostRouteCoordinates.count > 1 {
+                MapPolyline(coordinates: ghostRouteCoordinates)
+                    .stroke(Color(hex: 0xBF5AF2).opacity(0.7), style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round, dash: [2, 10]))
+            }
             if samples.count > 1 {
                 MapPolyline(coordinates: samples.map(\.coordinate))
                     .stroke(AppColor.accent, style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))

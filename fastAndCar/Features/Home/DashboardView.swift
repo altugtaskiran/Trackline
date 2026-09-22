@@ -78,7 +78,7 @@ struct DashboardView: View {
             AppColor.background.ignoresSafeArea()
 
             if isRecording && showsSatelliteChase {
-                LiveSatelliteMapView(samples: tripViewModel.samples, crewMarkers: crewMarkers)
+                LiveSatelliteMapView(samples: tripViewModel.samples, crewMarkers: crewMarkers, ghostRouteCoordinates: ghostRouteCoordinates)
                     .ignoresSafeArea()
             } else {
                 LiveRouteMapView(
