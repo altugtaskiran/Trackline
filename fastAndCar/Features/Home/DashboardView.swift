@@ -252,7 +252,13 @@ struct DashboardView: View {
                 guard let members = try? await CloudKitCrewService.fetchMembers(zoneRef: crewRef.zoneRef) else { continue }
                 let ids = members.map(\.userId).filter { $0 != myUserId }
                 guard !ids.isEmpty else { continue }
-                rosters.append((crewRef.zoneRef, ids, Dictionary(uniqueKeysWithValues: members.map { ($0.userId, $0.nickname) })))
+                // uniquingKeysWith, not uniqueKeysWithValues: a duplicate
+                // CrewMembership row for the same userId (membership records
+                // use a random UUID as their own ID, so this can happen) made
+                // uniqueKeysWithValues trap with a fatal error — confirmed
+                // live, this was crashing "Sürüşe Başla" outright.
+                let nicknameByUserId = Dictionary(members.map { ($0.userId, $0.nickname) }, uniquingKeysWith: { first, _ in first })
+                rosters.append((crewRef.zoneRef, ids, nicknameByUserId))
             }
             guard !rosters.isEmpty else { return }
 
