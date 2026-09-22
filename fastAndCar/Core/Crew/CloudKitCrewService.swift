@@ -146,6 +146,28 @@ enum CloudKitCrewService {
 
             let zoneRef = CrewZoneRef(zoneName: rootRecordID.zoneID.zoneName, ownerName: rootRecordID.zoneID.ownerName)
 
+            // Idempotent: a share link can be opened more than once (re-tapping
+            // an old invite, a nickname change prompting a re-accept, iOS
+            // re-delivering the same CKShare acceptance) — without this check,
+            // every acceptance blindly created a brand-new CrewMembership row
+            // (random UUID recordID), leaving duplicate rows for the same
+            // userId in the roster. Confirmed live: that duplicate crashed
+            // DashboardView's Dictionary(uniqueKeysWithValues:) roster build.
+            // Existing membership just gets its nickname refreshed instead.
+            let existingQuery = CKQuery(recordType: membershipRecordType, predicate: NSPredicate(format: "userId == %@", userId))
+            let existingMembership = try? await sharedDatabase.records(matching: existingQuery, inZoneWith: rootRecordID.zoneID)
+            if let (existingID, existingResult) = existingMembership?.matchResults.first,
+               case .success(let existingRecord) = existingResult {
+                existingRecord["nickname"] = nickname as CKRecordValue
+                do {
+                    _ = try await sharedDatabase.save(existingRecord)
+                } catch {
+                    throw CrewServiceError.underlying(NSError(domain: "AcceptShare.updateMembership", code: 0, userInfo: [NSUnderlyingErrorKey: error]))
+                }
+                _ = existingID
+                return (crew, zoneRef)
+            }
+
             let membershipRecord = CKRecord(recordType: membershipRecordType, recordID: CKRecord.ID(recordName: UUID().uuidString, zoneID: rootRecordID.zoneID))
             // Without this, CloudKit doesn't recognize the new record as
             // part of the shared hierarchy rooted at the Crew record — a
