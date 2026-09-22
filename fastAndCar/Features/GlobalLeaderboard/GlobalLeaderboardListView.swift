@@ -9,6 +9,7 @@
 //
 
 import CoreLocation
+import MapKit
 import SwiftUI
 
 struct GlobalLeaderboardListView: View {
@@ -194,23 +195,30 @@ struct GlobalLeaderboardListView: View {
             didLoadNearby = true
         }
         guard let coordinate = await currentCoordinate() else { return }
-        // Coarse (precision-4, whole-city-sized) cells — a real metro-area
-        // radius (Istanbul is ~40-50km across), still a cheap index-backed
-        // query (fetchNearbySegmentsWide), not the old fetchSegments
-        // (within:of:) stand-in that fetched every public Segment and
-        // filtered client-side (fine at test-data scale, not meant to stay).
-        let cells = Geohash.nearbyCells(around: coordinate, precision: Geohash.coarsePrecision)
+        let radiusMeters = nearbySearchRadiusKm.meters
+        // Coarse (precision-4, whole-city-sized) cells, but the candidate
+        // grid is now sized to the selected radius (up to 200km) instead
+        // of a fixed 3x3 — a fixed grid maxed out around ~100km net reach,
+        // so 200km couldn't actually find anything past that regardless of
+        // the setting (confirmed live). maxCells is raised accordingly;
+        // this list is opened occasionally, not polled, so the extra
+        // candidate-cell cost at the widest setting is a fine trade.
+        let metersPerDegreeLatitude = 111_320.0
+        let metersPerDegreeLongitude = 111_320.0 * cos(coordinate.latitude * .pi / 180)
+        let searchRegion = MKCoordinateRegion(
+            center: coordinate,
+            span: MKCoordinateSpan(
+                latitudeDelta: (radiusMeters * 2.4) / metersPerDegreeLatitude,
+                longitudeDelta: (radiusMeters * 2.4) / max(metersPerDegreeLongitude, 1)
+            )
+        )
+        let cells = Geohash.cells(covering: searchRegion, precision: Geohash.coarsePrecision, maxCells: 400) ?? []
         let fetched = (try? await CloudKitSegmentService.fetchNearbySegmentsWide(candidateCoarseGeohashes: cells)) ?? []
         // My own routes already live in "Oluşturduklarım" just below —
         // showing them here too just duplicated them under a section meant
         // for discovering *other* people's routes.
         let myUserId = try? await CloudKitSegmentService.currentUserId()
         let userLocation = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-        let radiusMeters = nearbySearchRadiusKm.meters
-        // The coarse-cell fetch above always pulls the same ~100km-wide
-        // candidate set (fixed 3x3 coarse-geohash grid) regardless of the
-        // user's chosen radius — a smaller radius is just a real-distance
-        // filter on top of it, not a separate/cheaper query.
         nearbySegments = fetched.filter { segment in
             guard segment.creatorId != myUserId else { return false }
             let segmentCenter = CLLocation(
