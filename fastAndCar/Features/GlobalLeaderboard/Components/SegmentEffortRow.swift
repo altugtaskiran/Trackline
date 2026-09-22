@@ -10,6 +10,7 @@ struct SegmentEffortRow: View {
     let effort: SegmentEffort
     var isCurrentUser: Bool = false
     var avatar: UIImage?
+    @State private var showsProfile = false
     @AppStorage("distanceUnit") private var distanceUnitRaw = DistanceUnit.systemDefault.rawValue
     private var distanceUnit: DistanceUnit { DistanceUnit(rawValue: distanceUnitRaw) ?? .systemDefault }
 
@@ -54,9 +55,14 @@ struct SegmentEffortRow: View {
             }
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(effort.nickname)
-                    .font(AppFont.headline)
-                    .foregroundStyle(isCurrentUser ? AppColor.accent : AppColor.textPrimary)
+                Button {
+                    showsProfile = true
+                } label: {
+                    Text(effort.nickname)
+                        .font(AppFont.headline)
+                        .foregroundStyle(isCurrentUser ? AppColor.accent : AppColor.textPrimary)
+                }
+                .buttonStyle(.plain)
                 Text("\(String.appLocalized("Zirve Hız")): \(distanceUnit.speedString(kph: effort.topSpeedKph))")
                     .font(AppFont.caption)
                     .foregroundStyle(AppColor.textSecondary)
@@ -86,6 +92,13 @@ struct SegmentEffortRow: View {
                         LinearGradient(colors: [Color(hex: 0xFFD60A), Color(hex: 0xFF9F0A)], startPoint: .leading, endPoint: .trailing),
                         lineWidth: 1.5
                     )
+            }
+        }
+        .sheet(isPresented: $showsProfile) {
+            if isCurrentUser {
+                ProfileView()
+            } else {
+                PublicProfileView(userId: effort.userId, nickname: effort.nickname)
             }
         }
     }

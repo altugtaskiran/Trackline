@@ -16,6 +16,12 @@ final class LocationManager: NSObject {
     private(set) var authorizationStatus: CLAuthorizationStatus
     private(set) var latestSample: LocationSample?
     private(set) var isRecording = false
+    /// Independent of `isRecording` — crew presence-sharing keeps location
+    /// updates flowing (so `latestSample` stays fresh for
+    /// CrewPresenceBroadcaster to read) even when no trip is being
+    /// recorded. Coarser accuracy than recording's, since "roughly where a
+    /// friend is" doesn't need navigation-grade precision.
+    private(set) var isBroadcastingPresence = false
 
     /// Called on the main actor for every accepted, smoothed sample while recording.
     var onSample: ((LocationSample) -> Void)?
@@ -62,16 +68,54 @@ final class LocationManager: NSObject {
         smoothing.reset()
         lastAcceptedTimestamp = nil
         isRecording = true
-        manager.allowsBackgroundLocationUpdates = authorizationStatus == .authorizedAlways
-        manager.showsBackgroundLocationIndicator = true
-        manager.startUpdatingLocation()
+        refreshLocationUpdatesState()
     }
 
     func stopRecording() {
         isRecording = false
-        manager.stopUpdatingLocation()
-        manager.allowsBackgroundLocationUpdates = false
-        manager.showsBackgroundLocationIndicator = false
+        refreshLocationUpdatesState()
+    }
+
+    /// Called from CrewPresenceBroadcaster while the Settings toggle is on
+    /// and the app is foregrounded — keeps `latestSample` updating even
+    /// when not recording a trip, independent of and compatible with an
+    /// active recording session (recording's accuracy always wins if both
+    /// are on at once).
+    func startBroadcastingPresence() {
+        guard hasUsableAuthorization else { return }
+        isBroadcastingPresence = true
+        refreshLocationUpdatesState()
+    }
+
+    func stopBroadcastingPresence() {
+        isBroadcastingPresence = false
+        refreshLocationUpdatesState()
+    }
+
+    private func refreshLocationUpdatesState() {
+        // Presence-only accuracy was kCLLocationAccuracyHundredMeters /
+        // 50m filter — coarse enough that iOS was batching background
+        // updates minutes apart (confirmed live: long silent gaps between
+        // crew map updates). Tightened to reduce that lag; costs more
+        // battery than before, but still well short of recording's
+        // navigation-grade settings.
+        manager.desiredAccuracy = isRecording ? kCLLocationAccuracyBestForNavigation : kCLLocationAccuracyNearestTenMeters
+        manager.distanceFilter = isRecording ? kCLDistanceFilterNone : 15
+
+        guard isRecording || isBroadcastingPresence else {
+            manager.stopUpdatingLocation()
+            manager.allowsBackgroundLocationUpdates = false
+            manager.showsBackgroundLocationIndicator = false
+            return
+        }
+        // Presence-sharing now keeps working while backgrounded too (user
+        // explicitly asked for "uygulama arkada olsa bile") — needs Always
+        // authorization, requested separately when the Settings toggle is
+        // switched on (see AppRootView). Falls back to foreground-only if
+        // the user only granted When-In-Use, same as recording always has.
+        manager.allowsBackgroundLocationUpdates = (isRecording || isBroadcastingPresence) && authorizationStatus == .authorizedAlways
+        manager.showsBackgroundLocationIndicator = isRecording || isBroadcastingPresence
+        manager.startUpdatingLocation()
     }
 
     /// A single current-location fix for "what's nearby" lookups (Global
@@ -90,6 +134,14 @@ final class LocationManager: NSObject {
 extension LocationManager: CLLocationManagerDelegate {
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         authorizationStatus = manager.authorizationStatus
+        // Always-authorization can arrive after recording/broadcasting has
+        // already started (the system prompt is async) — without this,
+        // allowsBackgroundLocationUpdates stays stuck at whatever it was
+        // computed as at start() time, silently breaking background
+        // tracking for the rest of the session even after the user grants it.
+        if isRecording || isBroadcastingPresence {
+            refreshLocationUpdatesState()
+        }
     }
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {

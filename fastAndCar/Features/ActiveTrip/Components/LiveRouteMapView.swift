@@ -35,18 +35,27 @@ struct LiveRouteMapView: View {
     /// line underneath the live-recorded route — Route Following mode's
     /// only UI besides the turn-hint banner, no MapKit routing involved.
     var ghostRouteCoordinates: [CLLocationCoordinate2D] = []
+    /// Crewmates currently sharing their location, drawn as small purple
+    /// dots on top of this same map — "is anyone I know nearby / headed
+    /// the same way", without leaving the driving screen.
+    var crewMarkers: [CrewMapMarker] = []
 
     var body: some View {
         MapReader { proxy in
             ZStack {
-                Map(position: $cameraPosition, interactionModes: []) {
-                    UserAnnotation()
-                }
+                // No UserAnnotation here on purpose: it tracks raw, unthrottled
+                // CoreLocation updates, while the route below is drawn from
+                // `samples` (throttled to ~1/sec + smoothed) — mixing the two
+                // made the dot visibly run ahead of the line it was supposed to
+                // sit on. The current-position dot is drawn in the same Canvas
+                // below, from the same `samples` array, so it and the route
+                // always agree exactly.
+                Map(position: $cameraPosition, interactionModes: []) { }
                     .mapStyle(.standard(elevation: .flat, emphasis: .muted, pointsOfInterest: .excludingAll, showsTraffic: false))
                     .environment(\.colorScheme, .light)
                     .opacity(0.22)
 
-                RouteOverlayCanvas(samples: samples, ghostRouteCoordinates: ghostRouteCoordinates, proxy: proxy)
+                RouteOverlayCanvas(samples: samples, ghostRouteCoordinates: ghostRouteCoordinates, crewMarkers: crewMarkers, proxy: proxy)
                     .allowsHitTesting(false)
             }
         }
@@ -59,10 +68,11 @@ struct LiveRouteMapView: View {
 private struct RouteOverlayCanvas: View {
     let samples: [LocationSample]
     var ghostRouteCoordinates: [CLLocationCoordinate2D] = []
+    var crewMarkers: [CrewMapMarker] = []
     let proxy: MapProxy
 
     var body: some View {
-        TimelineView(.animation(paused: samples.count < 2 && ghostRouteCoordinates.isEmpty)) { _ in
+        TimelineView(.animation(paused: samples.count < 2 && ghostRouteCoordinates.isEmpty && crewMarkers.isEmpty)) { _ in
             Canvas { context, _ in
                 if ghostRouteCoordinates.count > 1 {
                     let ghostPoints = ghostRouteCoordinates.map { proxy.convert($0, to: .local) }
@@ -85,18 +95,20 @@ private struct RouteOverlayCanvas: View {
                 }
 
                 let points = samples.map { proxy.convert($0.coordinate, to: .local) }
-                guard points.count > 1 else { return }
+                guard !points.isEmpty else { return }
 
-                for index in 1..<points.count {
-                    guard let previous = points[index - 1], let current = points[index] else { continue }
-                    var segment = Path()
-                    segment.move(to: previous)
-                    segment.addLine(to: current)
-                    context.stroke(
-                        segment,
-                        with: .color(AppColor.heatmapColor(forSpeedKph: samples[index].speedKph)),
-                        style: StrokeStyle(lineWidth: 6, lineCap: .round, lineJoin: .round)
-                    )
+                if points.count > 1 {
+                    for index in 1..<points.count {
+                        guard let previous = points[index - 1], let current = points[index] else { continue }
+                        var segment = Path()
+                        segment.move(to: previous)
+                        segment.addLine(to: current)
+                        context.stroke(
+                            segment,
+                            with: .color(AppColor.heatmapColor(forSpeedKph: samples[index].speedKph)),
+                            style: StrokeStyle(lineWidth: 6, lineCap: .round, lineJoin: .round)
+                        )
+                    }
                 }
 
                 if let startPoint = points.first ?? nil {
@@ -106,6 +118,34 @@ private struct RouteOverlayCanvas: View {
                         layer.addFilter(.shadow(color: AppColor.routeStart, radius: 8))
                         layer.fill(Path(ellipseIn: rect), with: .color(AppColor.routeStart))
                     }
+                }
+
+                // Current-position dot, drawn from the same `samples` the
+                // route line above is drawn from (see body's comment) —
+                // always exactly at the end of the line, never ahead of it.
+                if let currentPoint = points.last ?? nil {
+                    let radius: CGFloat = 8
+                    let rect = CGRect(x: currentPoint.x - radius, y: currentPoint.y - radius, width: radius * 2, height: radius * 2)
+                    context.drawLayer { layer in
+                        layer.addFilter(.shadow(color: .black.opacity(0.35), radius: 4))
+                        layer.fill(Path(ellipseIn: rect), with: .color(AppColor.accent))
+                        layer.stroke(Path(ellipseIn: rect), with: .color(.white), lineWidth: 2)
+                    }
+                }
+
+                for marker in crewMarkers {
+                    guard let point = proxy.convert(marker.coordinate, to: .local) else { continue }
+                    let radius: CGFloat = 8
+                    let rect = CGRect(x: point.x - radius, y: point.y - radius, width: radius * 2, height: radius * 2)
+                    context.drawLayer { layer in
+                        layer.addFilter(.shadow(color: .black.opacity(0.35), radius: 4))
+                        layer.fill(Path(ellipseIn: rect), with: .color(Color(hex: 0xBF5AF2)))
+                        layer.stroke(Path(ellipseIn: rect), with: .color(.white), lineWidth: 2)
+                    }
+                    let label = Text(String(marker.nickname.prefix(1)).uppercased())
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundColor(.white)
+                    context.draw(label, at: point)
                 }
             }
         }

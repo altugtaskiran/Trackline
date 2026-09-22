@@ -17,6 +17,11 @@ struct CrewInviteByNameView: View {
     let crewId: String
     let crewName: String
     let share: CKShare
+    /// Set when opened from a specific person's profile (PublicProfileView)
+    /// — that person is already known, so the search UI is skipped entirely
+    /// and this goes straight to the "send" confirmation card.
+    var presetUserId: String?
+    var presetHandle: String?
 
     @Environment(\.dismiss) private var dismiss
     @State private var nicknameDraft = ""
@@ -32,43 +37,47 @@ struct CrewInviteByNameView: View {
         nicknameDraft.trimmingCharacters(in: .whitespaces)
     }
 
+    private var isPreset: Bool { presetUserId != nil }
+
     var body: some View {
         NavigationStack {
             ZStack {
                 AppColor.background.ignoresSafeArea()
 
                 VStack(spacing: 20) {
-                    Text("Arkadaşının kullanıcı adını gir")
-                        .font(AppFont.headline)
-                        .foregroundStyle(AppColor.textPrimary)
-                        .multilineTextAlignment(.center)
+                    if !isPreset {
+                        Text("Arkadaşının kullanıcı adını gir")
+                            .font(AppFont.headline)
+                            .foregroundStyle(AppColor.textPrimary)
+                            .multilineTextAlignment(.center)
 
-                    TextField("örn. turbo (ya da turbo#4823)", text: $nicknameDraft)
-                        .font(AppFont.body)
-                        .foregroundStyle(AppColor.textPrimary)
-                        .padding(14)
-                        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(AppColor.surfaceElevated))
-                        .autocorrectionDisabled()
-                        .textInputAutocapitalization(.never)
-                        .multilineTextAlignment(.center)
-                        .onChange(of: nicknameDraft) { _, _ in
-                            candidates = []
-                            selected = nil
-                            searched = false
-                            didSend = false
-                        }
+                        TextField("örn. turbo (ya da turbo#4823)", text: $nicknameDraft)
+                            .font(AppFont.body)
+                            .foregroundStyle(AppColor.textPrimary)
+                            .padding(14)
+                            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(AppColor.surfaceElevated))
+                            .autocorrectionDisabled()
+                            .textInputAutocapitalization(.never)
+                            .multilineTextAlignment(.center)
+                            .onChange(of: nicknameDraft) { _, _ in
+                                candidates = []
+                                selected = nil
+                                searched = false
+                                didSend = false
+                            }
 
-                    Button {
-                        Task { await search() }
-                    } label: {
-                        if isSearching {
-                            ProgressView()
-                        } else {
-                            Text("Ara")
+                        Button {
+                            Task { await search() }
+                        } label: {
+                            if isSearching {
+                                ProgressView()
+                            } else {
+                                Text("Ara")
+                            }
                         }
+                        .buttonStyle(.glass(.neutral))
+                        .disabled(isSearching || typedNickname.isEmpty)
                     }
-                    .buttonStyle(.glass(.neutral))
-                    .disabled(isSearching || typedNickname.isEmpty)
 
                     if searched && candidates.isEmpty && selected == nil {
                         Text("Bu kullanıcı bulunamadı. Adı kontrol et.")
@@ -132,7 +141,7 @@ struct CrewInviteByNameView: View {
                 }
                 .padding(28)
             }
-            .navigationTitle("İsimle Davet Et")
+            .navigationTitle(isPreset ? "Crew'a Davet Et" : "İsimle Davet Et")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -150,6 +159,11 @@ struct CrewInviteByNameView: View {
             }
         }
         .preferredColorScheme(.dark)
+        .onAppear {
+            if let presetUserId, let presetHandle, selected == nil {
+                selected = (presetUserId, presetHandle)
+            }
+        }
     }
 
     /// "turbo#4823" is still accepted as a shortcut straight to one exact

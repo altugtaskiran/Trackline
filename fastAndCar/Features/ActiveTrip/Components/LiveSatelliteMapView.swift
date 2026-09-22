@@ -17,13 +17,15 @@ import SwiftUI
 
 struct LiveSatelliteMapView: View {
     var samples: [LocationSample]
+    var crewMarkers: [CrewMapMarker] = []
 
     @State private var cameraPosition: MapCameraPosition
 
     private var last: LocationSample? { samples.last }
 
-    init(samples: [LocationSample]) {
+    init(samples: [LocationSample], crewMarkers: [CrewMapMarker] = []) {
         self.samples = samples
+        self.crewMarkers = crewMarkers
         // Seeded from the real starting position (when one's already known)
         // instead of `.automatic` — `.automatic` briefly resolves to
         // MapKit's own default region before the first onChange can correct
@@ -51,6 +53,20 @@ struct LiveSatelliteMapView: View {
                         .frame(width: 16, height: 16)
                         .overlay(Circle().stroke(.white, lineWidth: 2))
                         .shadow(color: .black.opacity(0.35), radius: 4, y: 2)
+                }
+            }
+            ForEach(crewMarkers) { marker in
+                Annotation(marker.nickname, coordinate: marker.coordinate) {
+                    ZStack {
+                        Circle()
+                            .fill(Color(hex: 0xBF5AF2))
+                            .frame(width: 16, height: 16)
+                            .overlay(Circle().stroke(.white, lineWidth: 2))
+                            .shadow(color: .black.opacity(0.35), radius: 4, y: 2)
+                        Text(String(marker.nickname.prefix(1)).uppercased())
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundStyle(.white)
+                    }
                 }
             }
         }

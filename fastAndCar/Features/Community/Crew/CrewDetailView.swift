@@ -27,6 +27,8 @@ struct CrewDetailView: View {
     @State private var myUserId: String?
     @State private var photoCache = ProfilePhotoCache.shared
     @State private var isLeaving = false
+    @State private var liveLocations: [CrewLiveLocation] = []
+    @State private var profileTarget: CrewMembership?
     @AppStorage("distanceUnit") private var distanceUnitRaw = DistanceUnit.systemDefault.rawValue
     private var distanceUnit: DistanceUnit { DistanceUnit(rawValue: distanceUnitRaw) ?? .systemDefault }
 
@@ -44,6 +46,8 @@ struct CrewDetailView: View {
                         ProgressView().tint(AppColor.accent).padding(.top, 40)
                     } else {
                         memberRoster
+
+                        CrewLiveMapView(members: members, locations: liveLocations)
 
                         if segments.isEmpty {
                             emptyState
@@ -65,6 +69,20 @@ struct CrewDetailView: View {
             myUserId = try? await CloudKitCrewService.currentUserId()
             await load()
         }
+        .task {
+            // Polling, not a subscription — same posture as
+            // CrewLiveMapView used to have on its own before this view
+            // took over owning the fetch so the roster's green dots and
+            // the map share one source instead of two separate timers.
+            guard FeatureFlags.crewEnabled else { return }
+            while !Task.isCancelled {
+                let ids = members.map(\.userId)
+                if !ids.isEmpty {
+                    liveLocations = (try? await CloudKitCrewService.fetchLiveLocations(memberUserIds: ids, zoneRef: crewRef.zoneRef)) ?? []
+                }
+                try? await Task.sleep(for: .seconds(8))
+            }
+        }
         .alert(
             "Bir Sorun Oluştu",
             isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })
@@ -75,6 +93,13 @@ struct CrewDetailView: View {
         }
         .sheet(item: $pendingShare) { box in
             CrewInviteByNameView(crewId: crewRef.crew.id, crewName: crewRef.crew.name, share: box.value)
+        }
+        .sheet(item: $profileTarget) { member in
+            if member.userId == myUserId {
+                ProfileView()
+            } else {
+                PublicProfileView(userId: member.userId, nickname: member.nickname)
+            }
         }
     }
 
@@ -115,10 +140,25 @@ struct CrewDetailView: View {
             ForEach(members) { member in
                 GlassCard {
                     HStack(spacing: 12) {
-                        AvatarView(image: photoCache.image(for: member.userId), initial: member.nickname.first, size: 40)
-                        Text(member.nickname)
-                            .font(AppFont.body)
-                            .foregroundStyle(AppColor.textPrimary)
+                        Button {
+                            profileTarget = member
+                        } label: {
+                            HStack(spacing: 12) {
+                                ZStack(alignment: .bottomTrailing) {
+                                    AvatarView(image: photoCache.image(for: member.userId), initial: member.nickname.first, size: 40)
+                                    if liveLocations.first(where: { $0.userId == member.userId })?.isActive == true {
+                                        Circle()
+                                            .fill(AppColor.accent)
+                                            .frame(width: 12, height: 12)
+                                            .overlay(Circle().strokeBorder(AppColor.background, lineWidth: 2))
+                                    }
+                                }
+                                Text(member.nickname)
+                                    .font(AppFont.body)
+                                    .foregroundStyle(AppColor.textPrimary)
+                            }
+                        }
+                        .buttonStyle(.plain)
                         Spacer()
                         if crewRef.zoneRef.isOwnedByThisDevice, member.userId != myUserId {
                             Button {

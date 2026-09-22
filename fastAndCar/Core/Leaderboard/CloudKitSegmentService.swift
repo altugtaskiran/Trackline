@@ -243,6 +243,17 @@ enum CloudKitSegmentService {
 
     // MARK: - Efforts
 
+    /// One row per (segment, user) — recordName is deterministic so a
+    /// second, better run overwrites the same row instead of piling up a
+    /// duplicate leaderboard entry for the same person. "effort_" prefix
+    /// keeps it from colliding with voteRecordID's own "segmentId_userId"
+    /// scheme (different record type, but CloudKit record IDs are unique
+    /// per database+zone regardless of type — see CloudKitProfileService's
+    /// header comment for how that bit us before).
+    private static func effortRecordID(segmentId: String, userId: String) -> CKRecord.ID {
+        CKRecord.ID(recordName: "effort_\(segmentId)_\(userId)")
+    }
+
     static func submitEffort(segmentId: String, userId: String, nickname: String, match: SegmentMatcher.Match, drivingScore: Int) async throws {
         guard FeatureFlags.globalLeaderboardEnabled else { throw SegmentServiceError.featureNotAvailable }
         guard AntiCheat.isPlausible(topSpeedKph: match.topSpeedKph, averageSpeedKph: match.averageSpeedKph) else {
@@ -252,17 +263,25 @@ enum CloudKitSegmentService {
             throw SegmentServiceError.rateLimited
         }
 
-        let record = CKRecord(recordType: effortRecordType)
-        record["segmentId"] = segmentId as CKRecordValue
-        record["userId"] = userId as CKRecordValue
-        record["nickname"] = nickname as CKRecordValue
-        record["durationSeconds"] = match.durationSeconds as CKRecordValue
-        record["averageSpeedKph"] = match.averageSpeedKph as CKRecordValue
-        record["topSpeedKph"] = match.topSpeedKph as CKRecordValue
-        record["drivingScore"] = drivingScore as CKRecordValue
-        record["createdAt"] = Date() as CKRecordValue
-
+        let recordID = effortRecordID(segmentId: segmentId, userId: userId)
         do {
+            if let existing = try? await database.record(for: recordID),
+               let existingDuration = existing["durationSeconds"] as? Double,
+               existingDuration <= match.durationSeconds {
+                // Already have an equal-or-better time on this segment —
+                // nothing to do, keep the existing row as-is.
+                return
+            }
+
+            let record = (try? await database.record(for: recordID)) ?? CKRecord(recordType: effortRecordType, recordID: recordID)
+            record["segmentId"] = segmentId as CKRecordValue
+            record["userId"] = userId as CKRecordValue
+            record["nickname"] = nickname as CKRecordValue
+            record["durationSeconds"] = match.durationSeconds as CKRecordValue
+            record["averageSpeedKph"] = match.averageSpeedKph as CKRecordValue
+            record["topSpeedKph"] = match.topSpeedKph as CKRecordValue
+            record["drivingScore"] = drivingScore as CKRecordValue
+            record["createdAt"] = Date() as CKRecordValue
             _ = try await database.save(record)
             AntiCheat.recordSubmission()
         } catch let error as CKError where error.code == .notAuthenticated {

@@ -28,7 +28,9 @@ struct AppRootView: View {
     /// run the public Global Leaderboard auto-matcher.
     @State private var guidanceCrewZoneRef: CrewZoneRef?
     @State private var guidanceCrewId: String?
+    @AppStorage("sharesLiveLocationWithCrew") private var sharesLiveLocationWithCrew = false
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         ZStack {
@@ -232,6 +234,33 @@ struct AppRootView: View {
             // before it's ever actually needed.
             LocalNotifier.requestAuthorizationIfNeeded()
         }
+        .task {
+            // "arkada açık olsa bile" — presence sharing now keeps running
+            // in the background too, not just foreground: Always
+            // authorization is requested the moment the toggle goes on
+            // (below), and LocationManager only actually enables background
+            // delivery once that's granted (falls back to foreground-only
+            // like recording always has if the user only grants When-In-Use).
+            if sharesLiveLocationWithCrew {
+                appEnvironment.presenceBroadcaster.start()
+            }
+        }
+        .onChange(of: sharesLiveLocationWithCrew) { _, isOn in
+            if isOn {
+                appEnvironment.locationManager.requestAlwaysAuthorizationIfNeeded()
+                appEnvironment.presenceBroadcaster.start()
+            } else {
+                appEnvironment.presenceBroadcaster.stop()
+            }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            // Coming back to foreground after Always wasn't granted yet (or
+            // was just approved) — re-arm so the broadcaster picks up
+            // wherever LocationManager's authorization now stands, instead
+            // of staying stuck on whatever it saw at launch.
+            guard sharesLiveLocationWithCrew, phase == .active else { return }
+            appEnvironment.presenceBroadcaster.start()
+        }
         #if DEBUG
         .task {
             // Test-only: jumps straight to a synthetic Segment's detail
@@ -331,10 +360,31 @@ struct AppRootView: View {
             }
         }
         checkForNewlyUnlockedAchievements()
+        syncProfileStatsToCloud()
         // A followed route only applies to the one drive it was armed for.
         guidanceSegment = nil
         guidanceCrewZoneRef = nil
         guidanceCrewId = nil
+    }
+
+    /// Publishes this device's totals + garage onto the public UserProfile
+    /// record so other users can see a real profile (not just photo/name)
+    /// when they tap this person's name on a leaderboard — best-effort,
+    /// mirrors every other sync call in this codebase (try?, no UI feedback).
+    private func syncProfileStatsToCloud() {
+        guard let trips = try? modelContext.fetch(FetchDescriptor<Trip>()),
+              let cars = try? modelContext.fetch(FetchDescriptor<Car>()) else { return }
+        let totalDistanceMeters = trips.reduce(0) { $0 + $1.distanceMeters }
+        let totalDriveTime = trips.reduce(0) { $0 + $1.driveTime }
+        let carEntries = cars.map { CloudKitProfileService.CarSyncEntry(name: "\($0.year) \($0.displayName)", photoData: $0.photoData) }
+        Task {
+            try? await CloudKitProfileService.syncStats(
+                totalDistanceMeters: totalDistanceMeters,
+                tripCount: trips.count,
+                totalDriveTime: totalDriveTime,
+                cars: carEntries
+            )
+        }
     }
 
     /// Re-evaluates the full badge set against every trip on disk (cheap —

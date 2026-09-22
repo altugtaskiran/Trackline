@@ -118,6 +118,19 @@
         }
       }
     },
+    "%@, yönettiğin crew'a katılsın." : {
+
+    },
+    "%@: %@" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@: %2$@"
+          }
+        }
+      }
+    },
     "%@#%lld" : {
       "localizations" : {
         "tr" : {
@@ -191,6 +204,19 @@
         }
       }
     },
+    "%lld–%lld" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld–%2$lld"
+          }
+        }
+      }
+    },
+    "%lld%%" : {
+
+    },
     "• %@" : {
 
     },
@@ -249,6 +275,9 @@
           }
         }
       }
+    },
+    "Açıkken, uygulamayı arka planda da açık tuttuğun sürece crew'daki arkadaşların seni haritada görebilir." : {
+
     },
     "Akıcı sürüş, yakıt verimliliği yüksek" : {
       "extractionState" : "stale",
@@ -593,6 +622,9 @@
     "Bu kullanıcı bulunamadı. Adı kontrol et." : {
 
     },
+    "Bu kullanıcı henüz istatistiklerini paylaşmamış." : {
+
+    },
     "Bu özellik yakında aktif olacak." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -745,6 +777,9 @@
         }
       }
     },
+    "Crew ile Canlı Konum Paylaş" : {
+
+    },
     "Crew oluşturmak için cihazında iCloud hesabına giriş yapmalısın." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -777,6 +812,9 @@
           }
         }
       }
+    },
+    "Crew'a Davet Et" : {
+
     },
     "Crew'a Katıldın" : {
       "extractionState" : "stale",
@@ -1531,6 +1569,9 @@
         }
       }
     },
+    "Hız Dağılımı" : {
+
+    },
     "Hız değişkenliği yüksek" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1607,6 +1648,9 @@
           }
         }
       }
+    },
+    "İsim Ekle" : {
+
     },
     "İsimle Davet Et" : {
 
@@ -1818,9 +1862,6 @@
           }
         }
       }
-    },
-    "Liderlik tablolarında görünür" : {
-
     },
     "Liderlik Tablosu" : {
       "extractionState" : "stale",
@@ -2096,16 +2137,6 @@
         }
       }
     },
-    "Ort. %@ · Zirve %@" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Ort. %1$@ · Zirve %2$@"
-          }
-        }
-      }
-    },
     "Ort. %lld km/h · Zirve %lld km/h" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -2243,7 +2274,7 @@
         }
       }
     },
-    "Profil Fotoğrafı" : {
+    "Profil" : {
 
     },
     "Reddedildi" : {
@@ -2645,6 +2676,9 @@
         }
       }
     },
+    "Şu an aktif üye yok" : {
+
+    },
     "Sürdüklerim" : {
       "localizations" : {
         "en" : {
@@ -2684,6 +2718,9 @@
           }
         }
       }
+    },
+    "Sürüş Sayısı" : {
+
     },
     "Sürüşe Başla" : {
       "localizations" : {
@@ -2820,6 +2857,12 @@
           }
         }
       }
+    },
+    "Toplam Mesafe" : {
+
+    },
+    "Toplam Süre" : {
+
     },
     "Toplamda 100 km yol kat ettin" : {
       "extractionState" : "stale",
@@ -3084,16 +3127,6 @@
         }
       }
     },
-    "Zirve Hız" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Top Speed"
-          }
-        }
-      }
-    },
     "Zirve %lld km/h" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -3101,6 +3134,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Peak %lld km/h"
+          }
+        }
+      }
+    },
+    "Zirve Hız" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Top Speed"
           }
         }
       }

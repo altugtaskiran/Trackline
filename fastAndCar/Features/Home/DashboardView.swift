@@ -26,6 +26,12 @@ struct DashboardView: View {
     // LiveSatelliteMapView's header comment for why that placement got
     // pulled.
     @State private var showsSatelliteChase = false
+    // Crew members' live locations, overlaid on this same driving map — "if
+    // a crewmate is nearby or headed the same way, see them while I drive",
+    // not just on the separate Crew screen. Only polled while actually
+    // recording, to avoid an idle-screen background task.
+    @State private var crewMarkers: [CrewMapMarker] = []
+    @State private var myUserId: String?
     @Binding var isRecording: Bool
     let locationManager: LocationManager
     var onTripEnded: (ActiveTripViewModel.TripResult) -> Void
@@ -59,13 +65,14 @@ struct DashboardView: View {
             AppColor.background.ignoresSafeArea()
 
             if isRecording && showsSatelliteChase {
-                LiveSatelliteMapView(samples: tripViewModel.samples)
+                LiveSatelliteMapView(samples: tripViewModel.samples, crewMarkers: crewMarkers)
                     .ignoresSafeArea()
             } else {
                 LiveRouteMapView(
                     samples: isRecording ? tripViewModel.samples : [],
                     cameraPosition: $cameraPosition,
-                    ghostRouteCoordinates: ghostRouteCoordinates
+                    ghostRouteCoordinates: ghostRouteCoordinates,
+                    crewMarkers: isRecording ? crewMarkers : []
                 )
                 .ignoresSafeArea()
 
@@ -229,6 +236,40 @@ struct DashboardView: View {
                 withAnimation { cameraPosition = .automatic }
             } else {
                 showsSatelliteChase = false
+                crewMarkers = []
+            }
+        }
+        .task(id: isRecording) {
+            guard isRecording, FeatureFlags.crewEnabled else { return }
+            if myUserId == nil {
+                myUserId = try? await CloudKitCrewService.currentUserId()
+            }
+            // Membership rosters fetched once per drive (not every poll —
+            // who's in a crew doesn't change mid-drive, only where they are).
+            let crews = MyCrewsStore().crews
+            var rosters: [(zoneRef: CrewZoneRef, memberIds: [String], nicknames: [String: String])] = []
+            for crewRef in crews {
+                guard let members = try? await CloudKitCrewService.fetchMembers(zoneRef: crewRef.zoneRef) else { continue }
+                let ids = members.map(\.userId).filter { $0 != myUserId }
+                guard !ids.isEmpty else { continue }
+                rosters.append((crewRef.zoneRef, ids, Dictionary(uniqueKeysWithValues: members.map { ($0.userId, $0.nickname) })))
+            }
+            guard !rosters.isEmpty else { return }
+
+            while !Task.isCancelled && isRecording {
+                var merged: [String: CrewMapMarker] = [:]
+                for roster in rosters {
+                    guard let locations = try? await CloudKitCrewService.fetchLiveLocations(memberUserIds: roster.memberIds, zoneRef: roster.zoneRef) else { continue }
+                    for location in locations where location.isActive {
+                        merged[location.userId] = CrewMapMarker(
+                            userId: location.userId,
+                            nickname: roster.nicknames[location.userId] ?? "?",
+                            coordinate: location.coordinate
+                        )
+                    }
+                }
+                crewMarkers = Array(merged.values)
+                try? await Task.sleep(for: .seconds(8))
             }
         }
         .onChange(of: tripViewModel.samples.last?.id) { _, _ in

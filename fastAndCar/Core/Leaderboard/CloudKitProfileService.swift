@@ -37,6 +37,20 @@ enum CloudKitProfileService {
     private static let nicknameIndexRecordType = "NicknameIndex"
     private static var database: CKDatabase { CKContainer.default().publicCloudDatabase }
 
+    // CRITICAL: never use a bare `userId` as a record ID in the public
+    // database's default zone. `userId` (from CloudKitSegmentService.
+    // currentUserId()) IS `CKContainer.default().userRecordID().recordName`
+    // — i.e. it's already the ID of that account's own CloudKit-managed
+    // "Users" system record. `database.record(for:)` matches by ID alone,
+    // regardless of type, so a bare-userId lookup silently returns and then
+    // overwrites that system record instead of a separate "userProfile"
+    // record (confirmed in testing: our fields were landing on "Users" in
+    // Console, not "userProfile"). This prefix guarantees our record's ID
+    // can never collide with a real user record ID.
+    private static func profileRecordID(for userId: String) -> CKRecord.ID {
+        CKRecord.ID(recordName: "profile_" + userId)
+    }
+
     private static func handleKey(nickname: String, tag: Int) -> String {
         nickname.trimmingCharacters(in: .whitespaces).lowercased() + "_" + String(tag)
     }
@@ -53,7 +67,7 @@ enum CloudKitProfileService {
         try data.write(to: tempURL)
         defer { try? FileManager.default.removeItem(at: tempURL) }
 
-        let recordID = CKRecord.ID(recordName: userId)
+        let recordID = profileRecordID(for: userId)
         let record = (try? await database.record(for: recordID)) ?? CKRecord(recordType: profileRecordType, recordID: recordID)
         record["photo"] = CKAsset(fileURL: tempURL)
 
@@ -65,7 +79,7 @@ enum CloudKitProfileService {
             throw SegmentServiceError.underlying(error)
         }
     }
-    
+
     /// Publishes this device's nickname + tag onto its own UserProfile
     /// record — read-modify-write so it never clobbers a photo already
     /// saved there by uploadMyPhoto. Best-effort callers (NicknamePromptView,
@@ -74,7 +88,7 @@ enum CloudKitProfileService {
     static func syncHandle(nickname: String, tag: Int, previousNickname: String? = nil) async throws {
         guard FeatureFlags.globalLeaderboardEnabled else { throw SegmentServiceError.featureNotAvailable }
         let userId = try await CloudKitSegmentService.currentUserId()
-        let recordID = CKRecord.ID(recordName: userId)
+        let recordID = profileRecordID(for: userId)
 
         do {
             let record = (try? await database.record(for: recordID)) ?? CKRecord(recordType: profileRecordType, recordID: recordID)
@@ -115,7 +129,7 @@ enum CloudKitProfileService {
         guard FeatureFlags.globalLeaderboardEnabled else { throw SegmentServiceError.featureNotAvailable }
         let userId = try await CloudKitSegmentService.currentUserId()
         do {
-            let record = try await database.record(for: CKRecord.ID(recordName: userId))
+            let record = try await database.record(for: profileRecordID(for: userId))
             guard let nickname = record["nickname"] as? String, let tag = record["tag"] as? Int64 else { return nil }
             return (nickname, Int(tag))
         } catch let error as CKError where error.code == .unknownItem {
@@ -203,7 +217,7 @@ enum CloudKitProfileService {
     static func fetchPhotos(userIds: [String]) async throws -> [String: Data] {
         guard FeatureFlags.globalLeaderboardEnabled else { throw SegmentServiceError.featureNotAvailable }
         guard !userIds.isEmpty else { return [:] }
-        let ids = userIds.map { CKRecord.ID(recordName: $0) }
+        let ids = userIds.map { profileRecordID(for: $0) }
 
         do {
             let results = try await database.records(for: ids)
@@ -213,9 +227,108 @@ enum CloudKitProfileService {
                       let asset = record["photo"] as? CKAsset,
                       let fileURL = asset.fileURL,
                       let data = try? Data(contentsOf: fileURL) else { continue }
-                photos[recordID.recordName] = data
+                // Map back to the raw userId the caller passed in — the
+                // stored record ID is "profile_<userId>", not the userId.
+                photos[String(recordID.recordName.dropFirst("profile_".count))] = data
             }
             return photos
+        } catch let error as CKError where error.code == .notAuthenticated {
+            throw SegmentServiceError.notSignedIntoiCloud
+        } catch {
+            throw SegmentServiceError.underlying(error)
+        }
+    }
+
+    struct CarSyncEntry {
+        var name: String
+        var photoData: Data?
+    }
+
+    // CloudKit records have no "list of Asset" field type, so a bounded set
+    // of indexed single-Asset fields (carPhoto0...carPhoto7) stands in for
+    // an array — plenty for a real garage, and simpler than a second
+    // record type per car (which would need its own by-index deterministic
+    // IDs anyway, no real savings over this).
+    private static let maxSyncedCars = 8
+
+    /// Publishes this device's local driving totals + garage onto its own
+    /// UserProfile record, same read-modify-write posture as syncHandle —
+    /// so PublicProfileView (opened from a leaderboard row) can show a real
+    /// "like my own profile" view of someone else instead of just a photo.
+    /// Best-effort: called opportunistically (trip ended, Profile opened),
+    /// never blocks the UI on failure.
+    static func syncStats(totalDistanceMeters: Double, tripCount: Int, totalDriveTime: TimeInterval, cars: [CarSyncEntry]) async throws {
+        guard FeatureFlags.globalLeaderboardEnabled else { throw SegmentServiceError.featureNotAvailable }
+        let userId = try await CloudKitSegmentService.currentUserId()
+        let recordID = profileRecordID(for: userId)
+        let synced = Array(cars.prefix(maxSyncedCars))
+
+        var tempURLs: [URL] = []
+        defer { for url in tempURLs { try? FileManager.default.removeItem(at: url) } }
+
+        do {
+            let record = (try? await database.record(for: recordID)) ?? CKRecord(recordType: profileRecordType, recordID: recordID)
+            record["totalDistanceMeters"] = totalDistanceMeters as CKRecordValue
+            record["tripCount"] = Int64(tripCount) as CKRecordValue
+            record["totalDriveTime"] = totalDriveTime as CKRecordValue
+            record["carSummaries"] = synced.map(\.name) as CKRecordValue
+
+            for index in 0..<maxSyncedCars {
+                let key = "carPhoto\(index)"
+                guard index < synced.count, let data = synced[index].photoData else {
+                    record[key] = nil
+                    continue
+                }
+                let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".jpg")
+                try data.write(to: tempURL)
+                tempURLs.append(tempURL)
+                record[key] = CKAsset(fileURL: tempURL)
+            }
+
+            _ = try await database.save(record)
+        } catch let error as CKError where error.code == .notAuthenticated {
+            throw SegmentServiceError.notSignedIntoiCloud
+        } catch {
+            throw SegmentServiceError.underlying(error)
+        }
+    }
+
+    struct ProfileStats {
+        var totalDistanceMeters: Double
+        var tripCount: Int
+        var totalDriveTime: TimeInterval
+        var carSummaries: [String]
+        var carPhotos: [Data?]
+    }
+
+    /// Batch by-ID fetch, same mechanism as fetchPhotos — a user who never
+    /// synced stats (or is on an older build) is just left out of the result.
+    static func fetchStats(userIds: [String]) async throws -> [String: ProfileStats] {
+        guard FeatureFlags.globalLeaderboardEnabled else { throw SegmentServiceError.featureNotAvailable }
+        guard !userIds.isEmpty else { return [:] }
+        let ids = userIds.map { profileRecordID(for: $0) }
+
+        do {
+            let results = try await database.records(for: ids)
+            var stats: [String: ProfileStats] = [:]
+            for (recordID, result) in results {
+                guard case .success(let record) = result,
+                      let totalDistanceMeters = record["totalDistanceMeters"] as? Double else { continue }
+                let carPhotos: [Data?] = (0..<maxSyncedCars).map { index in
+                    guard let asset = record["carPhoto\(index)"] as? CKAsset,
+                          let fileURL = asset.fileURL else { return nil }
+                    return try? Data(contentsOf: fileURL)
+                }
+                // Map back to the raw userId — see fetchPhotos' same fix.
+                stats[String(recordID.recordName.dropFirst("profile_".count))] = ProfileStats(
+                    totalDistanceMeters: totalDistanceMeters,
+                    tripCount: (record["tripCount"] as? Int64).map(Int.init) ?? 0,
+                    totalDriveTime: record["totalDriveTime"] as? Double ?? 0,
+                    carSummaries: record["carSummaries"] as? [String] ?? [],
+                    carPhotos: carPhotos
+                )
+            }
+            return stats
         } catch let error as CKError where error.code == .notAuthenticated {
             throw SegmentServiceError.notSignedIntoiCloud
         } catch {

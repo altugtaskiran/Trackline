@@ -13,6 +13,9 @@ struct TripsListView: View {
     @Query(sort: \Trip.createdAt, order: .reverse) private var trips: [Trip]
     @State private var showsSettings = false
     @State private var showsAchievements = false
+    @State private var showsProfile = false
+    @State private var nicknameStore = NicknameStore()
+    @State private var profilePhotoData: Data? = UserDefaults.standard.data(forKey: "profilePhotoData")
     @Environment(\.modelContext) private var modelContext
     private let locationManager: LocationManager
 
@@ -73,6 +76,9 @@ struct TripsListView: View {
         .sheet(isPresented: $showsAchievements) {
             AchievementsView()
         }
+        .sheet(isPresented: $showsProfile) {
+            ProfileView()
+        }
         #if DEBUG
         .task {
             guard ProcessInfo.processInfo.arguments.contains("-uiTestAutoSettings") else { return }
@@ -84,6 +90,14 @@ struct TripsListView: View {
 
     private var header: some View {
         HStack {
+            Button {
+                showsProfile = true
+            } label: {
+                AvatarView(image: profilePhotoData.flatMap(UIImage.init), initial: nicknameStore.nickname.first, size: 34)
+            }
+            .buttonStyle(.plain)
+            .padding(.trailing, 4)
+
             Text("Sürüşlerim")
                 .font(AppFont.title)
                 .foregroundStyle(AppColor.textPrimary)

@@ -11,6 +11,7 @@
 
 import CoreLocation
 import Foundation
+import MapKit
 
 enum Geohash {
     private static let base32 = Array("0123456789bcdefghjkmnpqrstuvwxyz")
@@ -100,6 +101,47 @@ enum Geohash {
                 let point = CLLocationCoordinate2D(
                     latitude: coordinate.latitude + dLat * latDelta,
                     longitude: coordinate.longitude + dLon * lonDelta
+                )
+                let cell = encode(point, precision: precision)
+                if seen.insert(cell).inserted {
+                    result.append(cell)
+                }
+            }
+        }
+        return result
+    }
+
+    /// Every precision-6 cell touching the given map region — used to load
+    /// nearby routes as the Home map's viewport changes (RouteDiscoveryOverlay),
+    /// generalizing nearbyCells' fixed 3×3 grid to an arbitrary rectangle.
+    /// Capped at `maxCells`: a zoomed-way-out region would otherwise expand
+    /// to a predicate with thousands of candidates — callers should treat a
+    /// nil result as "too zoomed out, ask the user to zoom in" rather than
+    /// firing a giant query.
+    static func cells(covering region: MKCoordinateRegion, precision: Int = defaultPrecision, maxCells: Int = 60) -> [String]? {
+        let cellHeightMeters = 610.0
+        let cellWidthMeters = 1220.0
+        let metersPerDegreeLatitude = 111_320.0
+        let metersPerDegreeLongitude = 111_320.0 * cos(region.center.latitude * .pi / 180)
+        let latStep = cellHeightMeters / metersPerDegreeLatitude
+        let lonStep = cellWidthMeters / max(metersPerDegreeLongitude, 1)
+
+        let minLat = region.center.latitude - region.span.latitudeDelta / 2
+        let maxLat = region.center.latitude + region.span.latitudeDelta / 2
+        let minLon = region.center.longitude - region.span.longitudeDelta / 2
+        let maxLon = region.center.longitude + region.span.longitudeDelta / 2
+
+        let latSteps = max(1, Int((maxLat - minLat) / latStep) + 1)
+        let lonSteps = max(1, Int((maxLon - minLon) / lonStep) + 1)
+        guard latSteps * lonSteps <= maxCells else { return nil }
+
+        var seen = Set<String>()
+        var result: [String] = []
+        for latIndex in 0..<latSteps {
+            for lonIndex in 0..<lonSteps {
+                let point = CLLocationCoordinate2D(
+                    latitude: minLat + Double(latIndex) * latStep,
+                    longitude: minLon + Double(lonIndex) * lonStep
                 )
                 let cell = encode(point, precision: precision)
                 if seen.insert(cell).inserted {

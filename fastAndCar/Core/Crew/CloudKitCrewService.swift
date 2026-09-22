@@ -11,12 +11,29 @@
 //
 
 import CloudKit
+import CoreLocation
 import Foundation
 
 enum CrewServiceError: Error {
     case featureNotAvailable
     case notSignedIntoiCloud
     case underlying(Error)
+}
+
+// Without this, Swift's default `.localizedDescription` bridging collapses
+// every case to a useless generic "The operation couldn't be completed
+// (fastAndCar.CrewServiceError error N.)" — CrewPresenceBroadcaster's
+// TestFlight-visible `lastStatus` line needs the *real* CKError text
+// (e.g. "did not find record type" vs. a permissions error) to actually be
+// diagnosable without Xcode/console access.
+extension CrewServiceError: LocalizedError {
+    var errorDescription: String? {
+        switch self {
+        case .featureNotAvailable: "Crew özelliği bu derlemede kapalı."
+        case .notSignedIntoiCloud: "iCloud hesabına giriş yapılmamış."
+        case .underlying(let error): error.localizedDescription
+        }
+    }
 }
 
 enum CloudKitCrewService {
@@ -32,6 +49,10 @@ enum CloudKitCrewService {
     private static let segmentRecordType = "Segment"
     private static let effortRecordType = "SegmentEffort"
     private static let inviteRequestRecordType = "CrewInviteRequest"
+    // recordName = userId, one per crew zone — direct by-ID read/write, not
+    // a CKQuery, matching every other lookup in this app after CKQuery
+    // proved unreliable in this container (see CloudKitProfileService).
+    private static let liveLocationRecordType = "LiveLocation"
     private static var publicDatabase: CKDatabase { CKContainer.default().publicCloudDatabase }
 
     // MARK: - Create
@@ -437,22 +458,39 @@ enum CloudKitCrewService {
         }
     }
 
+    /// One row per (segment, user) in this crew's zone — same deterministic-ID
+    /// upsert pattern as CloudKitSegmentService's Global effort submission,
+    /// so a second, better run replaces this member's existing row instead
+    /// of adding a duplicate leaderboard entry for the same person.
+    private static func effortRecordID(segmentId: String, userId: String, zoneID: CKRecordZone.ID) -> CKRecord.ID {
+        CKRecord.ID(recordName: "effort_\(segmentId)_\(userId)", zoneID: zoneID)
+    }
+
     static func submitEffort(segmentId: String, crewId: String, userId: String, nickname: String, match: SegmentMatcher.Match, drivingScore: Int, zoneRef: CrewZoneRef) async throws {
         guard FeatureFlags.crewEnabled else { throw CrewServiceError.featureNotAvailable }
         guard AntiCheat.isPlausible(topSpeedKph: match.topSpeedKph, averageSpeedKph: match.averageSpeedKph) else {
             throw CrewServiceError.underlying(URLError(.badServerResponse))
         }
-        let record = CKRecord(recordType: effortRecordType, recordID: CKRecord.ID(recordName: UUID().uuidString, zoneID: zoneRef.zoneID))
-        record.parent = CKRecord.Reference(recordID: CKRecord.ID(recordName: crewId, zoneID: zoneRef.zoneID), action: .none)
-        record["segmentId"] = segmentId as CKRecordValue
-        record["userId"] = userId as CKRecordValue
-        record["nickname"] = nickname as CKRecordValue
-        record["durationSeconds"] = match.durationSeconds as CKRecordValue
-        record["averageSpeedKph"] = match.averageSpeedKph as CKRecordValue
-        record["topSpeedKph"] = match.topSpeedKph as CKRecordValue
-        record["drivingScore"] = drivingScore as CKRecordValue
-        record["createdAt"] = Date() as CKRecordValue
+        let recordID = effortRecordID(segmentId: segmentId, userId: userId, zoneID: zoneRef.zoneID)
         do {
+            if let existing = try? await zoneRef.database.record(for: recordID),
+               let existingDuration = existing["durationSeconds"] as? Double,
+               existingDuration <= match.durationSeconds {
+                // Already have an equal-or-better time on this segment —
+                // nothing to do, keep the existing row as-is.
+                return
+            }
+
+            let record = (try? await zoneRef.database.record(for: recordID)) ?? CKRecord(recordType: effortRecordType, recordID: recordID)
+            record.parent = CKRecord.Reference(recordID: CKRecord.ID(recordName: crewId, zoneID: zoneRef.zoneID), action: .none)
+            record["segmentId"] = segmentId as CKRecordValue
+            record["userId"] = userId as CKRecordValue
+            record["nickname"] = nickname as CKRecordValue
+            record["durationSeconds"] = match.durationSeconds as CKRecordValue
+            record["averageSpeedKph"] = match.averageSpeedKph as CKRecordValue
+            record["topSpeedKph"] = match.topSpeedKph as CKRecordValue
+            record["drivingScore"] = drivingScore as CKRecordValue
+            record["createdAt"] = Date() as CKRecordValue
             _ = try await zoneRef.database.save(record)
         } catch let error as CKError where error.code == .notAuthenticated {
             throw CrewServiceError.notSignedIntoiCloud
@@ -491,6 +529,70 @@ enum CloudKitCrewService {
             return matchResults.compactMap { _, result in
                 guard case .success(let record) = result else { return nil }
                 return mapMembership(record)
+            }
+        } catch let error as CKError where error.code == .notAuthenticated {
+            throw CrewServiceError.notSignedIntoiCloud
+        } catch {
+            throw CrewServiceError.underlying(error)
+        }
+    }
+
+    // MARK: - Live location
+
+    /// Read-modify-write, keyed by userId so repeated calls just refresh
+    /// the same record instead of piling up new ones. Needs `parent` set to
+    /// the crew's root record the same way CrewMembership/Segment do —
+    /// without it, a non-owner participant's CREATE into the shared zone
+    /// gets silently rejected (confirmed live earlier this session).
+    ///
+    /// CRITICAL: `userId` (CKContainer userRecordID().recordName) itself
+    /// starts with an underscore (e.g. "_df9e0e74..."), and CloudKit
+    /// rejects any developer-supplied record name starting with "_" —
+    /// that prefix is reserved for CloudKit's own system-generated IDs.
+    /// Using it bare here failed every single save with "invalid id
+    /// string" (confirmed live) — this was the actual root cause of live
+    /// location never working, not the background-execution issue fixed
+    /// earlier. "live_" avoids the collision the same way "profile_" does
+    /// for CloudKitProfileService's UserProfile record IDs.
+    static func updateMyLocation(coordinate: CLLocationCoordinate2D, userId: String, crewId: String, zoneRef: CrewZoneRef) async throws {
+        guard FeatureFlags.crewEnabled else { throw CrewServiceError.featureNotAvailable }
+        let recordID = CKRecord.ID(recordName: "live_" + userId, zoneID: zoneRef.zoneID)
+        do {
+            let record = (try? await zoneRef.database.record(for: recordID)) ?? CKRecord(recordType: liveLocationRecordType, recordID: recordID)
+            record.parent = CKRecord.Reference(recordID: CKRecord.ID(recordName: crewId, zoneID: zoneRef.zoneID), action: .none)
+            record["latitude"] = coordinate.latitude as CKRecordValue
+            record["longitude"] = coordinate.longitude as CKRecordValue
+            // Field is "updateAt" in Console (typo made when the type was
+            // created manually) — matching it here beats getting the typo
+            // fixed in Console, since Production fields can't be renamed
+            // once deployed anyway.
+            record["updateAt"] = Date() as CKRecordValue
+            _ = try await zoneRef.database.save(record)
+        } catch let error as CKError where error.code == .notAuthenticated {
+            throw CrewServiceError.notSignedIntoiCloud
+        } catch {
+            throw CrewServiceError.underlying(error)
+        }
+    }
+
+    /// Batch by-ID fetch (not a query) for every given member — missing
+    /// records (never broadcast, or long-stale and irrelevant) are simply
+    /// left out rather than erroring.
+    static func fetchLiveLocations(memberUserIds: [String], zoneRef: CrewZoneRef) async throws -> [CrewLiveLocation] {
+        guard FeatureFlags.crewEnabled else { throw CrewServiceError.featureNotAvailable }
+        guard !memberUserIds.isEmpty else { return [] }
+        let ids = memberUserIds.map { CKRecord.ID(recordName: "live_" + $0, zoneID: zoneRef.zoneID) }
+        do {
+            let results = try await zoneRef.database.records(for: ids)
+            return results.compactMap { _, result -> CrewLiveLocation? in
+                guard case .success(let record) = result,
+                      let lat = record["latitude"] as? Double,
+                      let lon = record["longitude"] as? Double,
+                      let updatedAt = record["updateAt"] as? Date else { return nil }
+                // Map back to the raw userId — the record ID carries the
+                // "live_" prefix (see updateMyLocation's comment).
+                let userId = String(record.recordID.recordName.dropFirst("live_".count))
+                return CrewLiveLocation(userId: userId, latitude: lat, longitude: lon, updatedAt: updatedAt)
             }
         } catch let error as CKError where error.code == .notAuthenticated {
             throw CrewServiceError.notSignedIntoiCloud
