@@ -60,19 +60,20 @@ struct LiveRouteMapView: View {
     /// wash *them* out too. Idle/browsing mode wants a genuinely legible
     /// map anyway (it's a real navigable surface now), so it passes 1.0.
     var mapOpacity: Double = 0.22
-    /// Only while idle (DashboardView passes `!isRecording`) — a fixed "you
-    /// are here" pin that stays put even after panning away from it.
-    /// Deliberately absent while recording: that's the raw, unthrottled
-    /// CoreLocation position, while the recorded route line is drawn from
-    /// `samples` (throttled + smoothed) — mixing the two during a drive
-    /// made the dot visibly run ahead of the line it was supposed to sit
-    /// on (confirmed live). No route line is drawn while idle, so there's
-    /// nothing for it to drift ahead of here.
-    var showsUserLocation: Bool = false
 
     var body: some View {
         MapReader { proxy in
             ZStack {
+                // No UserAnnotation here — even while idle. That would run
+                // a second, independent CLLocationManager (MapKit's own,
+                // for the blue dot) alongside our own LocationManager, and
+                // the two concurrent location clients measurably slowed
+                // down our own manager's fix right when a drive started
+                // (confirmed live). The idle position dot below is drawn
+                // from the exact same `samples`/LocationManager the
+                // recording route line uses — one source, always in sync,
+                // never a second GPS client to contend with.
+                //
                 // Discovery routes are native MapPolyline/Annotation content
                 // here (not the screen-space Canvas below) on purpose: an
                 // earlier attempt drew them in the Canvas and used a SwiftUI
@@ -82,9 +83,6 @@ struct LiveRouteMapView: View {
                 // (confirmed live). Native Map content has no such conflict;
                 // annotations are designed to coexist with map gestures.
                 Map(position: $cameraPosition, interactionModes: interactionModes) {
-                    if showsUserLocation {
-                        UserAnnotation()
-                    }
                     ForEach(discoverySegments) { segment in
                         discoveryMapContent(for: segment)
                     }
@@ -194,7 +192,11 @@ private struct RouteOverlayCanvas: View {
                     }
                 }
 
-                if let startPoint = points.first ?? nil {
+                // Only draw the separate "start" dot once there's an actual
+                // route (2+ points) — with just the single idle position
+                // point, this would otherwise draw right on top of the
+                // current-position dot below.
+                if points.count > 1, let startPoint = points.first ?? nil {
                     let radius: CGFloat = 7
                     let rect = CGRect(x: startPoint.x - radius, y: startPoint.y - radius, width: radius * 2, height: radius * 2)
                     context.drawLayer { layer in

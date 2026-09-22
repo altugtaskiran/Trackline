@@ -82,7 +82,15 @@ struct DashboardView: View {
                     .ignoresSafeArea()
             } else {
                 LiveRouteMapView(
-                    samples: isRecording ? tripViewModel.samples : [],
+                    // Idle: one live point from our own LocationManager
+                    // (kept warm via startIdleMapTracking, see .onAppear/
+                    // .task below) — not MapKit's own UserAnnotation, which
+                    // ran a second, independent CLLocationManager and
+                    // measurably slowed down this one's fix right when
+                    // recording started (confirmed live). One point (not
+                    // an empty array) draws just the position dot, no line
+                    // — RouteOverlayCanvas only draws a route once it has 2+.
+                    samples: isRecording ? tripViewModel.samples : Array(locationManager.latestSample.map { [$0] } ?? []),
                     cameraPosition: $cameraPosition,
                     ghostRouteCoordinates: ghostRouteCoordinates,
                     crewMarkers: isRecording ? crewMarkers : [],
@@ -97,8 +105,7 @@ struct DashboardView: View {
                         guard !isRecording else { return }
                         Task { await loadDiscoverySegments(around: region) }
                     },
-                    mapOpacity: isRecording ? 0.22 : 1.0,
-                    showsUserLocation: !isRecording
+                    mapOpacity: isRecording ? 0.22 : 1.0
                 )
                 .ignoresSafeArea()
 
@@ -254,10 +261,17 @@ struct DashboardView: View {
             }
         }
         .onAppear {
-            if !isRecording { cameraPosition = .userLocation(fallback: .automatic) }
+            if !isRecording {
+                cameraPosition = .userLocation(fallback: .automatic)
+                locationManager.startIdleMapTracking()
+            }
+        }
+        .onDisappear {
+            locationManager.stopIdleMapTracking()
         }
         .onChange(of: isRecording) { _, recording in
             if recording {
+                locationManager.stopIdleMapTracking()
                 tripViewModel.start()
                 // .automatic alone doesn't recenter on the user — it just
                 // keeps whatever region is already showing. That was
@@ -276,6 +290,7 @@ struct DashboardView: View {
             } else {
                 showsSatelliteChase = false
                 crewMarkers = []
+                locationManager.startIdleMapTracking()
             }
         }
         .sheet(item: $previewSegment, onDismiss: { selectedSegmentId = nil }) { segment in

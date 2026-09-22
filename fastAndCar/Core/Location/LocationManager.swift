@@ -22,6 +22,15 @@ final class LocationManager: NSObject {
     /// recorded. Coarser accuracy than recording's, since "roughly where a
     /// friend is" doesn't need navigation-grade precision.
     private(set) var isBroadcastingPresence = false
+    /// Keeps `latestSample` warm while the idle Home map is on screen, so
+    /// starting a drive doesn't have to cold-start a GPS fix from scratch.
+    /// Replaces showing MapKit's own UserAnnotation there — that ran a
+    /// second, independent CLLocationManager instance alongside this one,
+    /// and the two concurrent location clients measurably slowed down this
+    /// manager's own fix right at the moment recording started (confirmed
+    /// live: "önceden çok hızlı bulurdu, şimdi mavi soluklaşıyor").
+    /// One manager, one source of truth for the dot drawn on screen.
+    private(set) var isIdleMapVisible = false
 
     /// Called on the main actor for every accepted, smoothed sample while recording.
     var onSample: ((LocationSample) -> Void)?
@@ -92,6 +101,17 @@ final class LocationManager: NSObject {
         refreshLocationUpdatesState()
     }
 
+    func startIdleMapTracking() {
+        guard hasUsableAuthorization else { return }
+        isIdleMapVisible = true
+        refreshLocationUpdatesState()
+    }
+
+    func stopIdleMapTracking() {
+        isIdleMapVisible = false
+        refreshLocationUpdatesState()
+    }
+
     private func refreshLocationUpdatesState() {
         // Presence-only accuracy was kCLLocationAccuracyHundredMeters /
         // 50m filter — coarse enough that iOS was batching background
@@ -102,7 +122,7 @@ final class LocationManager: NSObject {
         manager.desiredAccuracy = isRecording ? kCLLocationAccuracyBestForNavigation : kCLLocationAccuracyNearestTenMeters
         manager.distanceFilter = isRecording ? kCLDistanceFilterNone : 15
 
-        guard isRecording || isBroadcastingPresence else {
+        guard isRecording || isBroadcastingPresence || isIdleMapVisible else {
             manager.stopUpdatingLocation()
             manager.allowsBackgroundLocationUpdates = false
             manager.showsBackgroundLocationIndicator = false
@@ -113,6 +133,8 @@ final class LocationManager: NSObject {
         // authorization, requested separately when the Settings toggle is
         // switched on (see AppRootView). Falls back to foreground-only if
         // the user only granted When-In-Use, same as recording always has.
+        // Idle map tracking never needs background delivery — it's only
+        // ever relevant while its own screen is literally on screen.
         manager.allowsBackgroundLocationUpdates = (isRecording || isBroadcastingPresence) && authorizationStatus == .authorizedAlways
         manager.showsBackgroundLocationIndicator = isRecording || isBroadcastingPresence
         manager.startUpdatingLocation()
@@ -139,7 +161,7 @@ extension LocationManager: CLLocationManagerDelegate {
         // allowsBackgroundLocationUpdates stays stuck at whatever it was
         // computed as at start() time, silently breaking background
         // tracking for the rest of the session even after the user grants it.
-        if isRecording || isBroadcastingPresence {
+        if isRecording || isBroadcastingPresence || isIdleMapVisible {
             refreshLocationUpdatesState()
         }
     }
