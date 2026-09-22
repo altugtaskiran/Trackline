@@ -258,7 +258,17 @@ struct DashboardView: View {
         .onChange(of: isRecording) { _, recording in
             if recording {
                 tripViewModel.start()
-                withAnimation { cameraPosition = .automatic }
+                // .automatic alone doesn't recenter on the user — it just
+                // keeps whatever region is already showing. That was
+                // harmless before (idle map was always locked on the
+                // user), but now that idle browsing lets you drag the map
+                // anywhere, starting a drive left the camera stuck wherever
+                // it'd been dragged to — the live route/position dot were
+                // still drawing correctly, just off-screen (confirmed
+                // live, reported as "no location"). .userLocation forces
+                // it back to the real position before the first sample's
+                // own heading-up tracking (below) takes over.
+                withAnimation { cameraPosition = .userLocation(fallback: .automatic) }
                 discoverySegments = []
                 selectedSegmentId = nil
                 previewSegment = nil
