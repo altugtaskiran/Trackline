@@ -181,6 +181,17 @@ struct ProfileView: View {
         let previous = nicknameStore.nickname
         nicknameStore.nickname = trimmed
         try? await CloudKitProfileService.syncHandle(nickname: trimmed, tag: nicknameStore.tag, previousNickname: previous)
+
+        // Best-effort cascade — otherwise every leaderboard row and crew
+        // roster entry written before this rename keeps showing the old
+        // name forever (confirmed live). Never blocks the UI on failure.
+        guard let userId = try? await CloudKitSegmentService.currentUserId() else { return }
+        Task {
+            try? await CloudKitSegmentService.updateMyNicknameOnEfforts(userId: userId, nickname: trimmed)
+            for crewRef in MyCrewsStore().crews {
+                try? await CloudKitCrewService.updateMyNickname(userId: userId, nickname: trimmed, zoneRef: crewRef.zoneRef)
+            }
+        }
     }
 
     private var statsRow: some View {

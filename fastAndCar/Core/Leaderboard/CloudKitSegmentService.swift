@@ -291,6 +291,33 @@ enum CloudKitSegmentService {
         }
     }
 
+    /// The `nickname` on every SegmentEffort is a denormalized copy, baked
+    /// in at submission time — a later nickname change otherwise leaves old
+    /// leaderboard rows showing the stale name forever (confirmed live).
+    /// Called from ProfileView.saveNickname() alongside syncHandle, best-effort.
+    /// NOTE: needs a queryable index on SegmentEffort.userId in Console —
+    /// unlike segmentId (already queried by fetchLeaderboard above), userId
+    /// has never been queried on this record type before.
+    static func updateMyNicknameOnEfforts(userId: String, nickname: String) async throws {
+        guard FeatureFlags.globalLeaderboardEnabled else { throw SegmentServiceError.featureNotAvailable }
+        let predicate = NSPredicate(format: "userId == %@", userId)
+        let query = CKQuery(recordType: effortRecordType, predicate: predicate)
+        do {
+            let (matchResults, _) = try await database.records(matching: query)
+            let updates: [CKRecord] = matchResults.compactMap { _, result in
+                guard case .success(let record) = result else { return nil }
+                record["nickname"] = nickname as CKRecordValue
+                return record
+            }
+            guard !updates.isEmpty else { return }
+            _ = try await database.modifyRecords(saving: updates, deleting: [])
+        } catch let error as CKError where error.code == .notAuthenticated {
+            throw SegmentServiceError.notSignedIntoiCloud
+        } catch {
+            throw SegmentServiceError.underlying(error)
+        }
+    }
+
     /// Ranked by elapsed time ascending — fastest clear of the segment wins.
     static func fetchLeaderboard(segmentId: String) async throws -> [SegmentEffort] {
         guard FeatureFlags.globalLeaderboardEnabled else { throw SegmentServiceError.featureNotAvailable }

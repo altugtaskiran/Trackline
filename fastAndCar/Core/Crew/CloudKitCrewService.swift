@@ -559,6 +559,36 @@ enum CloudKitCrewService {
         }
     }
 
+    /// The `nickname` on CrewMembership and every crew SegmentEffort is a
+    /// denormalized copy, baked in when written — a later nickname change
+    /// otherwise leaves the roster and crew leaderboards showing the stale
+    /// name forever (confirmed live; acceptShare's idempotent re-accept
+    /// path already refreshes CrewMembership, but only when the user
+    /// re-opens the invite link — this covers it unconditionally).
+    /// Best-effort per zone, called from ProfileView.saveNickname() for
+    /// every crew the device belongs to.
+    static func updateMyNickname(userId: String, nickname: String, zoneRef: CrewZoneRef) async throws {
+        guard FeatureFlags.crewEnabled else { throw CrewServiceError.featureNotAvailable }
+        let predicate = NSPredicate(format: "userId == %@", userId)
+        do {
+            for recordType in [membershipRecordType, effortRecordType] {
+                let query = CKQuery(recordType: recordType, predicate: predicate)
+                let (matchResults, _) = try await zoneRef.database.records(matching: query, inZoneWith: zoneRef.zoneID)
+                let updates: [CKRecord] = matchResults.compactMap { _, result in
+                    guard case .success(let record) = result else { return nil }
+                    record["nickname"] = nickname as CKRecordValue
+                    return record
+                }
+                guard !updates.isEmpty else { continue }
+                _ = try await zoneRef.database.modifyRecords(saving: updates, deleting: [])
+            }
+        } catch let error as CKError where error.code == .notAuthenticated {
+            throw CrewServiceError.notSignedIntoiCloud
+        } catch {
+            throw CrewServiceError.underlying(error)
+        }
+    }
+
     // MARK: - Live location
 
     /// Read-modify-write, keyed by userId so repeated calls just refresh
