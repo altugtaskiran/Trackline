@@ -84,17 +84,9 @@ struct CreateSegmentFlowView: View {
 
                 ScrollView {
                     VStack(spacing: 20) {
-                        GeometryReader { proxy in
-                            let rect = CGRect(origin: .zero, size: proxy.size)
-                            let region = FittedRegion.fitting(samples: previewSamples, aspectRatio: rect.width / max(rect.height, 1))
-                            let projector = GeoMapProjector.projector(region: region)
-                            ZStack {
-                                RouteMapBackdrop(region: region)
-                                RouteCanvas(samples: previewSamples, lineWidth: 3, showsEndpoints: true, padding: 20, projector: projector)
-                            }
-                        }
-                        .frame(height: 220)
-                        .glassCard(cornerRadius: 22, padding: 0)
+                        SegmentRouteMapPreview(coordinates: previewSamples.map(\.coordinate))
+                            .frame(height: 220)
+                            .glassCard(cornerRadius: 22, padding: 0)
 
                         GlassCard {
                             VStack(alignment: .leading, spacing: 16) {
