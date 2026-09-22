@@ -44,6 +44,7 @@ enum CloudKitSegmentService {
         record["toleranceMeters"] = segment.toleranceMeters as CKRecordValue
         record["bearingDegrees"] = segment.bearingDegrees as CKRecordValue
         record["geohashes"] = segment.geohashes as CKRecordValue
+        record["geohashesCoarse"] = segment.geohashesCoarse as CKRecordValue
         record["createdAt"] = segment.createdAt as CKRecordValue
         record["voteCount"] = segment.voteCount as CKRecordValue
         record["creatorDurationSeconds"] = segment.creatorDurationSeconds as CKRecordValue
@@ -90,6 +91,35 @@ enum CloudKitSegmentService {
         guard FeatureFlags.globalLeaderboardEnabled else { throw SegmentServiceError.featureNotAvailable }
         guard !candidateGeohashes.isEmpty else { return [] }
         let predicate = NSPredicate(format: "ANY geohashes IN %@", candidateGeohashes)
+        let query = CKQuery(recordType: segmentRecordType, predicate: predicate)
+
+        do {
+            let (matchResults, _) = try await database.records(matching: query)
+            let segments = matchResults.compactMap { _, result -> Segment? in
+                guard case .success(let record) = result else { return nil }
+                return mapSegment(record)
+            }
+            let filtered = segments.filter { $0.voteCount >= minVoteCount }.sorted { $0.voteCount > $1.voteCount }
+            return Array(filtered.prefix(limit))
+        } catch let error as CKError where error.code == .notAuthenticated {
+            throw SegmentServiceError.notSignedIntoiCloud
+        } catch {
+            throw SegmentServiceError.underlying(error)
+        }
+    }
+
+    /// Whole-metro-area "nearby" — same index-backed geohash pre-filter as
+    /// fetchNearbySegments, but against the coarser `geohashesCoarse` tags
+    /// (precision-4, ~39km × 19.5km cells) so a real city-sized radius (a
+    /// 3×3 neighbor grid around the searcher, via Geohash.nearbyCells at
+    /// coarsePrecision) stays a cheap handful of candidate cells instead of
+    /// thousands. This is what loadNearby (Global Leaderboard's
+    /// "Yakınımdakiler") should call — fetchNearbySegments' precision-6
+    /// cells only reach ~1-2km, too tight for browsing a whole city.
+    static func fetchNearbySegmentsWide(candidateCoarseGeohashes: [String], minVoteCount: Int = 0, limit: Int = Int.max) async throws -> [Segment] {
+        guard FeatureFlags.globalLeaderboardEnabled else { throw SegmentServiceError.featureNotAvailable }
+        guard !candidateCoarseGeohashes.isEmpty else { return [] }
+        let predicate = NSPredicate(format: "ANY geohashesCoarse IN %@", candidateCoarseGeohashes)
         let query = CKQuery(recordType: segmentRecordType, predicate: predicate)
 
         do {
@@ -384,6 +414,7 @@ enum CloudKitSegmentService {
             toleranceMeters: toleranceMeters,
             bearingDegrees: bearingDegrees,
             geohashes: geohashes,
+            geohashesCoarse: record["geohashesCoarse"] as? [String] ?? [],
             createdAt: createdAt,
             creatorDurationSeconds: record["creatorDurationSeconds"] as? Double ?? 0,
             voteCount: record["voteCount"] as? Int ?? 0

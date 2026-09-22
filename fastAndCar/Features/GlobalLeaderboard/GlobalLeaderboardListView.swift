@@ -186,14 +186,13 @@ struct GlobalLeaderboardListView: View {
             didLoadNearby = true
         }
         guard let coordinate = await currentCoordinate() else { return }
-        // Real path: geohash-cell pre-filter, index-backed — fetchSegments
-        // (within:of:) was a temporary stand-in that fetched every public
-        // Segment and filtered client-side, fine at test-data scale but not
-        // meant to stay (see its own header comment). Reach is ~1-2km
-        // (Geohash's precision-6 3x3 grid) instead of the old 30km test
-        // radius — narrower, but this is the query that actually scales.
-        let cells = Geohash.nearbyCells(around: coordinate)
-        let fetched = (try? await CloudKitSegmentService.fetchNearbySegments(candidateGeohashes: cells)) ?? []
+        // Coarse (precision-4, whole-city-sized) cells — a real metro-area
+        // radius (Istanbul is ~40-50km across), still a cheap index-backed
+        // query (fetchNearbySegmentsWide), not the old fetchSegments
+        // (within:of:) stand-in that fetched every public Segment and
+        // filtered client-side (fine at test-data scale, not meant to stay).
+        let cells = Geohash.nearbyCells(around: coordinate, precision: Geohash.coarsePrecision)
+        let fetched = (try? await CloudKitSegmentService.fetchNearbySegmentsWide(candidateCoarseGeohashes: cells)) ?? []
         // My own routes already live in "Oluşturduklarım" just below —
         // showing them here too just duplicated them under a section meant
         // for discovering *other* people's routes.

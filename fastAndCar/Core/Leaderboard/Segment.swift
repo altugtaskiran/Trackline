@@ -32,6 +32,11 @@ struct Segment: Identifiable, Codable, Equatable, Hashable {
     /// crossing road) must not match.
     var bearingDegrees: Double
     var geohashes: [String]
+    /// Coarser (precision-4, whole-city-sized) tags alongside `geohashes` —
+    /// loadNearby's "Yakınımdakiler" search uses these to cover a real
+    /// metro-area radius; `geohashes` stays precision-6 for the tight,
+    /// GPS-drift-tolerant matching SegmentMatcher/Home map discovery need.
+    var geohashesCoarse: [String] = []
     var createdAt: Date
     /// How long the creator's own recorded pass took, start to end — the
     /// baseline every later "Bu Rotayı Sür" attempt races against. Baked in
@@ -46,6 +51,55 @@ struct Segment: Identifiable, Codable, Equatable, Hashable {
 
     static func == (lhs: Segment, rhs: Segment) -> Bool { lhs.id == rhs.id }
     func hash(into hasher: inout Hasher) { hasher.combine(id) }
+
+    init(
+        id: String, name: String, creatorId: String, creatorNickname: String, polyline: [RoutePolylinePoint],
+        minLatitude: Double, minLongitude: Double, maxLatitude: Double, maxLongitude: Double,
+        toleranceMeters: Double, bearingDegrees: Double, geohashes: [String], geohashesCoarse: [String] = [],
+        createdAt: Date, creatorDurationSeconds: Double, voteCount: Int
+    ) {
+        self.id = id
+        self.name = name
+        self.creatorId = creatorId
+        self.creatorNickname = creatorNickname
+        self.polyline = polyline
+        self.minLatitude = minLatitude
+        self.minLongitude = minLongitude
+        self.maxLatitude = maxLatitude
+        self.maxLongitude = maxLongitude
+        self.toleranceMeters = toleranceMeters
+        self.bearingDegrees = bearingDegrees
+        self.geohashes = geohashes
+        self.geohashesCoarse = geohashesCoarse
+        self.createdAt = createdAt
+        self.creatorDurationSeconds = creatorDurationSeconds
+        self.voteCount = voteCount
+    }
+
+    // Custom decoding so `geohashesCoarse` (added after this session's other
+    // fields) defaults to [] for already-persisted Segment JSON (LocalRoutesStore's
+    // UserDefaults blob) that predates it — the synthesized Decodable would
+    // otherwise throw keyNotFound and, via LocalRoutesStore.load()'s `try?`,
+    // silently empty out a device's whole "Rotalarım" list.
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        creatorId = try container.decode(String.self, forKey: .creatorId)
+        creatorNickname = try container.decode(String.self, forKey: .creatorNickname)
+        polyline = try container.decode([RoutePolylinePoint].self, forKey: .polyline)
+        minLatitude = try container.decode(Double.self, forKey: .minLatitude)
+        minLongitude = try container.decode(Double.self, forKey: .minLongitude)
+        maxLatitude = try container.decode(Double.self, forKey: .maxLatitude)
+        maxLongitude = try container.decode(Double.self, forKey: .maxLongitude)
+        toleranceMeters = try container.decode(Double.self, forKey: .toleranceMeters)
+        bearingDegrees = try container.decode(Double.self, forKey: .bearingDegrees)
+        geohashes = try container.decode([String].self, forKey: .geohashes)
+        geohashesCoarse = try container.decodeIfPresent([String].self, forKey: .geohashesCoarse) ?? []
+        createdAt = try container.decode(Date.self, forKey: .createdAt)
+        creatorDurationSeconds = try container.decode(Double.self, forKey: .creatorDurationSeconds)
+        voteCount = try container.decode(Int.self, forKey: .voteCount)
+    }
 
     var startCoordinate: CLLocationCoordinate2D? {
         polyline.first.map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon) }
@@ -115,6 +169,7 @@ struct Segment: Identifiable, Codable, Equatable, Hashable {
             toleranceMeters: toleranceMeters,
             bearingDegrees: GeoMath.bearingDegrees(from: first, to: last),
             geohashes: Geohash.cells(for: coordinates),
+            geohashesCoarse: Geohash.cells(for: coordinates, precision: Geohash.coarsePrecision),
             createdAt: Date(),
             creatorDurationSeconds: samples[endIndex].timestamp.timeIntervalSince(samples[startIndex].timestamp),
             voteCount: 0

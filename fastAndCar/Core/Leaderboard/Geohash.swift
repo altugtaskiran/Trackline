@@ -20,6 +20,29 @@ enum Geohash {
     /// lists small, loose enough that a segment's cells and a same-route
     /// trip's cells reliably overlap despite GPS noise.
     static let defaultPrecision = 6
+    /// Precision 4 ≈ 39km × 19.5km cells — a whole-city-sized grid for
+    /// "Yakınımdakiler" (loadNearby) to search a real metro-area radius
+    /// (Istanbul is ~40-50km across) without ballooning the candidate-cell
+    /// count the way using precision 6 at that range would. Segments carry
+    /// a second, coarser geohashesCoarse tag list for exactly this.
+    static let coarsePrecision = 4
+
+    /// Approximate (height, width) in meters for a cell at this precision —
+    /// standard geohash cell-size table. Used to size the neighbor grid in
+    /// nearbyCells/cells(covering:) correctly at whatever precision is
+    /// requested, not just the hardcoded precision-6 dimensions.
+    private static func cellDimensionsMeters(precision: Int) -> (height: Double, width: Double) {
+        switch precision {
+        case ...1: return (5_009_400, 4_992_600)
+        case 2: return (1_252_300, 624_100)
+        case 3: return (156_500, 156_000)
+        case 4: return (39_100, 19_500)
+        case 5: return (4_890, 4_890)
+        case 6: return (1_220, 610)
+        case 7: return (152.9, 152.4)
+        default: return (38.2, 19.0)
+        }
+    }
 
     static func encode(latitude: Double, longitude: Double, precision: Int = defaultPrecision) -> String {
         var latRange = (min: -90.0, max: 90.0)
@@ -87,8 +110,7 @@ enum Geohash {
     /// "segments near me" still finds routes a couple kilometers off
     /// without needing the real geohash neighbor-cell algorithm.
     static func nearbyCells(around coordinate: CLLocationCoordinate2D, precision: Int = defaultPrecision) -> [String] {
-        let cellHeightMeters = 610.0
-        let cellWidthMeters = 1220.0
+        let (cellHeightMeters, cellWidthMeters) = cellDimensionsMeters(precision: precision)
         let metersPerDegreeLatitude = 111_320.0
         let metersPerDegreeLongitude = 111_320.0 * cos(coordinate.latitude * .pi / 180)
         let latDelta = cellHeightMeters / metersPerDegreeLatitude
@@ -119,8 +141,7 @@ enum Geohash {
     /// nil result as "too zoomed out, ask the user to zoom in" rather than
     /// firing a giant query.
     static func cells(covering region: MKCoordinateRegion, precision: Int = defaultPrecision, maxCells: Int = 60) -> [String]? {
-        let cellHeightMeters = 610.0
-        let cellWidthMeters = 1220.0
+        let (cellHeightMeters, cellWidthMeters) = cellDimensionsMeters(precision: precision)
         let metersPerDegreeLatitude = 111_320.0
         let metersPerDegreeLongitude = 111_320.0 * cos(region.center.latitude * .pi / 180)
         let latStep = cellHeightMeters / metersPerDegreeLatitude
