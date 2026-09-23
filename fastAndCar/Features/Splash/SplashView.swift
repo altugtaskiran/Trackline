@@ -58,7 +58,7 @@ struct SplashView: View {
                 .frame(height: 150)
                 .padding(.horizontal, 56)
 
-                Text("Drive Tracker: TrackLine")
+                Text("Trackline: Drive Tracker")
                     .font(AppFont.title)
                     .foregroundStyle(AppColor.textPrimary)
                     .padding(.top, 20)
