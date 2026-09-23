@@ -374,9 +374,6 @@
         }
       }
     },
-    "Arama Mesafesi" : {
-
-    },
     "Arkadaşının kullanıcı adını gir" : {
 
     },
@@ -422,9 +419,6 @@
           }
         }
       }
-    },
-    "Ayarlar'dan arama mesafesini artırabilirsin." : {
-
     },
     "Ayarları Aç" : {
       "localizations" : {
@@ -1358,9 +1352,6 @@
           }
         }
       }
-    },
-    "Global rotalarda \"Yakınımdakiler\" listesinin ne kadar uzağa bakacağını belirler." : {
-
     },
     "Gönder" : {
       "extractionState" : "stale",
@@ -3035,9 +3026,6 @@
         }
       }
     },
-    "Yakınımdakiler Arama Mesafesi" : {
-
-    },
     "Yakınımdakiler, Parkur Ara ve herkese açık parkurlar yakında aktif olacak." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -3055,7 +3043,7 @@
         }
       }
     },
-    "Yakınında (%@ içinde) parkur bulunamadı" : {
+    "Yakınında (50 km içinde) parkur bulunamadı" : {
 
     },
     "Yakınında parkur bulunamadı" : {
