@@ -208,7 +208,11 @@ struct SegmentDetailView: View {
         } catch SegmentServiceError.featureNotAvailable {
             errorMessage = "Bu özellik yakında aktif olacak."
         } catch {
-            errorMessage = "Oy verilemedi. Bağlantını kontrol edip tekrar dene."
+            // Was a hardcoded "check your connection" regardless of the
+            // real reason — showed that even when genuinely connected,
+            // masking whatever CKError (or, more likely, the voteCount
+            // race adjustVoteCount now retries) actually happened.
+            errorMessage = error.localizedDescription
         }
     }
 }

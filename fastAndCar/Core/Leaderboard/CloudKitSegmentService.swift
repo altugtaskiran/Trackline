@@ -260,11 +260,7 @@ enum CloudKitSegmentService {
             voteRecord["userId"] = userId as CKRecordValue
             voteRecord["createdAt"] = Date() as CKRecordValue
             _ = try await database.save(voteRecord)
-
-            let segmentRecord = try await database.record(for: CKRecord.ID(recordName: segmentId))
-            let currentVotes = segmentRecord["voteCount"] as? Int ?? 0
-            segmentRecord["voteCount"] = (currentVotes + 1) as CKRecordValue
-            _ = try await database.save(segmentRecord)
+            try await adjustVoteCount(segmentId: segmentId, by: 1)
         } catch let error as CKError where error.code == .notAuthenticated {
             throw SegmentServiceError.notSignedIntoiCloud
         } catch {
@@ -273,21 +269,41 @@ enum CloudKitSegmentService {
     }
 
     /// Undo — deletes this device's vote record and decrements the
-    /// Segment's cached voteCount (clamped at 0, same non-atomic
-    /// fetch-then-save trade as voteForSegment).
+    /// Segment's cached voteCount (clamped at 0 inside adjustVoteCount).
     static func unvoteSegment(segmentId: String, userId: String) async throws {
         guard FeatureFlags.globalLeaderboardEnabled else { throw SegmentServiceError.featureNotAvailable }
         do {
             _ = try? await database.deleteRecord(withID: voteRecordID(segmentId: segmentId, userId: userId))
-
-            let segmentRecord = try await database.record(for: CKRecord.ID(recordName: segmentId))
-            let currentVotes = segmentRecord["voteCount"] as? Int ?? 0
-            segmentRecord["voteCount"] = max(0, currentVotes - 1) as CKRecordValue
-            _ = try await database.save(segmentRecord)
+            try await adjustVoteCount(segmentId: segmentId, by: -1)
         } catch let error as CKError where error.code == .notAuthenticated {
             throw SegmentServiceError.notSignedIntoiCloud
         } catch {
             throw SegmentServiceError.underlying(error)
+        }
+    }
+
+    /// Fetch-increment-save on a Segment's voteCount isn't atomic — two
+    /// people voting on the same popular route around the same moment can
+    /// race, and CloudKit's own optimistic-concurrency check
+    /// (CKError.serverRecordChanged) then rejects the second save even
+    /// though the vote record itself already saved fine. Without a retry,
+    /// that surfaced as a scary "check your connection" failure on a vote
+    /// that actually went through (confirmed as a plausible cause of the
+    /// intermittent "bağlandı ama hata verdi" reports). Re-fetching and
+    /// retrying a few times resolves the race instead of failing on it.
+    private static func adjustVoteCount(segmentId: String, by delta: Int) async throws {
+        var attempt = 0
+        while true {
+            do {
+                let segmentRecord = try await database.record(for: CKRecord.ID(recordName: segmentId))
+                let currentVotes = segmentRecord["voteCount"] as? Int ?? 0
+                segmentRecord["voteCount"] = max(0, currentVotes + delta) as CKRecordValue
+                _ = try await database.save(segmentRecord)
+                return
+            } catch let error as CKError where error.code == .serverRecordChanged {
+                attempt += 1
+                if attempt >= 3 { throw error }
+            }
         }
     }
 
