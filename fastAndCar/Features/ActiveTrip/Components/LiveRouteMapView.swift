@@ -86,7 +86,15 @@ struct LiveRouteMapView: View {
                 // annotations are designed to coexist with map gestures.
                 Map(position: $cameraPosition, interactionModes: interactionModes) {
                     if let idlePositionCoordinate {
-                        Annotation("Konum", coordinate: idlePositionCoordinate) {
+                        // A plain String literal here resolves to
+                        // Annotation's non-localizing StringProtocol
+                        // overload, not the LocalizedStringKey one Text
+                        // uses — it never picked up the app's language
+                        // override or the system language at all
+                        // (confirmed live: stayed Turkish even with the
+                        // device set to English). Forcing LocalizedStringKey
+                        // routes it through the same lookup Text(_:) uses.
+                        Annotation(LocalizedStringKey("Konum"), coordinate: idlePositionCoordinate) {
                             Circle()
                                 .fill(AppColor.accent)
                                 .frame(width: 16, height: 16)

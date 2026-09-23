@@ -57,7 +57,11 @@ struct LiveSatelliteMapView: View {
                     .stroke(AppColor.accent, style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
             }
             if let last {
-                Annotation("Konum", coordinate: last.coordinate) {
+                // Plain String literal here picks Annotation's
+                // non-localizing StringProtocol overload instead of the
+                // LocalizedStringKey one Text uses — same fix as
+                // LiveRouteMapView's idle position annotation.
+                Annotation(LocalizedStringKey("Konum"), coordinate: last.coordinate) {
                     Circle()
                         .fill(AppColor.accent)
                         .frame(width: 16, height: 16)

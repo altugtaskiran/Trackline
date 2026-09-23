@@ -5,7 +5,14 @@
 
     },
     "· %@" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "· %@"
+          }
+        }
+      }
     },
     "\"%@\" crew'ına katıl: %@" : {
       "extractionState" : "stale",
@@ -36,7 +43,14 @@
       }
     },
     "\"%@\" olarak ekle" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add as \"%@\""
+          }
+        }
+      }
     },
     "\"%@\" parkurunu tamamladın!" : {
       "extractionState" : "stale",
@@ -78,13 +92,34 @@
       }
     },
     "\"Her Zaman İzin Ver\"e Geç" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Switch to \"Always Allow\""
+          }
+        }
+      }
     },
     "/100" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "/100"
+          }
+        }
+      }
     },
     "#%lld" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "#%lld"
+          }
+        }
+      }
     },
     "%.0fm sonra %@" : {
       "extractionState" : "stale",
@@ -99,6 +134,12 @@
     },
     "%@ · Ort. %@" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · Avg %@"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "new",
@@ -109,6 +150,12 @@
     },
     "%@ → %@" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ → %@"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "new",
@@ -118,7 +165,14 @@
       }
     },
     "%@ davet etti" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ invited you"
+          }
+        }
+      }
     },
     "%@ km · Ort. %lld km/h" : {
       "extractionState" : "stale",
@@ -132,10 +186,23 @@
       }
     },
     "%@, yönettiğin crew'a katılsın." : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ will join the crew you manage."
+          }
+        }
+      }
     },
     "%@: %@" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: %@"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "new",
@@ -146,6 +213,12 @@
     },
     "%@#%lld" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@#%lld"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "new",
@@ -205,7 +278,14 @@
       }
     },
     "%lld" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld"
+          }
+        }
+      }
     },
     "%lld üye" : {
       "localizations" : {
@@ -219,6 +299,12 @@
     },
     "%lld–%lld" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld–%lld"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "new",
@@ -228,10 +314,24 @@
       }
     },
     "%lld%%" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld%%"
+          }
+        }
+      }
     },
     "• %@" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "• %@"
+          }
+        }
+      }
     },
     "7 gün art arda sürüş yaptın" : {
       "extractionState" : "stale",
@@ -290,7 +390,14 @@
       }
     },
     "Açıkken, uygulamayı arka planda da açık tuttuğun sürece crew'daki arkadaşların seni haritada görebilir." : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When on, your crew can see you on the map as long as you keep the app open in the background."
+          }
+        }
+      }
     },
     "Akıcı sürüş, yakıt verimliliği yüksek" : {
       "extractionState" : "stale",
@@ -339,10 +446,24 @@
       }
     },
     "Ara" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search"
+          }
+        }
+      }
     },
     "Ara veya yaz" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search or type"
+          }
+        }
+      }
     },
     "Araç Ekle" : {
       "localizations" : {
@@ -365,7 +486,14 @@
       }
     },
     "Aracı Düzenle" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit Car"
+          }
+        }
+      }
     },
     "Aracını ekle, paylaşım kartlarında ve gelecekte istatistiklerinde görünsün." : {
       "localizations" : {
@@ -378,7 +506,14 @@
       }
     },
     "Arkadaşının kullanıcı adını gir" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter your friend's username"
+          }
+        }
+      }
     },
     "Average Speed" : {
       "localizations" : {
@@ -434,7 +569,14 @@
       }
     },
     "Aynı isimde birden fazla kullanıcı var, birini seç:" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Multiple users share this name, pick one:"
+          }
+        }
+      }
     },
     "B" : {
       "extractionState" : "stale",
@@ -480,13 +622,34 @@
       }
     },
     "Beğeni" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Like"
+          }
+        }
+      }
     },
     "Bekleyen davetin yok" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You don't have any pending invites"
+          }
+        }
+      }
     },
     "Bekleyen Davetler (%lld)" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pending Invites (%lld)"
+          }
+        }
+      }
     },
     "Belirlenmedi" : {
       "extractionState" : "stale",
@@ -636,10 +799,24 @@
       }
     },
     "Bu kullanıcı bulunamadı. Adı kontrol et." : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This user couldn't be found. Check the name."
+          }
+        }
+      }
     },
     "Bu kullanıcı henüz istatistiklerini paylaşmamış." : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This user hasn't shared their stats yet."
+          }
+        }
+      }
     },
     "Bu özellik yakında aktif olacak." : {
       "extractionState" : "stale",
@@ -794,7 +971,14 @@
       }
     },
     "Crew ile Canlı Konum Paylaş" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share Live Location with Crew"
+          }
+        }
+      }
     },
     "Crew oluşturmak için cihazında iCloud hesabına giriş yapmalısın." : {
       "extractionState" : "stale",
@@ -830,7 +1014,14 @@
       }
     },
     "Crew'a Davet Et" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invite to Crew"
+          }
+        }
+      }
     },
     "Crew'a Katıldın" : {
       "extractionState" : "stale",
@@ -923,7 +1114,14 @@
       }
     },
     "Davet Gönder" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send Invite"
+          }
+        }
+      }
     },
     "Davet kabul edilemedi. Bağlantını kontrol edip tekrar dene." : {
       "extractionState" : "stale",
@@ -948,7 +1146,14 @@
       }
     },
     "Davetler" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invites"
+          }
+        }
+      }
     },
     "Diğer Yollarla Paylaş" : {
       "localizations" : {
@@ -1047,9 +1252,6 @@
         }
       }
     },
-    "Drive Tracker: TrackLine" : {
-
-    },
     "Driving Score" : {
       "localizations" : {
         "en" : {
@@ -1087,7 +1289,14 @@
       }
     },
     "Düzenle" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit"
+          }
+        }
+      }
     },
     "Elektrik" : {
       "extractionState" : "stale",
@@ -1368,7 +1577,14 @@
       }
     },
     "Gönderildi" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sent"
+          }
+        }
+      }
     },
     "Gönderilemedi. Bağlantını kontrol edip tekrar dene." : {
       "extractionState" : "stale",
@@ -1586,7 +1802,14 @@
       }
     },
     "Hız Dağılımı" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speed Distribution"
+          }
+        }
+      }
     },
     "Hız değişkenliği yüksek" : {
       "extractionState" : "stale",
@@ -1666,10 +1889,24 @@
       }
     },
     "İsim Ekle" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Name"
+          }
+        }
+      }
     },
     "İsimle Davet Et" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invite by Name"
+          }
+        }
+      }
     },
     "İşlem tamamlanamadı. Bağlantını kontrol edip tekrar dene." : {
       "extractionState" : "stale",
@@ -1805,6 +2042,17 @@
         }
       }
     },
+    "Konum" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Location"
+          }
+        }
+      }
+    },
     "Konum İzni" : {
       "localizations" : {
         "en" : {
@@ -1846,7 +2094,14 @@
       }
     },
     "kullanıcı adı" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "username"
+          }
+        }
+      }
     },
     "Kurucu sensin" : {
       "extractionState" : "stale",
@@ -2131,7 +2386,14 @@
       }
     },
     "örn. turbo (ya da turbo#4823)" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "e.g. turbo (or turbo#4823)"
+          }
+        }
+      }
     },
     "örn. turbo_mert" : {
       "localizations" : {
@@ -2291,7 +2553,14 @@
       }
     },
     "Profil" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profile"
+          }
+        }
+      }
     },
     "Reddedildi" : {
       "extractionState" : "stale",
@@ -2352,7 +2621,14 @@
       }
     },
     "Rotayı İptal Et" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel Route"
+          }
+        }
+      }
     },
     "Rotayı tamamladın!" : {
       "extractionState" : "stale",
@@ -2693,7 +2969,14 @@
       }
     },
     "Şu an aktif üye yok" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No active members right now"
+          }
+        }
+      }
     },
     "Sürdüklerim" : {
       "localizations" : {
@@ -2736,10 +3019,24 @@
       }
     },
     "Sürüş kaydının uygulama arka plandayken de devam edebilmesi için gerekli. Açılan Ayarlar sayfasında Konum > Her Zaman'ı seç." : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Needed so trip recording can keep going while the app is in the background. On the Settings page that opens, choose Location > Always."
+          }
+        }
+      }
     },
     "Sürüş Sayısı" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Number of Trips"
+          }
+        }
+      }
     },
     "Sürüşe Başla" : {
       "localizations" : {
@@ -2802,7 +3099,14 @@
       }
     },
     "Tahmini Süre" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estimated Duration"
+          }
+        }
+      }
     },
     "Tamam" : {
       "localizations" : {
@@ -2881,10 +3185,24 @@
       }
     },
     "Toplam Mesafe" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Total Distance"
+          }
+        }
+      }
     },
     "Toplam Süre" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Total Duration"
+          }
+        }
+      }
     },
     "Toplamda 100 km yol kat ettin" : {
       "extractionState" : "stale",
@@ -2938,10 +3256,24 @@
       }
     },
     "Trackline" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trackline"
+          }
+        }
+      }
     },
     "TRACKLINE" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TRACKLINE"
+          }
+        }
+      }
     },
     "Trackline yolculuğunu kaydeder, pist haritası gibi çizer." : {
       "localizations" : {
@@ -2949,6 +3281,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Trackline records your journey, drawing it like a track map."
+          }
+        }
+      }
+    },
+    "Trackline: Drive Tracker" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trackline: Drive Tracker"
           }
         }
       }
@@ -3050,7 +3392,14 @@
       }
     },
     "Yakınında (50 km içinde) parkur bulunamadı" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No routes found nearby (within 50 km)"
+          }
+        }
+      }
     },
     "Yakınında parkur bulunamadı" : {
       "extractionState" : "stale",

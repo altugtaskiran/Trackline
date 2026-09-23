@@ -52,7 +52,11 @@ struct SegmentRouteMapPreview: View {
                     .stroke(AppColor.accent, style: StrokeStyle(lineWidth: 4, lineCap: .round, lineJoin: .round))
             }
             if let start = coordinates.first {
-                Annotation("Başlangıç", coordinate: start) {
+                // LocalizedStringKey, not a plain String literal — the
+                // StringProtocol overload Annotation would otherwise pick
+                // never localizes (same bug class as LiveRouteMapView's
+                // "Konum" label).
+                Annotation(LocalizedStringKey("Başlangıç"), coordinate: start) {
                     Circle()
                         .fill(AppColor.routeStart)
                         .frame(width: 14, height: 14)
@@ -61,7 +65,7 @@ struct SegmentRouteMapPreview: View {
                 }
             }
             if let end = coordinates.last, coordinates.count > 1 {
-                Annotation("Bitiş", coordinate: end) {
+                Annotation(LocalizedStringKey("Bitiş"), coordinate: end) {
                     Circle()
                         .fill(AppColor.routeEnd)
                         .frame(width: 14, height: 14)
