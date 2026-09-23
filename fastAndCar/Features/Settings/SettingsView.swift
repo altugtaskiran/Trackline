@@ -45,19 +45,46 @@ struct SettingsView: View {
                 ScrollView {
                     VStack(spacing: 14) {
                         GlassCard {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Konum İzni")
-                                        .font(AppFont.headline)
-                                        .foregroundStyle(AppColor.textPrimary)
-                                    Text(viewModel.authorizationStatusText)
+                            VStack(alignment: .leading, spacing: 10) {
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("Konum İzni")
+                                            .font(AppFont.headline)
+                                            .foregroundStyle(AppColor.textPrimary)
+                                        Text(viewModel.authorizationStatusText)
+                                            .font(AppFont.caption)
+                                            .foregroundStyle(AppColor.textSecondary)
+                                    }
+                                    Spacer()
+                                    Circle()
+                                        .fill(viewModel.authorizationIsGranted ? AppColor.accent : Color(hex: 0xFF3B30))
+                                        .frame(width: 10, height: 10)
+                                }
+                                // "Yalnızca uygulama kullanılırken" seçilmişse
+                                // sürüş kaydı uygulama arka plana atılınca
+                                // durur — ama iOS, kullanıcı "Her Zaman"
+                                // sorusunu bir kez cevapladıktan sonra o
+                                // sistem diyaloğunu bir daha hiç göstermiyor;
+                                // düzeltmenin tek yolu Ayarlar uygulaması.
+                                // Buradaki tek dokunuşla direkt TrackLine'ın
+                                // kendi Ayarlar sayfasına atlıyoruz —
+                                // kullanıcı Ayarlar'da arama yapmak zorunda
+                                // kalmıyor, sadece "Her Zaman"a dokunuyor.
+                                if viewModel.needsAlwaysUpgrade {
+                                    Button {
+                                        if let url = URL(string: UIApplication.openSettingsURLString) {
+                                            UIApplication.shared.open(url)
+                                        }
+                                    } label: {
+                                        Text("\"Her Zaman İzin Ver\"e Geç")
+                                            .font(AppFont.body)
+                                            .frame(maxWidth: .infinity)
+                                    }
+                                    .buttonStyle(.glass(.accent))
+                                    Text("Sürüş kaydının uygulama arka plandayken de devam edebilmesi için gerekli. Açılan Ayarlar sayfasında Konum > Her Zaman'ı seç.")
                                         .font(AppFont.caption)
                                         .foregroundStyle(AppColor.textSecondary)
                                 }
-                                Spacer()
-                                Circle()
-                                    .fill(viewModel.authorizationIsGranted ? AppColor.accent : Color(hex: 0xFF3B30))
-                                    .frame(width: 10, height: 10)
                             }
                         }
 
