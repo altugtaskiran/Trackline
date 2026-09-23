@@ -232,8 +232,42 @@ struct CrewDetailView: View {
         } catch CrewServiceError.featureNotAvailable {
             errorMessage = "Bu özellik yakında aktif olacak."
         } catch {
-            errorMessage = "Crew bilgileri yüklenemedi. iCloud'a giriş yaptığından emin ol."
+            // A member's zone lookup fails this way (zoneNotFound —
+            // sometimes wrapped in a partialFailure/batchRequestFailed
+            // dictionary instead of surfacing directly) once the crew's
+            // owner deletes their private zone: CloudKit revokes the
+            // corresponding shared zone from every participant, but never
+            // tells this device to drop its local MyCrewsStore entry, so
+            // the crew kept reappearing in the list with every open
+            // attempt failing the same way. Detect that specific class of
+            // error and clean up automatically instead of leaving a dead
+            // entry the member can never get into.
+            if crewIsGone(error) {
+                MyCrewsStore().remove(crewRef.crew.id)
+                errorMessage = "Bu crew kurucusu tarafından silinmiş."
+                dismiss()
+            } else {
+                errorMessage = "Crew bilgileri yüklenemedi. iCloud'a giriş yaptığından emin ol."
+            }
         }
+    }
+
+    private func crewIsGone(_ error: Error) -> Bool {
+        func isZoneGone(_ ckError: CKError) -> Bool {
+            ckError.code == .zoneNotFound || ckError.code == .unknownItem
+        }
+        if let ckError = error as? CKError {
+            if isZoneGone(ckError) { return true }
+            if ckError.code == .partialFailure,
+               let partialErrors = ckError.partialErrorsByItemID?.values {
+                return partialErrors.contains { ($0 as? CKError).map(isZoneGone) ?? false }
+            }
+            return false
+        }
+        if case CrewServiceError.underlying(let underlying) = error {
+            return crewIsGone(underlying)
+        }
+        return false
     }
 
     private func presentInviteByName() async {
