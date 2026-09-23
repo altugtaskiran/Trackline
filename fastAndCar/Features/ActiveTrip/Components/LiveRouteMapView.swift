@@ -131,19 +131,6 @@ struct LiveRouteMapView: View {
         if isSelected {
             MapPolyline(coordinates: segment.polyline.map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon) })
                 .stroke(color, style: StrokeStyle(lineWidth: 7, lineCap: .round, lineJoin: .round))
-
-            // With at most one route's line visible at a time, a few
-            // extra tap points spread along it are no longer clutter —
-            // they make the now-visible line itself feel tappable
-            // without needing real line hit-testing (MapPolyline has no
-            // tap API of its own).
-            ForEach(Array(routeStuds(for: segment).enumerated()), id: \.offset) { _, stud in
-                Annotation("", coordinate: stud) {
-                    DiscoveryRouteTapTarget(color: color, size: 14) {
-                        onSelectSegment?(segment.id)
-                    }
-                }
-            }
         }
 
         if let start = segment.startCoordinate {
@@ -154,23 +141,11 @@ struct LiveRouteMapView: View {
             }
         }
     }
-
-    private func routeStuds(for segment: Segment) -> [CLLocationCoordinate2D] {
-        let points = segment.polyline
-        guard points.count > 6 else { return [] }
-        return [0.25, 0.5, 0.75].map { fraction in
-            let index = min(points.count - 1, Int(Double(points.count - 1) * fraction))
-            let point = points[index]
-            return CLLocationCoordinate2D(latitude: point.lat, longitude: point.lon)
-        }
-    }
 }
 
-/// The tappable dot marking a discovery route's start point (or, once
-/// selected, one of a few extra points along its now-visible line) — a
-/// plain SwiftUI View (not an inline closure) so the enclosing
-/// MapContentBuilder expression stays small enough for the compiler to
-/// type-check quickly.
+/// The tappable dot marking a discovery route's start point — a plain
+/// SwiftUI View (not an inline closure) so the enclosing MapContentBuilder
+/// expression stays small enough for the compiler to type-check quickly.
 private struct DiscoveryRouteTapTarget: View {
     let color: Color
     var size: CGFloat = 22
