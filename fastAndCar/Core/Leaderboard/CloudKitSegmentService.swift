@@ -123,7 +123,14 @@ enum CloudKitSegmentService {
         let query = CKQuery(recordType: segmentRecordType, predicate: predicate)
 
         do {
-            let (matchResults, _) = try await database.records(matching: query)
+            // Without a resultsLimit, this fetched every matching record's
+            // full data (including each Segment's whole polyline) before
+            // ever applying the caller's `limit` — at a wide radius (a
+            // few hundred candidate cells), that's what made
+            // "Yakınımdakiler" both slow and, sometimes, silently fail
+            // outright (confirmed live: "çok uzun sürüyor ve bazen
+            // yüklenmiyor bile"). Capping it server-side fixes both.
+            let (matchResults, _) = try await database.records(matching: query, resultsLimit: limit == Int.max ? 200 : min(limit, 200))
             let segments = matchResults.compactMap { _, result -> Segment? in
                 guard case .success(let record) = result else { return nil }
                 return mapSegment(record)
