@@ -185,9 +185,15 @@ struct GlobalLeaderboardListView: View {
         .padding(.top, 60)
     }
 
-    /// Best-effort and silent on failure — if the feature isn't active yet
-    /// or the device has no location fix handy, the section just shows its
-    /// empty state rather than an alert every time this tab opens.
+    /// Surfaces real CloudKit errors instead of silently treating any
+    /// failure as "found nothing" — a "no route nearby" empty state and an
+    /// actual query failure (missing Production index on geohashesCoarse,
+    /// permissions, query too complex) used to look identical, which made
+    /// a genuine bug here indistinguishable from there just being no
+    /// nearby routes (confirmed live: a brand-new route, created on one
+    /// device, wasn't found from a second device/account at all). A
+    /// missing location fix still fails silently — that's routine, not a
+    /// bug worth an alert every time this tab opens.
     private func loadNearby() async {
         isLoadingNearby = true
         defer {
@@ -222,7 +228,14 @@ struct GlobalLeaderboardListView: View {
             )
         )
         let cells = Geohash.cells(covering: searchRegion, precision: Geohash.coarsePrecision, maxCells: 150) ?? []
-        let fetched = (try? await CloudKitSegmentService.fetchNearbySegmentsWide(candidateCoarseGeohashes: cells, limit: 60)) ?? []
+        var fetched: [Segment] = []
+        do {
+            fetched = try await CloudKitSegmentService.fetchNearbySegmentsWide(candidateCoarseGeohashes: cells, limit: 60)
+        } catch SegmentServiceError.featureNotAvailable {
+            // Expected right now if the build has the flag off — not a bug.
+        } catch {
+            errorMessage = error.localizedDescription
+        }
         // My own routes already live in "Oluşturduklarım" just below —
         // showing them here too just duplicated them under a section meant
         // for discovering *other* people's routes.

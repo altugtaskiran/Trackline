@@ -23,6 +23,26 @@ enum SegmentServiceError: Error {
     case underlying(Error)
 }
 
+// Without this, Swift's default `.localizedDescription` bridging collapses
+// every case to a useless generic "The operation couldn't be completed
+// (fastAndCar.SegmentServiceError error N.)" — every silent `try?` around a
+// CloudKitSegmentService call this session (Yakınımdakiler's loadNearby
+// included) has been hiding the real CKError text (missing Production
+// index, permission error, query-too-complex, etc.) behind "found nothing"
+// for exactly this reason. Matches the same fix already applied to
+// CrewServiceError earlier this session.
+extension SegmentServiceError: LocalizedError {
+    var errorDescription: String? {
+        switch self {
+        case .featureNotAvailable: "Bu özellik bu derlemede kapalı."
+        case .notSignedIntoiCloud: "iCloud hesabına giriş yapılmamış."
+        case .rateLimited: "Çok sık deneme yapıldı, biraz sonra tekrar dene."
+        case .implausibleEffort: "Bu sürüş verisi geçersiz görünüyor."
+        case .underlying(let error): error.localizedDescription
+        }
+    }
+}
+
 enum CloudKitSegmentService {
     private static let segmentRecordType = "Segment"
     private static let effortRecordType = "SegmentEffort"
