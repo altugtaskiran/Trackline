@@ -195,6 +195,17 @@ struct GlobalLeaderboardListView: View {
     /// missing location fix still fails silently — that's routine, not a
     /// bug worth an alert every time this tab opens.
     private func loadNearby() async {
+        // Switching to Ana Sayfa and back tore this view down and rebuilt
+        // it, resetting nearbySegments/didLoadNearby back to empty and
+        // re-running this whole fetch every single time — confirmed live,
+        // read as "sürekli yükleniyor, kaydetmiyor". A short-lived shared
+        // cache means quick tab back-and-forth reuses the last result
+        // instantly instead of refetching.
+        if NearbySegmentsCache.shared.isFresh(radius: nearbySearchRadiusKm) {
+            await applyFetchedSegments(NearbySegmentsCache.shared.segments)
+            didLoadNearby = true
+            return
+        }
         isLoadingNearby = true
         defer {
             isLoadingNearby = false
@@ -224,24 +235,24 @@ struct GlobalLeaderboardListView: View {
         var fetched: [Segment] = []
         do {
             fetched = try await CloudKitSegmentService.fetchSegments(within: radiusMeters, of: coordinate)
+            NearbySegmentsCache.shared.store(fetched, radius: nearbySearchRadiusKm)
         } catch SegmentServiceError.featureNotAvailable {
             // Expected right now if the build has the flag off — not a bug.
         } catch {
             errorMessage = error.localizedDescription
         }
-        // My own routes already live in "Oluşturduklarım" just below —
-        // showing them here too just duplicated them under a section meant
-        // for discovering *other* people's routes.
+        await applyFetchedSegments(fetched)
+    }
+
+    /// fetchSegments(within:of:) already filters to the real radius before
+    /// returning — the only thing left to do here (both for a fresh fetch
+    /// and for a cache hit, which has no coordinate handy to re-filter
+    /// with anyway) is drop the caller's own routes, which already live in
+    /// "Oluşturduklarım" just below and would otherwise just be duplicated
+    /// under a section meant for discovering *other* people's routes.
+    private func applyFetchedSegments(_ fetched: [Segment]) async {
         let myUserId = try? await CloudKitSegmentService.currentUserId()
-        let userLocation = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-        nearbySegments = fetched.filter { segment in
-            guard segment.creatorId != myUserId else { return false }
-            let segmentCenter = CLLocation(
-                latitude: (segment.minLatitude + segment.maxLatitude) / 2,
-                longitude: (segment.minLongitude + segment.maxLongitude) / 2
-            )
-            return userLocation.distance(from: segmentCenter) <= radiusMeters
-        }
+        nearbySegments = fetched.filter { $0.creatorId != myUserId }
     }
 
     private func currentCoordinate() async -> CLLocationCoordinate2D? {
