@@ -261,10 +261,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Config/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Trackline;
-				INFOPLIST_KEY_CFBundleName = Trackline;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.navigation";
-				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Trackline, sürüşünü kesintisiz kaydedebilmek ve açtığında crew arkadaşlarınla canlı konumunu paylaşmaya devam edebilmek için uygulama arka plandayken de konumuna ihtiyaç duyar.";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Trackline, rotanı kaydetmek ve açtığında crew arkadaşlarınla canlı konumunu paylaşabilmek için konumuna ihtiyaç duyar.";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "fastAndCar, sürüşünü kesintisiz kaydedebilmek ve açtığında crew arkadaşlarınla canlı konumunu paylaşmaya devam edebilmek için uygulama arka plandayken de konumuna ihtiyaç duyar.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "fastAndCar, rotanı kaydetmek ve açtığında crew arkadaşlarınla canlı konumunu paylaşabilmek için konumuna ihtiyaç duyar.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -303,10 +302,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Config/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Trackline;
-				INFOPLIST_KEY_CFBundleName = Trackline;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.navigation";
-				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Trackline, sürüşünü kesintisiz kaydedebilmek ve açtığında crew arkadaşlarınla canlı konumunu paylaşmaya devam edebilmek için uygulama arka plandayken de konumuna ihtiyaç duyar.";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Trackline, rotanı kaydetmek ve açtığında crew arkadaşlarınla canlı konumunu paylaşabilmek için konumuna ihtiyaç duyar.";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "fastAndCar, sürüşünü kesintisiz kaydedebilmek ve açtığında crew arkadaşlarınla canlı konumunu paylaşmaya devam edebilmek için uygulama arka plandayken de konumuna ihtiyaç duyar.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "fastAndCar, rotanı kaydetmek ve açtığında crew arkadaşlarınla canlı konumunu paylaşabilmek için konumuna ihtiyaç duyar.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
