@@ -202,35 +202,28 @@ struct GlobalLeaderboardListView: View {
         }
         guard let coordinate = await currentCoordinate() else { return }
         let radiusMeters = nearbySearchRadiusKm.meters
-        // Coarse (precision-4, whole-city-sized) cells, but the candidate
-        // grid is now sized to the selected radius (up to 200km) instead
-        // of a fixed 3x3 — a fixed grid maxed out around ~100km net reach,
-        // so 200km couldn't actually find anything past that regardless of
-        // the setting (confirmed live).
-        //
-        // The padding here used to be 2.4x the radius on *each* side
-        // (~4.8x the true diameter) "to be safe" — at 200km that alone
-        // produced 300+ candidate cells in one predicate, which is what
-        // actually made this slow and occasionally fail outright
-        // (confirmed live). The real distance filter below (exact
-        // great-circle distance from each candidate) is what enforces the
-        // radius correctly anyway — this padding only needs to be wide
-        // enough that a segment right at the edge of the circle still
-        // lands in a covered coarse cell, and 1.3x is plenty for that at
-        // a 39km-tall cell size.
-        let metersPerDegreeLatitude = 111_320.0
-        let metersPerDegreeLongitude = 111_320.0 * cos(coordinate.latitude * .pi / 180)
-        let searchRegion = MKCoordinateRegion(
-            center: coordinate,
-            span: MKCoordinateSpan(
-                latitudeDelta: (radiusMeters * 1.3) / metersPerDegreeLatitude,
-                longitudeDelta: (radiusMeters * 1.3) / max(metersPerDegreeLongitude, 1)
-            )
-        )
-        let cells = Geohash.cells(covering: searchRegion, precision: Geohash.coarsePrecision, maxCells: 150) ?? []
+        // Back to the geohashesCoarse-free path: a route that genuinely
+        // exists in the database, created moments ago, still wasn't
+        // showing up here even right next to it (confirmed live) — the
+        // coarse geohash predicate this used to run
+        // (fetchNearbySegmentsWide, "ANY geohashesCoarse IN %@") depends
+        // on that field having a Queryable index actually deployed to
+        // CloudKit's PRODUCTION environment specifically, which this
+        // session's whole history (LiveLocation, SegmentEffort.userId —
+        // every one of these needed a manual Console index + explicit
+        // "Deploy Schema Changes to Production" before it worked from a
+        // real device/TestFlight) makes very likely to be the real cause
+        // here too, rather than anything about the 200km radius itself.
+        // fetchSegments(within:of:) has no such dependency at all — it
+        // fetches every public Segment and filters by real distance
+        // client-side, so it's correct regardless of index state. Costs
+        // more per call, but is fine at today's segment count, and
+        // correctness beats a premature optimization that's currently
+        // broken. Revisit once there's a confirmed-working index and/or
+        // enough segments that fetching all of them stops being cheap.
         var fetched: [Segment] = []
         do {
-            fetched = try await CloudKitSegmentService.fetchNearbySegmentsWide(candidateCoarseGeohashes: cells, limit: 60)
+            fetched = try await CloudKitSegmentService.fetchSegments(within: radiusMeters, of: coordinate)
         } catch SegmentServiceError.featureNotAvailable {
             // Expected right now if the build has the flag off — not a bug.
         } catch {
