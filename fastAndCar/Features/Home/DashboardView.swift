@@ -37,11 +37,21 @@ struct DashboardView: View {
     // user pans the map. A minimum vote count keeps unrated/spam routes
     // off the map entirely (they still exist in Global Rotalar, just not
     // rendered here) — see CloudKitSegmentService.fetchNearbySegments.
-    @State private var discoverySegments: [Segment] = []
+    // Keyed by id and merged into (never wholesale-replaced) by
+    // loadDiscoverySegments below — a pin that's already been shown stays
+    // on the map even if a later, slightly-panned viewport query doesn't
+    // happen to re-surface it. Previously every camera move replaced the
+    // whole array with just that query's results, so a pin near the edge
+    // of the padded search window could flicker away on a tiny pan and
+    // only reappear once a later query's cells happened to include it
+    // again — confirmed live: near-identical zoom levels, same pin
+    // visible in one screenshot and gone in the next.
+    @State private var discoveredSegmentsById: [String: Segment] = [:]
+    private var discoverySegments: [Segment] { Array(discoveredSegmentsById.values) }
     @State private var selectedSegmentId: String?
     @State private var previewSegment: Segment?
     private let discoveryMinVoteCount = 3
-    private let discoveryLimit = 30
+    private let discoveryLimit = 60
     @Binding var isRecording: Bool
     let locationManager: LocationManager
     var onTripEnded: (ActiveTripViewModel.TripResult) -> Void
@@ -282,7 +292,7 @@ struct DashboardView: View {
                 // it back to the real position before the first sample's
                 // own heading-up tracking (below) takes over.
                 withAnimation { cameraPosition = .userLocation(fallback: .automatic) }
-                discoverySegments = []
+                discoveredSegmentsById = [:]
                 selectedSegmentId = nil
                 previewSegment = nil
             } else {
@@ -418,22 +428,35 @@ struct DashboardView: View {
     ///   that wide, so the search never actually stops, just gets coarser.
     private func loadDiscoverySegments(around region: MKCoordinateRegion) async {
         guard FeatureFlags.globalLeaderboardEnabled else { return }
+        // 3x (not just enough to cover the visible viewport) on purpose —
+        // now that results are merged in rather than replacing what's
+        // already shown (see discoveredSegmentsById), a wider scan per
+        // load means panning around inside that already-scanned margin
+        // needs no new query at all, instead of refetching on every
+        // single pan.
         let padded = MKCoordinateRegion(
             center: region.center,
-            span: MKCoordinateSpan(latitudeDelta: region.span.latitudeDelta * 1.6, longitudeDelta: region.span.longitudeDelta * 1.6)
+            span: MKCoordinateSpan(latitudeDelta: region.span.latitudeDelta * 3, longitudeDelta: region.span.longitudeDelta * 3)
         )
+        var fetched: [Segment]?
         if let cells = Geohash.cells(covering: padded) {
-            discoverySegments = (try? await CloudKitSegmentService.fetchNearbySegments(
+            fetched = try? await CloudKitSegmentService.fetchNearbySegments(
                 candidateGeohashes: cells,
                 minVoteCount: discoveryMinVoteCount,
                 limit: discoveryLimit
-            )) ?? discoverySegments
+            )
         } else if let coarseCells = Geohash.cells(covering: padded, precision: Geohash.coarsePrecision) {
-            discoverySegments = (try? await CloudKitSegmentService.fetchNearbySegmentsWide(
+            fetched = try? await CloudKitSegmentService.fetchNearbySegmentsWide(
                 candidateCoarseGeohashes: coarseCells,
                 minVoteCount: discoveryMinVoteCount,
                 limit: discoveryLimit
-            )) ?? discoverySegments
+            )
+        }
+        // Merge in, don't replace — a pin already on the map stays put;
+        // panning only ever discovers more of them, never drops one that
+        // was already found (see discoveredSegmentsById's doc comment).
+        for segment in fetched ?? [] {
+            discoveredSegmentsById[segment.id] = segment
         }
         // Else: zoomed out past even the coarse grid's 60-cell cap (a
         // whole-country-scale view) — leave whatever's already drawn.
