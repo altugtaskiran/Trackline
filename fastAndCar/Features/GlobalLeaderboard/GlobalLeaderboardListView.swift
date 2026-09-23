@@ -26,7 +26,11 @@ struct GlobalLeaderboardListView: View {
     @State private var errorMessage: String?
     @AppStorage("distanceUnit") private var distanceUnitRaw = DistanceUnit.systemDefault.rawValue
     private var distanceUnit: DistanceUnit { DistanceUnit(rawValue: distanceUnitRaw) ?? .systemDefault }
-    @AppStorage("nearbySearchRadiusKm") private var nearbySearchRadiusKm: NearbySearchRadius = .km100
+    // Fixed, not user-configurable — a wider adjustable radius (up to
+    // 200km) was the whole reason this search ever needed a huge
+    // candidate-cell predicate in the first place. A single sane default
+    // removes that failure mode entirely instead of just shrinking it.
+    private let nearbyRadiusMeters: Double = 50_000
 
     var body: some View {
         ZStack {
@@ -49,16 +53,9 @@ struct GlobalLeaderboardListView: View {
                         if isLoadingNearby {
                             ProgressView().tint(AppColor.accent)
                         } else if didLoadNearby && nearbySegments.isEmpty {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Yakınında (\(nearbySearchRadiusKm.label) içinde) parkur bulunamadı")
-                                    .font(AppFont.body)
-                                    .foregroundStyle(AppColor.textSecondary)
-                                if nearbySearchRadiusKm != .km100 {
-                                    Text("Ayarlar'dan arama mesafesini artırabilirsin.")
-                                        .font(AppFont.caption)
-                                        .foregroundStyle(AppColor.accent)
-                                }
-                            }
+                            Text("Yakınında (50 km içinde) parkur bulunamadı")
+                                .font(AppFont.body)
+                                .foregroundStyle(AppColor.textSecondary)
                         } else {
                             ForEach(nearbySegments) { segment in
                                 // Pushed onto AppRootView's single shared
@@ -157,7 +154,7 @@ struct GlobalLeaderboardListView: View {
         .onChange(of: searchText) { _, newValue in
             search(for: newValue)
         }
-        .task(id: nearbySearchRadiusKm) { await loadNearby() }
+        .task { await loadNearby() }
         .alert(
             "Bir Sorun Oluştu",
             isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })
@@ -186,14 +183,9 @@ struct GlobalLeaderboardListView: View {
     }
 
     /// Surfaces real CloudKit errors instead of silently treating any
-    /// failure as "found nothing" — a "no route nearby" empty state and an
-    /// actual query failure (missing Production index on geohashesCoarse,
-    /// permissions, query too complex) used to look identical, which made
-    /// a genuine bug here indistinguishable from there just being no
-    /// nearby routes (confirmed live: a brand-new route, created on one
-    /// device, wasn't found from a second device/account at all). A
-    /// missing location fix still fails silently — that's routine, not a
-    /// bug worth an alert every time this tab opens.
+    /// failure as "found nothing" — a missing location fix still fails
+    /// silently (that's routine), but a genuine query error is now shown
+    /// rather than looking identical to "no routes nearby".
     private func loadNearby() async {
         // Switching to Ana Sayfa and back tore this view down and rebuilt
         // it, resetting nearbySegments/didLoadNearby back to empty and
@@ -201,7 +193,7 @@ struct GlobalLeaderboardListView: View {
         // read as "sürekli yükleniyor, kaydetmiyor". A short-lived shared
         // cache means quick tab back-and-forth reuses the last result
         // instantly instead of refetching.
-        if NearbySegmentsCache.shared.isFresh(radius: nearbySearchRadiusKm) {
+        if NearbySegmentsCache.shared.isFresh {
             await applyFetchedSegments(NearbySegmentsCache.shared.segments)
             didLoadNearby = true
             return
@@ -212,34 +204,60 @@ struct GlobalLeaderboardListView: View {
             didLoadNearby = true
         }
         guard let coordinate = await currentCoordinate() else { return }
-        let radiusMeters = nearbySearchRadiusKm.meters
-        // Back to the geohashesCoarse-free path: a route that genuinely
-        // exists in the database, created moments ago, still wasn't
-        // showing up here even right next to it (confirmed live) — the
-        // coarse geohash predicate this used to run
-        // (fetchNearbySegmentsWide, "ANY geohashesCoarse IN %@") depends
-        // on that field having a Queryable index actually deployed to
-        // CloudKit's PRODUCTION environment specifically, which this
-        // session's whole history (LiveLocation, SegmentEffort.userId —
-        // every one of these needed a manual Console index + explicit
-        // "Deploy Schema Changes to Production" before it worked from a
-        // real device/TestFlight) makes very likely to be the real cause
-        // here too, rather than anything about the 200km radius itself.
-        // fetchSegments(within:of:) has no such dependency at all — it
-        // fetches every public Segment and filters by real distance
-        // client-side, so it's correct regardless of index state. Costs
-        // more per call, but is fine at today's segment count, and
-        // correctness beats a premature optimization that's currently
-        // broken. Revisit once there's a confirmed-working index and/or
-        // enough segments that fetching all of them stops being cheap.
+
+        // Primary path: the indexed geohashesCoarse query — confirmed via
+        // CloudKit Console that this field actually has a deployed
+        // Queryable index in Production, so the earlier "can't find a
+        // route that's right there" bug wasn't a missing index after all;
+        // it was almost certainly the old candidate-cell predicate being
+        // far too large (a fixed 50km radius keeps that grid small and
+        // fast — no user-adjustable 200km option to blow it back up).
+        // Server-side filtering here means the phone only ever downloads
+        // matches, which is what actually scales to a large route count,
+        // unlike fetching every public Segment.
+        let metersPerDegreeLatitude = 111_320.0
+        let metersPerDegreeLongitude = 111_320.0 * cos(coordinate.latitude * .pi / 180)
+        let searchRegion = MKCoordinateRegion(
+            center: coordinate,
+            span: MKCoordinateSpan(
+                latitudeDelta: (nearbyRadiusMeters * 1.3) / metersPerDegreeLatitude,
+                longitudeDelta: (nearbyRadiusMeters * 1.3) / max(metersPerDegreeLongitude, 1)
+            )
+        )
+        let cells = Geohash.cells(covering: searchRegion, precision: Geohash.coarsePrecision, maxCells: 150) ?? []
+
+        let userLocation = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
         var fetched: [Segment] = []
         do {
-            fetched = try await CloudKitSegmentService.fetchSegments(within: radiusMeters, of: coordinate)
-            NearbySegmentsCache.shared.store(fetched, radius: nearbySearchRadiusKm)
+            let candidates = try await CloudKitSegmentService.fetchNearbySegmentsWide(candidateCoarseGeohashes: cells, limit: 60)
+            // The 1.3x padding above means the candidate cells cover a bit
+            // more than the true 50km circle — this re-applies the exact
+            // radius the same way fetchSegments(within:of:) does.
+            fetched = candidates.filter { segment in
+                let segmentCenter = CLLocation(
+                    latitude: (segment.minLatitude + segment.maxLatitude) / 2,
+                    longitude: (segment.minLongitude + segment.maxLongitude) / 2
+                )
+                return userLocation.distance(from: segmentCenter) <= nearbyRadiusMeters
+            }
+            NearbySegmentsCache.shared.store(fetched)
         } catch SegmentServiceError.featureNotAvailable {
             // Expected right now if the build has the flag off — not a bug.
         } catch {
-            errorMessage = error.localizedDescription
+            // Safety net: the indexed query genuinely failed (not just
+            // "found nothing") — fall back to the guaranteed-correct
+            // fetch-all-and-filter path rather than showing an error for
+            // something that might just be a transient query hiccup.
+            // Costs more per call, but only runs when the fast path
+            // actually breaks.
+            do {
+                fetched = try await CloudKitSegmentService.fetchSegments(within: nearbyRadiusMeters, of: coordinate)
+                NearbySegmentsCache.shared.store(fetched)
+            } catch SegmentServiceError.featureNotAvailable {
+                // Expected right now if the build has the flag off.
+            } catch {
+                errorMessage = error.localizedDescription
+            }
         }
         await applyFetchedSegments(fetched)
     }

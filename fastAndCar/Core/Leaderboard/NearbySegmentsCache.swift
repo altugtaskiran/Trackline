@@ -22,18 +22,16 @@ final class NearbySegmentsCache {
 
     private(set) var segments: [Segment] = []
     private var fetchedAt: Date?
-    private var fetchedRadius: NearbySearchRadius?
 
     private let freshnessWindow: TimeInterval = 300
 
-    func isFresh(radius: NearbySearchRadius) -> Bool {
-        guard let fetchedAt, fetchedRadius == radius else { return false }
+    var isFresh: Bool {
+        guard let fetchedAt else { return false }
         return Date().timeIntervalSince(fetchedAt) < freshnessWindow
     }
 
-    func store(_ segments: [Segment], radius: NearbySearchRadius) {
+    func store(_ segments: [Segment]) {
         self.segments = segments
         self.fetchedAt = Date()
-        self.fetchedRadius = radius
     }
 }
