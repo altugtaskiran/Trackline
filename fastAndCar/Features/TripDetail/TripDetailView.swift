@@ -6,6 +6,7 @@
 //  score, stat grid, and an editable timeline.
 //
 
+import MapKit
 import SwiftUI
 
 struct TripDetailView: View {
@@ -106,28 +107,48 @@ struct TripDetailView: View {
         #endif
     }
 
+    // Was RouteMapBackdrop + GeoMapProjector's linear equirectangular
+    // approximation — the same class of drift bug fixed everywhere else
+    // this session (SegmentDetailView, CreateSegmentFlowView,
+    // CrewSegmentDetailView, LiveRouteMapView): over a long/wide enough
+    // route, the approximation diverges from MapKit's real projection and
+    // the line visibly slides off the streets underneath. This screen
+    // couldn't just switch to native MapPolyline like those did, because
+    // the heatmap coloring and RouteInspectorOverlay's tap-to-inspect both
+    // depend on screen-space Canvas drawing — but MapReader's own
+    // proxy.convert is the exact live projection the Map is actually
+    // using (no approximation to drift), so swapping the projector
+    // closure's implementation keeps all of that working while fixing
+    // the drift.
     private var routeHero: some View {
-        GeometryReader { proxy in
-            let rect = CGRect(origin: .zero, size: proxy.size)
-            let region = FittedRegion.fitting(samples: viewModel.samples, aspectRatio: rect.width / max(rect.height, 1))
-            let projector = GeoMapProjector.projector(region: region)
+        MapReader { mapProxy in
+            GeometryReader { geoProxy in
+                let rect = CGRect(origin: .zero, size: geoProxy.size)
+                let region = FittedRegion.fitting(samples: viewModel.samples, aspectRatio: rect.width / max(rect.height, 1))
+                let projector: ([LocationSample], CGRect, CGFloat) -> [CGPoint] = { samples, rect, _ in
+                    samples.map { mapProxy.convert($0.coordinate, to: .local) ?? CGPoint(x: rect.midX, y: rect.midY) }
+                }
 
-            ZStack {
-                RouteMapBackdrop(region: region)
-                RouteCanvas(samples: viewModel.samples, lineWidth: 3, showsEndpoints: true, padding: 24, projector: projector)
-                RouteEndpointLabels(
-                    samples: viewModel.samples,
-                    startPlaceName: viewModel.trip.startPlaceName,
-                    endPlaceName: viewModel.trip.endPlaceName,
-                    padding: 24,
-                    projector: projector
-                )
-                RouteInspectorOverlay(samples: viewModel.samples, padding: 24, inspectedIndex: $viewModel.inspectedIndex, projector: projector)
+                ZStack {
+                    Map(initialPosition: .region(region), interactionModes: []) {}
+                        .mapStyle(.standard(elevation: .flat, emphasis: .muted, pointsOfInterest: .excludingAll, showsTraffic: false))
+                        .environment(\.colorScheme, .light)
+                        .opacity(0.6)
+                    RouteCanvas(samples: viewModel.samples, lineWidth: 3, showsEndpoints: true, padding: 24, projector: projector)
+                    RouteEndpointLabels(
+                        samples: viewModel.samples,
+                        startPlaceName: viewModel.trip.startPlaceName,
+                        endPlaceName: viewModel.trip.endPlaceName,
+                        padding: 24,
+                        projector: projector
+                    )
+                    RouteInspectorOverlay(samples: viewModel.samples, padding: 24, inspectedIndex: $viewModel.inspectedIndex, projector: projector)
 
-                if let sample = viewModel.inspectedSample {
-                    VStack {
-                        inspectorTooltip(for: sample)
-                        Spacer()
+                    if let sample = viewModel.inspectedSample {
+                        VStack {
+                            inspectorTooltip(for: sample)
+                            Spacer()
+                        }
                     }
                 }
             }

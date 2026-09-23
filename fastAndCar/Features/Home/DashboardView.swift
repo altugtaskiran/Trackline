@@ -10,6 +10,7 @@
 //  Start button turns into Sürüşü Bitir.
 //
 
+import CoreLocation
 import MapKit
 import SwiftUI
 
@@ -460,6 +461,23 @@ struct DashboardView: View {
         }
         // Else: zoomed out past even the coarse grid's 60-cell cap (a
         // whole-country-scale view) — leave whatever's already drawn.
+
+        // Unbounded otherwise — a long session panning around a wide area
+        // would just keep accumulating pins in memory forever. Once past
+        // the cap, drop whichever are currently farthest from where the
+        // user is actually looking; they're the ones least likely to
+        // still be relevant, and panning back toward them re-discovers
+        // them from CloudKit anyway.
+        let cap = 400
+        if discoveredSegmentsById.count > cap {
+            let center = CLLocation(latitude: region.center.latitude, longitude: region.center.longitude)
+            let keep = discoveredSegmentsById.values.sorted { a, b in
+                let aCenter = CLLocation(latitude: (a.minLatitude + a.maxLatitude) / 2, longitude: (a.minLongitude + a.maxLongitude) / 2)
+                let bCenter = CLLocation(latitude: (b.minLatitude + b.maxLatitude) / 2, longitude: (b.minLongitude + b.maxLongitude) / 2)
+                return center.distance(from: aCenter) < center.distance(from: bCenter)
+            }.prefix(cap)
+            discoveredSegmentsById = Dictionary(uniqueKeysWithValues: keep.map { ($0.id, $0) })
+        }
     }
 
     private var formattedElapsed: String {

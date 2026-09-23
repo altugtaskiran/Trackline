@@ -20,8 +20,9 @@ struct RouteCanvas: View {
     var padding: CGFloat = 16
     var progress: Double?
     /// Overridable so Trip Detail can swap in a projection registered to the
-    /// real map underneath (see GeoMapProjector) instead of this default,
-    /// which fits the route to its own view bounds with no map involved.
+    /// real map underneath (MapReader's proxy.convert) instead of this
+    /// default, which fits the route to its own view bounds with no map
+    /// involved.
     var projector: ([LocationSample], CGRect, CGFloat) -> [CGPoint] = RouteProjector.project
 
     var body: some View {
