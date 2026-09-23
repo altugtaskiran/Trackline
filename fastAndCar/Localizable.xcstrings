@@ -2043,7 +2043,6 @@
       }
     },
     "Konum" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
