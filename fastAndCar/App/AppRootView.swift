@@ -240,18 +240,6 @@ struct AppRootView: View {
             }
         }
         .task {
-            // Ask for notification permission here, at launch, rather than
-            // waiting until the first drive actually finishes and needs to
-            // post one (SegmentAutoMatcher used to be the only caller) —
-            // requestAuthorization's system prompt is async and doesn't
-            // block, so a notification that needs to go out moments after
-            // the very first prompt appears was racing the user's answer
-            // and silently getting dropped if they hadn't responded yet.
-            // Asking on launch gives that prompt plenty of time to resolve
-            // before it's ever actually needed.
-            LocalNotifier.requestAuthorizationIfNeeded()
-        }
-        .task {
             // "arkada açık olsa bile" — presence sharing now keeps running
             // in the background too, not just foreground: Always
             // authorization is requested the moment the toggle goes on
