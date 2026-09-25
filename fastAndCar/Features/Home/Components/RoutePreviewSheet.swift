@@ -15,9 +15,14 @@ struct RoutePreviewSheet: View {
     let segment: Segment
     var onFollow: (Segment) -> Void
     var onDismiss: () -> Void
+    /// Pushes the full SegmentDetailView (real leaderboard, all efforts) —
+    /// this sheet only ever shows the top 3.
+    var onShowLeaderboard: (Segment) -> Void = { _ in }
 
     @State private var startPlaceName: String?
     @State private var endPlaceName: String?
+    @State private var topEfforts: [SegmentEffort] = []
+    @State private var isLoadingLeaderboard = true
     @AppStorage("distanceUnit") private var distanceUnitRaw = DistanceUnit.systemDefault.rawValue
     private var distanceUnit: DistanceUnit { DistanceUnit(rawValue: distanceUnitRaw) ?? .systemDefault }
 
@@ -59,6 +64,8 @@ struct RoutePreviewSheet: View {
                 }
             }
 
+            leaderboardPreview
+
             Button {
                 onFollow(segment)
             } label: {
@@ -76,6 +83,64 @@ struct RoutePreviewSheet: View {
             startPlaceName = await startName
             endPlaceName = await endName
         }
+        .task(id: segment.id) {
+            isLoadingLeaderboard = true
+            topEfforts = (try? await CloudKitSegmentService.fetchLeaderboard(segmentId: segment.id)) ?? []
+            isLoadingLeaderboard = false
+        }
+    }
+
+    @ViewBuilder
+    private var leaderboardPreview: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("Liderlik Tablosu")
+                    .font(AppFont.headline)
+                    .foregroundStyle(AppColor.textPrimary)
+                Spacer()
+                if !isLoadingLeaderboard {
+                    Text("\(topEfforts.count) \(String.appLocalized("kişi sürdü"))")
+                        .font(AppFont.caption)
+                        .foregroundStyle(AppColor.textSecondary)
+                }
+            }
+
+            if isLoadingLeaderboard {
+                ProgressView().tint(AppColor.accent)
+            } else if topEfforts.isEmpty {
+                Text("Bu rotayı henüz kimse sürmedi — ilk sen ol.")
+                    .font(AppFont.caption)
+                    .foregroundStyle(AppColor.textSecondary)
+            } else {
+                VStack(spacing: 6) {
+                    ForEach(Array(topEfforts.prefix(3).enumerated()), id: \.element.id) { index, effort in
+                        HStack(spacing: 10) {
+                            Text("#\(index + 1)")
+                                .font(AppFont.caption.weight(.bold))
+                                .foregroundStyle(AppColor.accent)
+                                .frame(width: 22, alignment: .leading)
+                            Text(effort.nickname)
+                                .font(AppFont.body)
+                                .foregroundStyle(AppColor.textPrimary)
+                                .lineLimit(1)
+                            Spacer()
+                            Text(formatDuration(effort.durationSeconds))
+                                .font(AppFont.statValue(14))
+                                .foregroundStyle(AppColor.textSecondary)
+                        }
+                    }
+                }
+
+                Button {
+                    onShowLeaderboard(segment)
+                } label: {
+                    Text("Tam Liderlik Tablosunu Gör")
+                        .font(AppFont.caption.weight(.semibold))
+                        .foregroundStyle(AppColor.accent)
+                }
+            }
+        }
+        .glassCard(cornerRadius: 16, padding: 14)
     }
 
     private func statTile(title: LocalizedStringKey, value: String, icon: String) -> some View {

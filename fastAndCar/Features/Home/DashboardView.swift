@@ -70,6 +70,11 @@ struct DashboardView: View {
     var onTripEnded: (ActiveTripViewModel.TripResult) -> Void
     var onCancelRoute: () -> Void
     var onFollowSegment: (Segment) -> Void
+    /// Pushes the full SegmentDetailView from the discovery layer's
+    /// RoutePreviewSheet ("Tam Liderlik Tablosunu Gör") — separate from
+    /// onFollowSegment, which arms Route Following mode instead of just
+    /// viewing the leaderboard.
+    var onShowSegmentDetail: (Segment) -> Void
 
     init(
         locationManager: LocationManager,
@@ -77,7 +82,8 @@ struct DashboardView: View {
         guidanceSegment: Segment? = nil,
         onTripEnded: @escaping (ActiveTripViewModel.TripResult) -> Void,
         onCancelRoute: @escaping () -> Void = {},
-        onFollowSegment: @escaping (Segment) -> Void = { _ in }
+        onFollowSegment: @escaping (Segment) -> Void = { _ in },
+        onShowSegmentDetail: @escaping (Segment) -> Void = { _ in }
     ) {
         self.locationManager = locationManager
         _viewModel = State(initialValue: HomeViewModel(locationManager: locationManager))
@@ -86,6 +92,7 @@ struct DashboardView: View {
         self.onTripEnded = onTripEnded
         self.onCancelRoute = onCancelRoute
         self.onFollowSegment = onFollowSegment
+        self.onShowSegmentDetail = onShowSegmentDetail
     }
 
     private var ghostRouteCoordinates: [CLLocationCoordinate2D] {
@@ -122,7 +129,28 @@ struct DashboardView: View {
                     selectedSegmentId: selectedSegmentId,
                     onSelectSegment: { id in
                         selectedSegmentId = id
-                        previewSegment = id.flatMap { selectedId in discoverySegments.first { $0.id == selectedId } }
+                        let newSegment = id.flatMap { selectedId in discoverySegments.first { $0.id == selectedId } }
+                        // Switching straight from one segment's sheet to a
+                        // different one (tapping a new pin while a preview
+                        // is already up, now possible since the map stays
+                        // interactive behind it) mutated `previewSegment`
+                        // item-in-place — SwiftUI's `.sheet(item:)` didn't
+                        // reliably re-apply presentationDetents/height on
+                        // that in-place swap, so the new sheet briefly
+                        // rendered full-screen instead of the usual
+                        // half-height card (confirmed live). Dismissing
+                        // first, then presenting the new one a beat later,
+                        // forces a real close-then-open cycle so the
+                        // detents apply fresh each time.
+                        if previewSegment != nil, let newSegment, newSegment.id != previewSegment?.id {
+                            previewSegment = nil
+                            Task {
+                                try? await Task.sleep(for: .milliseconds(80))
+                                previewSegment = newSegment
+                            }
+                        } else {
+                            previewSegment = newSegment
+                        }
                     },
                     onRegionChange: { region in
                         guard !isRecording else { return }
@@ -148,7 +176,15 @@ struct DashboardView: View {
                                 resumeFollowingTask?.cancel()
                                 resumeFollowingTask = Task {
                                     try? await Task.sleep(for: .seconds(3.5))
-                                    guard !Task.isCancelled, !isRecording else { return }
+                                    // Also bail if a discovery route is
+                                    // selected/being previewed — snapping
+                                    // the camera back to "me" while the
+                                    // user is reading a route's info (or
+                                    // it's still visible after they closed
+                                    // the sheet without picking a
+                                    // different one) was confirmed live as
+                                    // disruptive, not just "browsing idly".
+                                    guard !Task.isCancelled, !isRecording, previewSegment == nil, selectedSegmentId == nil else { return }
                                     isFollowingLocation = true
                                     withAnimation { recenterOnKnownLocation() }
                                 }
@@ -388,7 +424,19 @@ struct DashboardView: View {
             guard !isRecording, isFollowingLocation else { return }
             recenterOnKnownLocation()
         }
-        .sheet(item: $previewSegment, onDismiss: { selectedSegmentId = nil }) { segment in
+        .sheet(item: $previewSegment, onDismiss: {
+            // Fires when the sheet's dismiss animation actually finishes —
+            // which, for the "switch straight to a different route" case
+            // (onSelectSegment above), happens *after* previewSegment has
+            // already been reassigned to the new segment. Unconditionally
+            // nil-ing selectedSegmentId here raced that reassignment and
+            // cleared the newly selected route's highlighted line right
+            // after it appeared (confirmed live). Only clear it if nothing
+            // new is already queued up.
+            if previewSegment == nil {
+                selectedSegmentId = nil
+            }
+        }) { segment in
             RoutePreviewSheet(
                 segment: segment,
                 onFollow: { followed in
@@ -396,10 +444,16 @@ struct DashboardView: View {
                     selectedSegmentId = nil
                     onFollowSegment(followed)
                 },
-                onDismiss: { previewSegment = nil }
+                onDismiss: { previewSegment = nil },
+                onShowLeaderboard: { shown in
+                    previewSegment = nil
+                    selectedSegmentId = nil
+                    onShowSegmentDetail(shown)
+                }
             )
-            .presentationDetents([.height(320)])
+            .presentationDetents([.height(460)])
             .presentationDragIndicator(.visible)
+            .presentationBackgroundInteraction(.enabled)
             .preferredColorScheme(.dark)
         }
         .task(id: isRecording) {

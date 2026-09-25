@@ -33,6 +33,7 @@ struct ProfileView: View {
 
     private var totalDistanceMeters: Double { trips.reduce(0) { $0 + $1.distanceMeters } }
     private var totalDriveTime: TimeInterval { trips.reduce(0) { $0 + $1.driveTime } }
+    private var bestTopSpeedKph: Double { trips.map(\.topSpeedKph).max() ?? 0 }
 
     var body: some View {
         NavigationStack {
@@ -87,6 +88,7 @@ struct ProfileView: View {
                 totalDistanceMeters: totalDistanceMeters,
                 tripCount: trips.count,
                 totalDriveTime: totalDriveTime,
+                bestTopSpeedKph: bestTopSpeedKph,
                 cars: carEntries
             )
         }

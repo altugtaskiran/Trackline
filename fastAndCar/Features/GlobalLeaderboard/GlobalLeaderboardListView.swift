@@ -9,7 +9,6 @@
 //
 
 import CoreLocation
-import MapKit
 import SwiftUI
 
 struct GlobalLeaderboardListView: View {
@@ -149,7 +148,7 @@ struct GlobalLeaderboardListView: View {
                 .padding(20)
             }
         }
-        .navigationTitle("Global Liderlik")
+        .navigationTitle("Global Parkur")
         .navigationBarTitleDisplayMode(.inline)
         .onChange(of: searchText) { _, newValue in
             search(for: newValue)
@@ -205,61 +204,17 @@ struct GlobalLeaderboardListView: View {
         }
         guard let coordinate = await currentCoordinate() else { return }
 
-        // Primary path: the indexed geohashesCoarse query — confirmed via
-        // CloudKit Console that this field actually has a deployed
-        // Queryable index in Production, so the earlier "can't find a
-        // route that's right there" bug wasn't a missing index after all;
-        // it was almost certainly the old candidate-cell predicate being
-        // far too large (a fixed 50km radius keeps that grid small and
-        // fast — no user-adjustable 200km option to blow it back up).
-        // Server-side filtering here means the phone only ever downloads
-        // matches, which is what actually scales to a large route count,
-        // unlike fetching every public Segment.
-        let metersPerDegreeLatitude = 111_320.0
-        let metersPerDegreeLongitude = 111_320.0 * cos(coordinate.latitude * .pi / 180)
-        let searchRegion = MKCoordinateRegion(
-            center: coordinate,
-            span: MKCoordinateSpan(
-                latitudeDelta: (nearbyRadiusMeters * 1.3) / metersPerDegreeLatitude,
-                longitudeDelta: (nearbyRadiusMeters * 1.3) / max(metersPerDegreeLongitude, 1)
-            )
-        )
-        let cells = Geohash.cells(covering: searchRegion, precision: Geohash.coarsePrecision, maxCells: 150) ?? []
-
-        let userLocation = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-        var fetched: [Segment] = []
+        // Primary path (indexed geohashesCoarse query) + fallback
+        // (fetch-all-and-filter) now shared with AppRootView's launch-time
+        // prefetch — see NearbySegmentsCache.fetchAndCache.
         do {
-            let candidates = try await CloudKitSegmentService.fetchNearbySegmentsWide(candidateCoarseGeohashes: cells, limit: 60)
-            // The 1.3x padding above means the candidate cells cover a bit
-            // more than the true 50km circle — this re-applies the exact
-            // radius the same way fetchSegments(within:of:) does.
-            fetched = candidates.filter { segment in
-                let segmentCenter = CLLocation(
-                    latitude: (segment.minLatitude + segment.maxLatitude) / 2,
-                    longitude: (segment.minLongitude + segment.maxLongitude) / 2
-                )
-                return userLocation.distance(from: segmentCenter) <= nearbyRadiusMeters
-            }
-            NearbySegmentsCache.shared.store(fetched)
+            let fetched = try await NearbySegmentsCache.fetchAndCache(around: coordinate)
+            await applyFetchedSegments(fetched)
         } catch SegmentServiceError.featureNotAvailable {
             // Expected right now if the build has the flag off — not a bug.
         } catch {
-            // Safety net: the indexed query genuinely failed (not just
-            // "found nothing") — fall back to the guaranteed-correct
-            // fetch-all-and-filter path rather than showing an error for
-            // something that might just be a transient query hiccup.
-            // Costs more per call, but only runs when the fast path
-            // actually breaks.
-            do {
-                fetched = try await CloudKitSegmentService.fetchSegments(within: nearbyRadiusMeters, of: coordinate)
-                NearbySegmentsCache.shared.store(fetched)
-            } catch SegmentServiceError.featureNotAvailable {
-                // Expected right now if the build has the flag off.
-            } catch {
-                errorMessage = error.localizedDescription
-            }
+            errorMessage = error.localizedDescription
         }
-        await applyFetchedSegments(fetched)
     }
 
     /// fetchSegments(within:of:) already filters to the real radius before

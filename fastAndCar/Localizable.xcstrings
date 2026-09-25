@@ -287,6 +287,16 @@
         }
       }
     },
+    "%lld %@" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld %2$@"
+          }
+        }
+      }
+    },
     "%lld üye" : {
       "localizations" : {
         "en" : {
@@ -849,6 +859,9 @@
         }
       }
     },
+    "Bu rotayı henüz kimse sürmedi — ilk sen ol." : {
+
+    },
     "Bu Rotayı Sür" : {
       "localizations" : {
         "en" : {
@@ -1358,6 +1371,9 @@
         }
       }
     },
+    "En Yüksek Hız" : {
+
+    },
     "Finish Time" : {
       "localizations" : {
         "en" : {
@@ -1555,7 +1571,11 @@
         }
       }
     },
+    "Global İstatistik" : {
+
+    },
     "Global Liderlik" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1564,6 +1584,9 @@
           }
         }
       }
+    },
+    "Global Parkur" : {
+
     },
     "Gönder" : {
       "extractionState" : "stale",
@@ -1684,6 +1707,9 @@
           }
         }
       }
+    },
+    "Henüz kimse bu kategoride sıralanmadı." : {
+
     },
     "Henüz parkur yok" : {
       "localizations" : {
@@ -2138,7 +2164,6 @@
       }
     },
     "Liderlik Tablosu" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2274,6 +2299,9 @@
           }
         }
       }
+    },
+    "Metrik" : {
+
     },
     "Mil" : {
       "extractionState" : "stale",
@@ -3110,6 +3138,9 @@
           }
         }
       }
+    },
+    "Tam Liderlik Tablosunu Gör" : {
+
     },
     "Tamam" : {
       "localizations" : {

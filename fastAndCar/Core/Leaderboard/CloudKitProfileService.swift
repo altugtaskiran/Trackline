@@ -257,7 +257,7 @@ enum CloudKitProfileService {
     /// "like my own profile" view of someone else instead of just a photo.
     /// Best-effort: called opportunistically (trip ended, Profile opened),
     /// never blocks the UI on failure.
-    static func syncStats(totalDistanceMeters: Double, tripCount: Int, totalDriveTime: TimeInterval, cars: [CarSyncEntry]) async throws {
+    static func syncStats(totalDistanceMeters: Double, tripCount: Int, totalDriveTime: TimeInterval, bestTopSpeedKph: Double, cars: [CarSyncEntry]) async throws {
         guard FeatureFlags.globalLeaderboardEnabled else { throw SegmentServiceError.featureNotAvailable }
         let userId = try await CloudKitSegmentService.currentUserId()
         let recordID = profileRecordID(for: userId)
@@ -271,6 +271,7 @@ enum CloudKitProfileService {
             record["totalDistanceMeters"] = totalDistanceMeters as CKRecordValue
             record["tripCount"] = Int64(tripCount) as CKRecordValue
             record["totalDriveTime"] = totalDriveTime as CKRecordValue
+            record["bestTopSpeedKph"] = bestTopSpeedKph as CKRecordValue
             record["carSummaries"] = synced.map(\.name) as CKRecordValue
 
             for index in 0..<maxSyncedCars {
@@ -329,6 +330,53 @@ enum CloudKitProfileService {
                 )
             }
             return stats
+        } catch let error as CKError where error.code == .notAuthenticated {
+            throw SegmentServiceError.notSignedIntoiCloud
+        } catch {
+            throw SegmentServiceError.underlying(error)
+        }
+    }
+
+    enum GlobalStatMetric {
+        case totalDistance
+        case topSpeed
+
+        var fieldName: String {
+            switch self {
+            case .totalDistance: return "totalDistanceMeters"
+            case .topSpeed: return "bestTopSpeedKph"
+            }
+        }
+    }
+
+    struct GlobalStatEntry: Identifiable {
+        var id: String { userId }
+        let userId: String
+        let nickname: String
+        let tag: Int
+        let value: Double
+    }
+
+    /// Cross-user ranking, sorted server-side by the chosen stat field —
+    /// same sorted-CKQuery pattern as CloudKitSegmentService.
+    /// fetchLeaderboard(segmentId:). Requires a Queryable + Sortable Console
+    /// index on totalDistanceMeters / bestTopSpeedKph.
+    static func fetchGlobalStatLeaderboard(metric: GlobalStatMetric, limit: Int = 50) async throws -> [GlobalStatEntry] {
+        guard FeatureFlags.globalLeaderboardEnabled else { throw SegmentServiceError.featureNotAvailable }
+        let query = CKQuery(recordType: profileRecordType, predicate: NSPredicate(format: "%K > 0", metric.fieldName))
+        query.sortDescriptors = [NSSortDescriptor(key: metric.fieldName, ascending: false)]
+
+        do {
+            let (results, _) = try await database.records(matching: query, resultsLimit: limit)
+            return results.compactMap { _, result -> GlobalStatEntry? in
+                guard case .success(let record) = result,
+                      let nickname = record["nickname"] as? String,
+                      let tag = record["tag"] as? Int64,
+                      let value = record[metric.fieldName] as? Double,
+                      record.recordID.recordName.hasPrefix("profile_") else { return nil }
+                let userId = String(record.recordID.recordName.dropFirst("profile_".count))
+                return GlobalStatEntry(userId: userId, nickname: nickname, tag: Int(tag), value: value)
+            }
         } catch let error as CKError where error.code == .notAuthenticated {
             throw SegmentServiceError.notSignedIntoiCloud
         } catch {

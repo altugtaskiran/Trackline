@@ -12,12 +12,14 @@ import SwiftUI
 
 private enum CommunitySection: String, CaseIterable, Identifiable {
     case global
+    case globalStats
     case crew
     var id: String { rawValue }
 
     var label: String {
         switch self {
-        case .global: String.appLocalized("Global")
+        case .global: String.appLocalized("Global Parkur")
+        case .globalStats: String.appLocalized("Global İstatistik")
         case .crew: String.appLocalized("Crew")
         }
     }
@@ -44,6 +46,8 @@ struct CommunityView: View {
                 switch section {
                 case .global:
                     GlobalLeaderboardListView(onFollowSegment: onFollowSegment)
+                case .globalStats:
+                    GlobalStatsLeaderboardView()
                 case .crew:
                     CrewHomeView(onFollowCrewSegment: onFollowCrewSegment)
                 }

@@ -86,7 +86,8 @@ struct AppRootView: View {
                                         guidanceCrewZoneRef = nil
                                         guidanceCrewId = nil
                                     },
-                                    onFollowSegment: followSegment
+                                    onFollowSegment: followSegment,
+                                    onShowSegmentDetail: { path.append($0) }
                                 )
                                 .id(guidanceSegment?.id)
                             case .garage:
@@ -312,6 +313,17 @@ struct AppRootView: View {
             }
         }
         .task {
+            // Best-effort, once per launch: warms NearbySegmentsCache before
+            // the user ever opens the Global Parkur tab, so its first visit
+            // finds an already-fresh result instead of eating the full
+            // CloudKit round-trip live — "yakınımdakiler yüklenmesi uzun
+            // sürüyor" was reported as the tab's own first-open latency.
+            guard let coordinate = await withCheckedContinuation({ continuation in
+                appEnvironment.locationManager.requestOneShotLocation { continuation.resume(returning: $0) }
+            }) else { return }
+            _ = try? await NearbySegmentsCache.fetchAndCache(around: coordinate)
+        }
+        .task {
             // First launch (permission not decided yet) used to always sit
             // through the full splash animation *then* have Onboarding's
             // own animated intro play right after it — the same kind of
@@ -388,12 +400,14 @@ struct AppRootView: View {
               let cars = try? modelContext.fetch(FetchDescriptor<Car>()) else { return }
         let totalDistanceMeters = trips.reduce(0) { $0 + $1.distanceMeters }
         let totalDriveTime = trips.reduce(0) { $0 + $1.driveTime }
+        let bestTopSpeedKph = trips.map(\.topSpeedKph).max() ?? 0
         let carEntries = cars.map { CloudKitProfileService.CarSyncEntry(name: "\($0.year) \($0.displayName)", photoData: $0.photoData) }
         Task {
             try? await CloudKitProfileService.syncStats(
                 totalDistanceMeters: totalDistanceMeters,
                 tripCount: trips.count,
                 totalDriveTime: totalDriveTime,
+                bestTopSpeedKph: bestTopSpeedKph,
                 cars: carEntries
             )
         }

@@ -207,6 +207,8 @@ struct SegmentDetailView: View {
             }
         } catch SegmentServiceError.featureNotAvailable {
             errorMessage = "Bu özellik yakında aktif olacak."
+        } catch SegmentServiceError.permissionDenied {
+            errorMessage = "Beğeni kaydedilemedi — CloudKit yetki ayarları eksik olabilir."
         } catch {
             // Was a hardcoded "check your connection" regardless of the
             // real reason — showed that even when genuinely connected,

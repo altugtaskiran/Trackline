@@ -18,6 +18,11 @@ import SwiftUI
 struct PublicProfileView: View {
     let userId: String
     let nickname: String
+    /// Shown next to the nickname (e.g. for sending a crew invite by
+    /// "nickname#tag") when the caller has it handy — most callers
+    /// (SegmentEffortRow, RoutePreviewSheet) only have the nickname alone,
+    /// so this stays optional rather than a required param everywhere.
+    var tag: Int?
 
     @Environment(\.dismiss) private var dismiss
     @State private var photoCache = ProfilePhotoCache.shared
@@ -100,7 +105,13 @@ struct PublicProfileView: View {
         GlassCard {
             HStack(spacing: 14) {
                 AvatarView(image: photoCache.image(for: userId), initial: nickname.first, size: 56)
-                Text(nickname)
+                // Text(String), not Text("\(nickname)#\(tag)") — the latter
+                // resolves to the LocalizedStringKey initializer, which
+                // formats interpolated Ints with locale grouping (e.g.
+                // "9.301" instead of "9301" under tr_TR). Building the
+                // plain String first and handing it to Text(_ : String)
+                // skips that entirely.
+                Text(tag.map { "\(nickname)#\($0)" } ?? nickname)
                     .font(AppFont.headline)
                     .foregroundStyle(AppColor.textPrimary)
                 Spacer()

@@ -20,6 +20,11 @@ enum SegmentServiceError: Error {
     case notSignedIntoiCloud
     case rateLimited
     case implausibleEffort
+    /// CloudKit rejected a write to a record this device didn't create
+    /// (e.g. bumping someone else's Segment's voteCount) — almost always
+    /// means the record type's Security Role in CloudKit Console doesn't
+    /// grant "World: Write", only the default "World: Create".
+    case permissionDenied
     case underlying(Error)
 }
 
@@ -38,6 +43,7 @@ extension SegmentServiceError: LocalizedError {
         case .notSignedIntoiCloud: "iCloud hesabına giriş yapılmamış."
         case .rateLimited: "Çok sık deneme yapıldı, biraz sonra tekrar dene."
         case .implausibleEffort: "Bu sürüş verisi geçersiz görünüyor."
+        case .permissionDenied: "Bu rotanın beğeni sayısı güncellenemedi (yetki hatası) — CloudKit Console'da Segment kaydı için World: Write izni eksik olabilir."
         case .underlying(let error): error.localizedDescription
         }
     }
@@ -280,6 +286,8 @@ enum CloudKitSegmentService {
             try await adjustVoteCount(segmentId: segmentId, by: 1)
         } catch let error as CKError where error.code == .notAuthenticated {
             throw SegmentServiceError.notSignedIntoiCloud
+        } catch let error as CKError where error.code == .permissionFailure {
+            throw SegmentServiceError.permissionDenied
         } catch {
             throw SegmentServiceError.underlying(error)
         }
@@ -294,6 +302,8 @@ enum CloudKitSegmentService {
             try await adjustVoteCount(segmentId: segmentId, by: -1)
         } catch let error as CKError where error.code == .notAuthenticated {
             throw SegmentServiceError.notSignedIntoiCloud
+        } catch let error as CKError where error.code == .permissionFailure {
+            throw SegmentServiceError.permissionDenied
         } catch {
             throw SegmentServiceError.underlying(error)
         }

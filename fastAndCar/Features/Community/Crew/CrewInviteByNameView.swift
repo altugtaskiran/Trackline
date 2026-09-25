@@ -32,6 +32,7 @@ struct CrewInviteByNameView: View {
     @State private var isSending = false
     @State private var didSend = false
     @State private var errorMessage: String?
+    @State private var photoCache = ProfilePhotoCache.shared
 
     private var typedNickname: String {
         nicknameDraft.trimmingCharacters(in: .whitespaces)
@@ -96,8 +97,9 @@ struct CrewInviteByNameView: View {
                                 Button {
                                     selected = (candidate.userId, "\(typedNickname)#\(candidate.tag)")
                                 } label: {
-                                    HStack {
-                                        Text("\(typedNickname)#\(candidate.tag)")
+                                    HStack(spacing: 12) {
+                                        AvatarView(image: photoCache.image(for: candidate.userId), initial: typedNickname.first, size: 36)
+                                        Text("\(typedNickname)#\(candidate.tag)" as String)
                                             .foregroundStyle(AppColor.textPrimary)
                                         Spacer()
                                         Image(systemName: "chevron.right")
@@ -111,7 +113,8 @@ struct CrewInviteByNameView: View {
 
                     if let selected {
                         GlassCard {
-                            HStack {
+                            HStack(spacing: 12) {
+                                AvatarView(image: photoCache.image(for: selected.userId), initial: selected.handle.first, size: 40)
                                 Text(selected.handle)
                                     .font(AppFont.headline)
                                     .foregroundStyle(AppColor.textPrimary)
@@ -162,6 +165,7 @@ struct CrewInviteByNameView: View {
         .onAppear {
             if let presetUserId, let presetHandle, selected == nil {
                 selected = (presetUserId, presetHandle)
+                Task { await photoCache.prefetch(userIds: [presetUserId]) }
             }
         }
     }
@@ -197,6 +201,10 @@ struct CrewInviteByNameView: View {
             }
         } catch {
             errorMessage = "Arama yapılamadı. Bağlantını kontrol edip tekrar dene."
+        }
+        let userIds = (selected.map { [$0.userId] } ?? []) + candidates.map(\.userId)
+        if !userIds.isEmpty {
+            await photoCache.prefetch(userIds: userIds)
         }
     }
 
