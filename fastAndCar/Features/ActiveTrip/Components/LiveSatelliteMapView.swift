@@ -20,8 +20,8 @@ struct LiveSatelliteMapView: View {
     var crewMarkers: [CrewMapMarker] = []
     /// The target Segment's own route, drawn as a fixed "ghost" reference
     /// line — same purple dashed styling as the 2D map's Route Following
-    /// mode, just as native MapPolyline content instead of a Canvas overlay
-    /// (this map has no MapReader/proxy layer to draw one in).
+    /// mode. Static once armed, so native MapPolyline content is fine for
+    /// it (no smoothing needed) even though the live trail below isn't.
     var ghostRouteCoordinates: [CLLocationCoordinate2D] = []
 
     @State private var cameraPosition: MapCameraPosition
@@ -29,10 +29,8 @@ struct LiveSatelliteMapView: View {
     // Same real-GPS-interval-based smoothing as the 2D map's
     // RouteOverlayCanvas (LiveRouteMapView.swift) — raw samples land
     // roughly once a second regardless of speed, and drawing straight at
-    // samples.last made both the position dot and the trailing polyline
-    // visibly jump/pause-then-jump at high speed (confirmed live, and
-    // reported as still happening here in 3D after the 2D map was already
-    // fixed). Easing over the real gap between each sample's own
+    // samples.last made the position dot visibly jump/pause-then-jump at
+    // high speed. Easing over the real gap between each sample's own
     // timestamp keeps motion continuous at any speed, with no pause.
     @State private var transitionStartCoordinate: CLLocationCoordinate2D?
     @State private var transitionStartTime: Date = .now
@@ -69,8 +67,12 @@ struct LiveSatelliteMapView: View {
     }
 
     var body: some View {
-        TimelineView(.animation(paused: samples.count < 2)) { timeline in
-            mapContent(at: timeline.date)
+        MapReader { proxy in
+            ZStack {
+                TimelineView(.animation(paused: samples.count < 2)) { timeline in
+                    mapContent(at: timeline.date, proxy: proxy)
+                }
+            }
         }
         .onChange(of: last?.id) { _, _ in
             updateCamera()
@@ -95,25 +97,10 @@ struct LiveSatelliteMapView: View {
     }
 
     @MapContentBuilder
-    private func routeContent(polylineCoordinates: [CLLocationCoordinate2D], dotCoordinate: CLLocationCoordinate2D?) -> some MapContent {
+    private func routeContent() -> some MapContent {
         if ghostRouteCoordinates.count > 1 {
             MapPolyline(coordinates: ghostRouteCoordinates)
                 .stroke(Color(hex: 0xBF5AF2).opacity(0.7), style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round, dash: [2, 10]))
-        }
-        if polylineCoordinates.count > 1 {
-            MapPolyline(coordinates: polylineCoordinates)
-                .stroke(AppColor.accent, style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
-        }
-        if let dotCoordinate {
-            // Empty title — see LiveRouteMapView's idle position
-            // annotation for why (unwanted permanent "Konum" label).
-            Annotation("", coordinate: dotCoordinate) {
-                Circle()
-                    .fill(AppColor.accent)
-                    .frame(width: 16, height: 16)
-                    .overlay(Circle().stroke(.white, lineWidth: 2))
-                    .shadow(color: .black.opacity(0.35), radius: 4, y: 2)
-            }
         }
         ForEach(crewMarkers) { marker in
             Annotation(marker.nickname, coordinate: marker.coordinate) {
@@ -131,16 +118,28 @@ struct LiveSatelliteMapView: View {
         }
     }
 
-    private func mapContent(at date: Date) -> some View {
+    private func mapContent(at date: Date, proxy: MapProxy) -> some View {
         let smoothedCurrent = displayCoordinate(at: date)
-        var polylineCoordinates = samples.map(\.coordinate)
-        if !polylineCoordinates.isEmpty, let smoothedCurrent {
-            polylineCoordinates[polylineCoordinates.count - 1] = smoothedCurrent
+        return ZStack {
+            Map(position: $cameraPosition, interactionModes: []) {
+                routeContent()
+            }
+            .mapStyle(.hybrid(elevation: .realistic))
+
+            // The trailing route line AND the car icon are both drawn
+            // here, in this one Canvas, line first then car on top — same
+            // order 2D's RouteOverlayCanvas already used successfully.
+            // They used to be split (line in a separate Canvas layer, car
+            // as native Annotation content inside the Map) — a later
+            // ZStack layer always paints over an earlier one regardless
+            // of any real 3D depth relationship, so the line (added after
+            // the Map) was drawing on top of the car every time,
+            // sometimes in front of it (confirmed live — a real bug, not
+            // a simulator artifact). Drawing both in one Canvas, car
+            // last, fixes the ordering for good.
+            TrailAndCarOverlayCanvas(samples: samples, dotCoordinate: smoothedCurrent, proxy: proxy)
+                .allowsHitTesting(false)
         }
-        return Map(position: $cameraPosition, interactionModes: []) {
-            routeContent(polylineCoordinates: polylineCoordinates, dotCoordinate: smoothedCurrent)
-        }
-        .mapStyle(.hybrid(elevation: .realistic))
     }
 
     private func updateCamera() {
@@ -148,6 +147,57 @@ struct LiveSatelliteMapView: View {
         let camera = MapCamera(centerCoordinate: last.coordinate, distance: 350, heading: last.heading ?? 0, pitch: 60)
         withAnimation(.linear(duration: 0.9)) {
             cameraPosition = .camera(camera)
+        }
+    }
+}
+
+/// Draws just the growing driven-route trail in screen space, same
+/// technique as LiveRouteMapView's RouteOverlayCanvas — a live redraw
+/// tracks the map's current camera exactly on every frame, which a native
+/// MapPolyline replaced every frame cannot do smoothly.
+private struct TrailAndCarOverlayCanvas: View {
+    let samples: [LocationSample]
+    let dotCoordinate: CLLocationCoordinate2D?
+    let proxy: MapProxy
+
+    var body: some View {
+        // No TimelineView of its own — the parent (mapContent(at:proxy:))
+        // already rebuilds this fresh every frame from the outer
+        // TimelineView in body, so samples/dotCoordinate here are already
+        // current for this tick.
+        Canvas { context, _ in
+            let points = samples.map { proxy.convert($0.coordinate, to: .local) }
+            if points.count > 1 {
+                for index in 1..<points.count {
+                    guard let previous = points[index - 1], let current = points[index] else { continue }
+                    var segment = Path()
+                    segment.move(to: previous)
+                    segment.addLine(to: current)
+                    context.stroke(
+                        segment,
+                        with: .color(AppColor.heatmapColor(forSpeedKph: samples[index].speedKph)),
+                        style: StrokeStyle(lineWidth: 6, lineCap: .round, lineJoin: .round)
+                    )
+                }
+            }
+
+            // Car drawn last — on top of the line, matching 2D's own
+            // RouteOverlayCanvas draw order.
+            guard let dotCoordinate, let dotPoint = proxy.convert(dotCoordinate, to: .local) else { return }
+            context.drawLayer { layer in
+                layer.translateBy(x: dotPoint.x, y: dotPoint.y)
+                layer.addFilter(.shadow(color: .black.opacity(0.35), radius: 4))
+                switch LocationMarkerStyle.current {
+                case .dot:
+                    let radius: CGFloat = 8
+                    let rect = CGRect(x: -radius, y: -radius, width: radius * 2, height: radius * 2)
+                    layer.fill(Path(ellipseIn: rect), with: .color(AppColor.accent))
+                    layer.stroke(Path(ellipseIn: rect), with: .color(.white), lineWidth: 2)
+                case .carTest:
+                    let carSize: CGFloat = 38
+                    layer.draw(Image("LocationCar"), in: CGRect(x: -carSize / 2, y: -carSize / 2, width: carSize, height: carSize))
+                }
+            }
         }
     }
 }

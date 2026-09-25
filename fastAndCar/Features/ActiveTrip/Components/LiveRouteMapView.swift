@@ -72,6 +72,11 @@ struct LiveRouteMapView: View {
     /// by a TimelineView tick, not the drag gesture itself), while native
     /// content repositions immediately, every frame, for free.
     var idlePositionCoordinate: CLLocationCoordinate2D?
+    /// Degrees from true north — rotates the car icon to face the way
+    /// you're actually pointed, same convention LocationSample.heading
+    /// already uses. nil (no fix yet, or heading unknown) draws it
+    /// pointing north/up, matching this map's own north-up orientation.
+    var idleHeadingDegrees: Double?
     /// The map's road/label style is forced to light (below) regardless of
     /// the system appearance — legible against this app's own dark UI by
     /// default. This is an explicit opt-in to instead follow system dark
@@ -96,11 +101,7 @@ struct LiveRouteMapView: View {
                         // confirmed live as confusing/unwanted, the dot
                         // alone is enough.
                         Annotation("", coordinate: idlePositionCoordinate) {
-                            Circle()
-                                .fill(AppColor.accent)
-                                .frame(width: 16, height: 16)
-                                .overlay(Circle().stroke(.white, lineWidth: 2))
-                                .shadow(color: .black.opacity(0.35), radius: 4, y: 2)
+                            LocationCarMarker(style: LocationMarkerStyle.current, headingDegrees: idleHeadingDegrees)
                         }
                     }
                     ForEach(discoverySegments) { segment in
@@ -155,6 +156,34 @@ struct LiveRouteMapView: View {
 /// The tappable dot marking a discovery route's start point — a plain
 /// SwiftUI View (not an inline closure) so the enclosing MapContentBuilder
 /// expression stays small enough for the compiler to type-check quickly.
+/// The "you are here" marker — a top-down car render (test asset;
+/// user-provided, will be swapped for a properly licensed one before
+/// shipping) instead of a plain dot, rotated to face the current heading.
+/// Not `private`: reused by LiveSatelliteMapView's own position marker.
+struct LocationCarMarker: View {
+    var style: LocationMarkerStyle = .dot
+    var headingDegrees: Double?
+
+    var body: some View {
+        Group {
+            switch style {
+            case .dot:
+                Circle()
+                    .fill(AppColor.accent)
+                    .frame(width: 16, height: 16)
+                    .overlay(Circle().stroke(.white, lineWidth: 2))
+            case .carTest:
+                Image("LocationCar")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 38, height: 38)
+            }
+        }
+        .shadow(color: .black.opacity(0.35), radius: 4, y: 2)
+        .rotationEffect(.degrees(headingDegrees ?? 0))
+    }
+}
+
 private struct DiscoveryRouteTapTarget: View {
     let color: Color
     var size: CGFloat = 22
@@ -288,12 +317,23 @@ private struct RouteOverlayCanvas: View {
                 // route line above is drawn from (see body's comment) —
                 // always exactly at the end of the line, never ahead of it.
                 if let currentPoint = points.last ?? nil {
-                    let radius: CGFloat = 8
-                    let rect = CGRect(x: currentPoint.x - radius, y: currentPoint.y - radius, width: radius * 2, height: radius * 2)
+                    // Always points up — see LiveRouteMapView's idle
+                    // annotation comment for why (rotating by compass
+                    // heading on this north-up map looked wrong/tilted,
+                    // even driving dead straight).
                     context.drawLayer { layer in
+                        layer.translateBy(x: currentPoint.x, y: currentPoint.y)
                         layer.addFilter(.shadow(color: .black.opacity(0.35), radius: 4))
-                        layer.fill(Path(ellipseIn: rect), with: .color(AppColor.accent))
-                        layer.stroke(Path(ellipseIn: rect), with: .color(.white), lineWidth: 2)
+                        switch LocationMarkerStyle.current {
+                        case .dot:
+                            let radius: CGFloat = 8
+                            let rect = CGRect(x: -radius, y: -radius, width: radius * 2, height: radius * 2)
+                            layer.fill(Path(ellipseIn: rect), with: .color(AppColor.accent))
+                            layer.stroke(Path(ellipseIn: rect), with: .color(.white), lineWidth: 2)
+                        case .carTest:
+                            let carSize: CGFloat = 38
+                            layer.draw(Image("LocationCar"), in: CGRect(x: -carSize / 2, y: -carSize / 2, width: carSize, height: carSize))
+                        }
                     }
                 }
 

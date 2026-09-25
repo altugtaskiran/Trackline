@@ -163,6 +163,13 @@ struct DashboardView: View {
                     // tracks a drag perfectly instead of lagging behind it
                     // (confirmed live).
                     idlePositionCoordinate: isRecording ? nil : locationManager.latestSample?.coordinate,
+                    // North-up 2D map, not a heading-rotated one — rotating
+                    // the car icon by compass heading here made it look
+                    // wrong/tilted even driving dead straight (confirmed
+                    // live: GPS heading noise at speed, or just not what
+                    // "up" means on a map that doesn't itself rotate).
+                    // Always pointing up reads correctly regardless.
+                    idleHeadingDegrees: nil,
                     prefersDarkMapStyle: prefersDarkMap
                 )
                 .ignoresSafeArea()
@@ -518,12 +525,19 @@ struct DashboardView: View {
     /// earlier this session, to measurably slow down our own GPS fix —
     /// that's why UserAnnotation was removed in the first place).
     private func recenterOnKnownLocation() {
-        guard let coordinate = locationManager.latestSample?.coordinate else {
+        guard let sample = locationManager.latestSample else {
             cameraPosition = .automatic
             return
         }
-        cameraPosition = .camera(MapCamera(centerCoordinate: coordinate, distance: 600, heading: 0, pitch: 0))
-        lastAutoCenteredCoordinate = coordinate
+        // Heading-up here too, not just while recording — the 3D idle map
+        // (LiveSatelliteMapView, which always uses its own latest.heading
+        // regardless of recording state) already rotated to match travel
+        // direction while idle; this hardcoded 0 (always north-up) was
+        // the one place still not matching it (confirmed live: two idle
+        // screenshots side by side, 3D following the road's real direction
+        // while 2D stayed north-fixed).
+        cameraPosition = .camera(MapCamera(centerCoordinate: sample.coordinate, distance: 600, heading: sample.heading ?? 0, pitch: 0))
+        lastAutoCenteredCoordinate = sample.coordinate
     }
 
     private func loadDiscoverySegments(around region: MKCoordinateRegion) async {

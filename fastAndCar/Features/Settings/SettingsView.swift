@@ -13,8 +13,10 @@ struct SettingsView: View {
     @State private var viewModel: SettingsViewModel
     @AppStorage("distanceUnit") private var distanceUnitRaw = DistanceUnit.systemDefault.rawValue
     @AppStorage("sharesLiveLocationWithCrew") private var sharesLiveLocationWithCrew = false
+    @AppStorage("locationMarkerStyle") private var locationMarkerStyleRaw = LocationMarkerStyle.dot.rawValue
     @AppStorage("appLanguage") private var appLanguageRaw = AppLanguage.system.rawValue
     @Environment(AppEnvironment.self) private var appEnvironment
+    @State private var showsLocationMarkerPicker = false
     #if DEBUG
     @State private var debugAutoOpenLanguage = false
     #endif
@@ -27,6 +29,13 @@ struct SettingsView: View {
         Binding(
             get: { DistanceUnit(rawValue: distanceUnitRaw) ?? .systemDefault },
             set: { distanceUnitRaw = $0.rawValue }
+        )
+    }
+
+    private var locationMarkerStyle: Binding<LocationMarkerStyle> {
+        Binding(
+            get: { LocationMarkerStyle(rawValue: locationMarkerStyleRaw) ?? .dot },
+            set: { locationMarkerStyleRaw = $0.rawValue }
         )
     }
 
@@ -122,6 +131,27 @@ struct SettingsView: View {
                         }
 
                         GlassCard(padding: 0) {
+                            Button {
+                                showsLocationMarkerPicker = true
+                            } label: {
+                                HStack {
+                                    Text("Konum Göstergesi")
+                                        .font(AppFont.headline)
+                                        .foregroundStyle(AppColor.textPrimary)
+                                    Spacer()
+                                    Text(locationMarkerStyle.wrappedValue.label)
+                                        .font(AppFont.body)
+                                        .foregroundStyle(AppColor.textSecondary)
+                                    Image(systemName: "chevron.right")
+                                        .font(.system(size: 13, weight: .semibold))
+                                        .foregroundStyle(AppColor.textTertiary)
+                                }
+                                .padding(16)
+                            }
+                            .buttonStyle(.plain)
+                        }
+
+                        GlassCard(padding: 0) {
                             NavigationLink {
                                 LanguagePickerView(selection: appLanguage)
                             } label: {
@@ -171,6 +201,9 @@ struct SettingsView: View {
                 LanguagePickerView(selection: appLanguage)
             }
             #endif
+        }
+        .sheet(isPresented: $showsLocationMarkerPicker) {
+            LocationMarkerPickerView(selection: locationMarkerStyle, onDismiss: { showsLocationMarkerPicker = false })
         }
         .preferredColorScheme(.dark)
         #if DEBUG
