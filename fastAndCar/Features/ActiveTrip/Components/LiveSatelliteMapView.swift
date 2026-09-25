@@ -26,6 +26,18 @@ struct LiveSatelliteMapView: View {
 
     @State private var cameraPosition: MapCameraPosition
 
+    // Same real-GPS-interval-based smoothing as the 2D map's
+    // RouteOverlayCanvas (LiveRouteMapView.swift) — raw samples land
+    // roughly once a second regardless of speed, and drawing straight at
+    // samples.last made both the position dot and the trailing polyline
+    // visibly jump/pause-then-jump at high speed (confirmed live, and
+    // reported as still happening here in 3D after the 2D map was already
+    // fixed). Easing over the real gap between each sample's own
+    // timestamp keeps motion continuous at any speed, with no pause.
+    @State private var transitionStartCoordinate: CLLocationCoordinate2D?
+    @State private var transitionStartTime: Date = .now
+    @State private var transitionDuration: TimeInterval = 1.0
+
     private var last: LocationSample? { samples.last }
 
     init(samples: [LocationSample], crewMarkers: [CrewMapMarker] = [], ghostRouteCoordinates: [CLLocationCoordinate2D] = []) {
@@ -46,46 +58,89 @@ struct LiveSatelliteMapView: View {
         }
     }
 
+    private func displayCoordinate(at date: Date) -> CLLocationCoordinate2D? {
+        guard let target = last?.coordinate else { return nil }
+        guard let start = transitionStartCoordinate else { return target }
+        let t = min(1, max(0, date.timeIntervalSince(transitionStartTime) / transitionDuration))
+        return CLLocationCoordinate2D(
+            latitude: start.latitude + (target.latitude - start.latitude) * t,
+            longitude: start.longitude + (target.longitude - start.longitude) * t
+        )
+    }
+
     var body: some View {
-        Map(position: $cameraPosition, interactionModes: []) {
-            if ghostRouteCoordinates.count > 1 {
-                MapPolyline(coordinates: ghostRouteCoordinates)
-                    .stroke(Color(hex: 0xBF5AF2).opacity(0.7), style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round, dash: [2, 10]))
+        TimelineView(.animation(paused: samples.count < 2)) { timeline in
+            mapContent(at: timeline.date)
+        }
+        .onChange(of: last?.id) { _, _ in
+            updateCamera()
+
+            guard let newSample = samples.last, let previousSample = samples.dropLast().last else {
+                transitionStartCoordinate = nil
+                transitionStartTime = .now
+                return
             }
-            if samples.count > 1 {
-                MapPolyline(coordinates: samples.map(\.coordinate))
-                    .stroke(AppColor.accent, style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
+            let interval = newSample.timestamp.timeIntervalSince(previousSample.timestamp)
+            if interval > 0.3 && interval <= 3.0 {
+                transitionStartCoordinate = previousSample.coordinate
+                transitionDuration = interval
+            } else {
+                // No usable interval (first sample, out-of-order, or a
+                // signal-loss-sized gap) — snap instead of slowly creeping
+                // across what might be a huge real jump.
+                transitionStartCoordinate = nil
             }
-            if let last {
-                // Plain String literal here picks Annotation's
-                // non-localizing StringProtocol overload instead of the
-                // LocalizedStringKey one Text uses — same fix as
-                // LiveRouteMapView's idle position annotation.
-                Annotation(LocalizedStringKey("Konum"), coordinate: last.coordinate) {
+            transitionStartTime = .now
+        }
+    }
+
+    @MapContentBuilder
+    private func routeContent(polylineCoordinates: [CLLocationCoordinate2D], dotCoordinate: CLLocationCoordinate2D?) -> some MapContent {
+        if ghostRouteCoordinates.count > 1 {
+            MapPolyline(coordinates: ghostRouteCoordinates)
+                .stroke(Color(hex: 0xBF5AF2).opacity(0.7), style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round, dash: [2, 10]))
+        }
+        if polylineCoordinates.count > 1 {
+            MapPolyline(coordinates: polylineCoordinates)
+                .stroke(AppColor.accent, style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
+        }
+        if let dotCoordinate {
+            // Empty title — see LiveRouteMapView's idle position
+            // annotation for why (unwanted permanent "Konum" label).
+            Annotation("", coordinate: dotCoordinate) {
+                Circle()
+                    .fill(AppColor.accent)
+                    .frame(width: 16, height: 16)
+                    .overlay(Circle().stroke(.white, lineWidth: 2))
+                    .shadow(color: .black.opacity(0.35), radius: 4, y: 2)
+            }
+        }
+        ForEach(crewMarkers) { marker in
+            Annotation(marker.nickname, coordinate: marker.coordinate) {
+                ZStack {
                     Circle()
-                        .fill(AppColor.accent)
+                        .fill(Color(hex: 0xBF5AF2))
                         .frame(width: 16, height: 16)
                         .overlay(Circle().stroke(.white, lineWidth: 2))
                         .shadow(color: .black.opacity(0.35), radius: 4, y: 2)
-                }
-            }
-            ForEach(crewMarkers) { marker in
-                Annotation(marker.nickname, coordinate: marker.coordinate) {
-                    ZStack {
-                        Circle()
-                            .fill(Color(hex: 0xBF5AF2))
-                            .frame(width: 16, height: 16)
-                            .overlay(Circle().stroke(.white, lineWidth: 2))
-                            .shadow(color: .black.opacity(0.35), radius: 4, y: 2)
-                        Text(String(marker.nickname.prefix(1)).uppercased())
-                            .font(.system(size: 9, weight: .bold))
-                            .foregroundStyle(.white)
-                    }
+                    Text(String(marker.nickname.prefix(1)).uppercased())
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(.white)
                 }
             }
         }
+    }
+
+    private func mapContent(at date: Date) -> some View {
+        let smoothedCurrent = displayCoordinate(at: date)
+        var polylineCoordinates = samples.map(\.coordinate)
+        if !polylineCoordinates.isEmpty, let smoothedCurrent {
+            polylineCoordinates[polylineCoordinates.count - 1] = smoothedCurrent
+        }
+        return Map(position: $cameraPosition, interactionModes: []) {
+            routeContent(polylineCoordinates: polylineCoordinates, dotCoordinate: smoothedCurrent)
+        }
         .mapStyle(.hybrid(elevation: .realistic))
-        .onChange(of: last?.id) { _, _ in updateCamera() }
     }
 
     private func updateCamera() {

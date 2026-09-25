@@ -27,6 +27,18 @@ struct DashboardView: View {
     // LiveSatelliteMapView's header comment for why that placement got
     // pulled.
     @State private var showsSatelliteChase = false
+    @State private var prefersDarkMap = false
+    // Our own stand-in for what MapCameraPosition.userLocation(fallback:)
+    // used to give us for free (continuous follow until the user pans
+    // away) — dropped along with it to stop MapKit's own blue dot from
+    // appearing as a side effect of that specific API (see
+    // recenterOnKnownLocation's comment). true = keep recentering on every
+    // new GPS sample while idle; flips false the moment onRegionChange
+    // sees the camera move somewhere we didn't put it ourselves.
+    @State private var isFollowingLocation = true
+    @State private var lastAutoCenteredCoordinate: CLLocationCoordinate2D?
+    @State private var resumeFollowingTask: Task<Void, Never>?
+    @Environment(\.colorScheme) private var systemColorScheme
     // Crew members' live locations, overlaid on this same driving map — "if
     // a crewmate is nearby or headed the same way, see them while I drive",
     // not just on the separate Crew screen. Only polled while actually
@@ -88,9 +100,17 @@ struct DashboardView: View {
         ZStack {
             AppColor.background.ignoresSafeArea()
 
-            if isRecording && showsSatelliteChase {
-                LiveSatelliteMapView(samples: tripViewModel.samples, crewMarkers: crewMarkers, ghostRouteCoordinates: ghostRouteCoordinates)
-                    .ignoresSafeArea()
+            if showsSatelliteChase {
+                // While idle there's no trip in progress to draw a route
+                // from — feed just the current position (when known) so
+                // the camera centers there and the dot shows, same as the
+                // 2D idle map's own idlePositionCoordinate.
+                LiveSatelliteMapView(
+                    samples: isRecording ? tripViewModel.samples : [locationManager.latestSample].compactMap { $0 },
+                    crewMarkers: isRecording ? crewMarkers : [],
+                    ghostRouteCoordinates: ghostRouteCoordinates
+                )
+                .ignoresSafeArea()
             } else {
                 LiveRouteMapView(
                     samples: isRecording ? tripViewModel.samples : [],
@@ -106,15 +126,44 @@ struct DashboardView: View {
                     },
                     onRegionChange: { region in
                         guard !isRecording else { return }
+                        // A region change we didn't cause ourselves (see
+                        // recenterOnKnownLocation) means the user dragged
+                        // the map — stop auto-following until they're back
+                        // idle again, same as Apple Maps losing tracking
+                        // mode the moment you pan away from it.
+                        if let lastAutoCenteredCoordinate {
+                            let moved = CLLocation(latitude: region.center.latitude, longitude: region.center.longitude)
+                                .distance(from: CLLocation(latitude: lastAutoCenteredCoordinate.latitude, longitude: lastAutoCenteredCoordinate.longitude))
+                            if moved > 30 {
+                                isFollowingLocation = false
+                                // Resume auto-following on its own after a
+                                // few seconds of no further interaction —
+                                // browsing the map for a bit shouldn't
+                                // require ending/restarting a drive (or
+                                // leaving and reopening Ana Sayfa) just to
+                                // get back to "where am I". Each new pan
+                                // restarts this countdown (old one
+                                // cancelled below) so active browsing is
+                                // never interrupted mid-gesture.
+                                resumeFollowingTask?.cancel()
+                                resumeFollowingTask = Task {
+                                    try? await Task.sleep(for: .seconds(3.5))
+                                    guard !Task.isCancelled, !isRecording else { return }
+                                    isFollowingLocation = true
+                                    withAnimation { recenterOnKnownLocation() }
+                                }
+                            }
+                        }
                         Task { await loadDiscoverySegments(around: region) }
                     },
-                    mapOpacity: isRecording ? 0.22 : 1.0,
+                    mapOpacity: isRecording ? 0.4 : 1.0,
                     // Kept warm by startIdleMapTracking (own LocationManager,
                     // same single source recording uses) — drawn as native
                     // Annotation content, not our screen-space Canvas, so it
                     // tracks a drag perfectly instead of lagging behind it
                     // (confirmed live).
-                    idlePositionCoordinate: isRecording ? nil : locationManager.latestSample?.coordinate
+                    idlePositionCoordinate: isRecording ? nil : locationManager.latestSample?.coordinate,
+                    prefersDarkMapStyle: prefersDarkMap
                 )
                 .ignoresSafeArea()
 
@@ -249,10 +298,14 @@ struct DashboardView: View {
             }
             .animation(.spring(response: 0.35, dampingFraction: 0.85), value: isRecording)
 
-            if isRecording {
-                VStack {
-                    HStack {
-                        Spacer()
+            VStack {
+                HStack {
+                    Spacer()
+                    VStack(spacing: 12) {
+                        // 3D chase view — usable before a drive starts too
+                        // now, not just during one (previously locked
+                        // behind isRecording; confirmed the user wants to
+                        // preview/use it from Ana Sayfa as well).
                         Button {
                             withAnimation(.easeInOut(duration: 0.25)) { showsSatelliteChase.toggle() }
                         } label: {
@@ -262,16 +315,34 @@ struct DashboardView: View {
                                 .frame(width: 36, height: 36)
                                 .background(Circle().fill(.ultraThinMaterial))
                         }
-                        .padding(.trailing, 20)
+
+                        // The 2D map's road style is forced light regardless
+                        // of system appearance (legible against this app's
+                        // dark UI) — only worth offering a dark-map opt-out
+                        // when the system is actually in dark mode, and only
+                        // meaningful for the 2D map (satellite imagery has
+                        // no light/dark variant).
+                        if systemColorScheme == .dark, !showsSatelliteChase {
+                            Button {
+                                withAnimation(.easeInOut(duration: 0.25)) { prefersDarkMap.toggle() }
+                            } label: {
+                                Image(systemName: prefersDarkMap ? "moon.fill" : "moon")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundStyle(AppColor.accent)
+                                    .frame(width: 36, height: 36)
+                                    .background(Circle().fill(.ultraThinMaterial))
+                            }
+                        }
                     }
-                    Spacer()
+                    .padding(.trailing, 20)
                 }
-                .padding(.top, 60)
+                Spacer()
             }
+            .padding(.top, 60)
         }
         .onAppear {
             if !isRecording {
-                cameraPosition = .userLocation(fallback: .automatic)
+                recenterOnKnownLocation()
                 locationManager.startIdleMapTracking()
             }
         }
@@ -289,10 +360,10 @@ struct DashboardView: View {
                 // anywhere, starting a drive left the camera stuck wherever
                 // it'd been dragged to — the live route/position dot were
                 // still drawing correctly, just off-screen (confirmed
-                // live, reported as "no location"). .userLocation forces
-                // it back to the real position before the first sample's
-                // own heading-up tracking (below) takes over.
-                withAnimation { cameraPosition = .userLocation(fallback: .automatic) }
+                // live, reported as "no location"). Forces it back to
+                // the real position before the first sample's own
+                // heading-up tracking (below) takes over.
+                withAnimation { recenterOnKnownLocation() }
                 discoveredSegmentsById = [:]
                 selectedSegmentId = nil
                 previewSegment = nil
@@ -300,7 +371,15 @@ struct DashboardView: View {
                 showsSatelliteChase = false
                 crewMarkers = []
                 locationManager.startIdleMapTracking()
+                // Back to idle after a drive — resume auto-following, same
+                // as a fresh app launch would.
+                isFollowingLocation = true
+                recenterOnKnownLocation()
             }
+        }
+        .onChange(of: locationManager.latestSample?.id) { _, _ in
+            guard !isRecording, isFollowingLocation else { return }
+            recenterOnKnownLocation()
         }
         .sheet(item: $previewSegment, onDismiss: { selectedSegmentId = nil }) { segment in
             RoutePreviewSheet(
@@ -427,6 +506,26 @@ struct DashboardView: View {
     ///   ones never loaded. Now it switches to the same coarse
     ///   (precision-4) cells "Yakınımdakiler" uses once the viewport gets
     ///   that wide, so the search never actually stops, just gets coarser.
+    /// Was `cameraPosition = .userLocation(fallback: .automatic)` — that
+    /// specific MapKit API turns on MapKit's own blue "puck" as a side
+    /// effect of binding the camera to it, even with no `UserAnnotation()`
+    /// anywhere in the app (confirmed live: a blue dot appeared right next
+    /// to our own green one on first launch, then vanished once the camera
+    /// moved away from `.userLocation` after a recording). Building the
+    /// region from our own already-tracked coordinate instead centers the
+    /// camera the same way without ever touching MapKit's tracking (which
+    /// runs its own independent CLLocationManager and was already found,
+    /// earlier this session, to measurably slow down our own GPS fix —
+    /// that's why UserAnnotation was removed in the first place).
+    private func recenterOnKnownLocation() {
+        guard let coordinate = locationManager.latestSample?.coordinate else {
+            cameraPosition = .automatic
+            return
+        }
+        cameraPosition = .camera(MapCamera(centerCoordinate: coordinate, distance: 600, heading: 0, pitch: 0))
+        lastAutoCenteredCoordinate = coordinate
+    }
+
     private func loadDiscoverySegments(around region: MKCoordinateRegion) async {
         guard FeatureFlags.globalLeaderboardEnabled else { return }
         // 3x (not just enough to cover the visible viewport) on purpose —

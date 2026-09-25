@@ -72,6 +72,11 @@ struct LiveRouteMapView: View {
     /// by a TimelineView tick, not the drag gesture itself), while native
     /// content repositions immediately, every frame, for free.
     var idlePositionCoordinate: CLLocationCoordinate2D?
+    /// The map's road/label style is forced to light (below) regardless of
+    /// the system appearance — legible against this app's own dark UI by
+    /// default. This is an explicit opt-in to instead follow system dark
+    /// mode, off unless the user asks for it (a Moon toggle on Home).
+    var prefersDarkMapStyle: Bool = false
 
     var body: some View {
         MapReader { proxy in
@@ -86,15 +91,11 @@ struct LiveRouteMapView: View {
                 // annotations are designed to coexist with map gestures.
                 Map(position: $cameraPosition, interactionModes: interactionModes) {
                     if let idlePositionCoordinate {
-                        // A plain String literal here resolves to
-                        // Annotation's non-localizing StringProtocol
-                        // overload, not the LocalizedStringKey one Text
-                        // uses — it never picked up the app's language
-                        // override or the system language at all
-                        // (confirmed live: stayed Turkish even with the
-                        // device set to English). Forcing LocalizedStringKey
-                        // routes it through the same lookup Text(_:) uses.
-                        Annotation(LocalizedStringKey("Konum"), coordinate: idlePositionCoordinate) {
+                        // Empty title — a real one ("Konum") used to show
+                        // under the dot as a permanent callout-style label;
+                        // confirmed live as confusing/unwanted, the dot
+                        // alone is enough.
+                        Annotation("", coordinate: idlePositionCoordinate) {
                             Circle()
                                 .fill(AppColor.accent)
                                 .frame(width: 16, height: 16)
@@ -107,7 +108,7 @@ struct LiveRouteMapView: View {
                     }
                 }
                     .mapStyle(.standard(elevation: .flat, emphasis: .muted, pointsOfInterest: .excludingAll, showsTraffic: false))
-                    .environment(\.colorScheme, .light)
+                    .environment(\.colorScheme, prefersDarkMapStyle ? .dark : .light)
                     .opacity(mapOpacity)
                     .onMapCameraChange(frequency: .onEnd) { context in
                         onRegionChange?(context.region)
@@ -193,8 +194,42 @@ private struct RouteOverlayCanvas: View {
     var crewMarkers: [CrewMapMarker] = []
     let proxy: MapProxy
 
+    // Nav-app style smoothing for the current-position dot (and the route
+    // line's last segment, which shares the same point): raw GPS samples
+    // land roughly once a second, and drawing straight at samples.last
+    // made the dot visibly jump from point to point instead of gliding
+    // like Apple/Google Maps' own location puck (confirmed live: "noktamız
+    // atlaya atlaya gidiyor"). Instead of snapping the instant a new
+    // sample arrives, the drawn point eases from the previous sample
+    // toward the new one — recomputed every frame from the existing
+    // TimelineView tick, no extra timers needed.
+    //
+    // The ease duration used to be a fixed 0.5s, which looked fine at low
+    // speed but still visibly paused-then-jumped at 120-140km/h (confirmed
+    // live in simulator testing): samples land ~1s apart regardless of
+    // speed (LocationManager's minSampleInterval), so at high speed each
+    // ~35-39m hop finished easing in 0.5s and then just sat still at the
+    // target for the remaining ~0.5s before the next hop — a stop-start
+    // rhythm that reads as teleporting. Matching the ease duration to the
+    // real gap between each sample's own timestamp means the dot keeps
+    // moving right up until the next sample lands, no pause, at any speed.
+    @State private var transitionStartCoordinate: CLLocationCoordinate2D?
+    @State private var transitionStartTime: Date = .now
+    @State private var transitionDuration: TimeInterval = 1.0
+
+    private func displayCoordinate(at date: Date) -> CLLocationCoordinate2D? {
+        guard let target = samples.last?.coordinate else { return nil }
+        guard let start = transitionStartCoordinate else { return target }
+        let t = min(1, max(0, date.timeIntervalSince(transitionStartTime) / transitionDuration))
+        return CLLocationCoordinate2D(
+            latitude: start.latitude + (target.latitude - start.latitude) * t,
+            longitude: start.longitude + (target.longitude - start.longitude) * t
+        )
+    }
+
     var body: some View {
-        TimelineView(.animation(paused: samples.count < 2 && ghostRouteCoordinates.isEmpty && crewMarkers.isEmpty)) { _ in
+        TimelineView(.animation(paused: samples.count < 2 && ghostRouteCoordinates.isEmpty && crewMarkers.isEmpty)) { timeline in
+            let smoothedCurrent = displayCoordinate(at: timeline.date)
             Canvas { context, _ in
                 if ghostRouteCoordinates.count > 1 {
                     let ghostPoints = ghostRouteCoordinates.map { proxy.convert($0, to: .local) }
@@ -216,8 +251,11 @@ private struct RouteOverlayCanvas: View {
                     )
                 }
 
-                let points = samples.map { proxy.convert($0.coordinate, to: .local) }
+                var points = samples.map { proxy.convert($0.coordinate, to: .local) }
                 guard !points.isEmpty else { return }
+                if let smoothedCurrent {
+                    points[points.count - 1] = proxy.convert(smoothedCurrent, to: .local)
+                }
 
                 if points.count > 1 {
                     for index in 1..<points.count {
@@ -274,6 +312,30 @@ private struct RouteOverlayCanvas: View {
                     context.draw(label, at: point)
                 }
             }
+        }
+        .onChange(of: samples.last?.id) { _, _ in
+            guard let newSample = samples.last, let previousSample = samples.dropLast().last else {
+                // First-ever sample — nothing to ease from.
+                transitionStartCoordinate = nil
+                transitionStartTime = .now
+                return
+            }
+            let interval = newSample.timestamp.timeIntervalSince(previousSample.timestamp)
+            if interval > 0.3 && interval <= 3.0 {
+                // Ease over the real gap between these two samples' own
+                // timestamps — the dot keeps moving right up until the
+                // next one lands, at any speed, instead of pausing once a
+                // fixed-duration ease finishes early.
+                transitionStartCoordinate = previousSample.coordinate
+                transitionDuration = interval
+            } else {
+                // No usable interval (first sample, samples arrived out of
+                // order, or a signal-loss-sized gap) — a stale position
+                // slowly creeping across a huge real jump would look more
+                // wrong than just snapping straight to the new one.
+                transitionStartCoordinate = nil
+            }
+            transitionStartTime = .now
         }
     }
 }
