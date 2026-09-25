@@ -342,26 +342,33 @@ struct AppRootView: View {
         path.append(trip.id)
         resolvePlaceNames(for: trip)
         Task { await SegmentAutoMatcher.run(for: trip) }
-        // This drive was explicitly following one specific crew route (not
-        // a general "was I near any public segment" auto-detect) — already
-        // know exactly which segment and zone, so submit straight to it
-        // rather than searching.
-        if let crewZoneRef = guidanceCrewZoneRef, let crewId = guidanceCrewId, let followedSegment = guidanceSegment {
-            let samples = trip.samples
-            let score = trip.drivingScoreValue
-            Task {
-                guard let match = SegmentMatcher.match(trip: samples, against: followedSegment) else { return }
-                let nickname = NicknameStore().nickname
-                guard let userId = try? await CloudKitCrewService.currentUserId() else { return }
-                try? await CloudKitCrewService.submitEffort(
-                    segmentId: followedSegment.id,
-                    crewId: crewId,
-                    userId: userId,
-                    nickname: nickname,
-                    match: match,
-                    drivingScore: score,
-                    zoneRef: crewZoneRef
-                )
+        // Only tag/badge this trip as having followed a route if it
+        // actually matched it — Route Following mode being armed doesn't
+        // mean the drive stayed on that road the whole way (confirmed
+        // live: badge was showing even when the segment wasn't finished).
+        if let followedSegment = guidanceSegment,
+           let match = SegmentMatcher.match(trip: trip.samples, against: followedSegment) {
+            trip.followedSegmentId = followedSegment.id
+            trip.followedSegmentName = followedSegment.name
+            // This drive was explicitly following one specific crew route
+            // (not a general "was I near any public segment" auto-detect)
+            // — already know exactly which segment and zone, so submit
+            // straight to it rather than searching.
+            if let crewZoneRef = guidanceCrewZoneRef, let crewId = guidanceCrewId {
+                let score = trip.drivingScoreValue
+                Task {
+                    let nickname = NicknameStore().nickname
+                    guard let userId = try? await CloudKitCrewService.currentUserId() else { return }
+                    try? await CloudKitCrewService.submitEffort(
+                        segmentId: followedSegment.id,
+                        crewId: crewId,
+                        userId: userId,
+                        nickname: nickname,
+                        match: match,
+                        drivingScore: score,
+                        zoneRef: crewZoneRef
+                    )
+                }
             }
         }
         checkForNewlyUnlockedAchievements()

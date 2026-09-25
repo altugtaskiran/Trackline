@@ -24,6 +24,16 @@ struct TripRowCard: View {
                 Text(trip.startTime.formatted(Date.FormatStyle(date: .abbreviated, time: .shortened).locale(locale)))
                     .font(.system(size: 11, weight: .medium, design: .rounded))
                     .foregroundStyle(AppColor.textSecondary)
+                if let followedSegmentName = trip.followedSegmentName {
+                    HStack(spacing: 4) {
+                        Image(systemName: "flag.checkered")
+                            .font(.system(size: 9))
+                        Text(followedSegmentName)
+                            .font(.system(size: 11, weight: .medium, design: .rounded))
+                            .lineLimit(1)
+                    }
+                    .foregroundStyle(Color(hex: 0xBF5AF2))
+                }
             }
 
             Spacer()

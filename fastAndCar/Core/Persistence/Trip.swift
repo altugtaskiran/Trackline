@@ -51,6 +51,16 @@ final class Trip {
     var startPlaceName: String?
     var endPlaceName: String?
 
+    /// Set (after save, once a completed match is confirmed — see
+    /// AppRootView.handleTripEnded) when this drive actually followed a
+    /// specific public (global or crew) Segment through to completion —
+    /// nil for a plain freeform drive, or a route-following attempt that
+    /// didn't finish. Lets Sürüşlerim show that this trip was racing/
+    /// following someone else's route rather than looking identical to
+    /// any other recording.
+    var followedSegmentId: String?
+    var followedSegmentName: String?
+
     init(samples: [LocationSample], stopEvents: [TripStopEvent], stats: TripStats, score: DrivingScore) {
         self.id = UUID()
         self.createdAt = Date()
