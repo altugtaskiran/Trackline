@@ -201,13 +201,30 @@ enum CloudKitSegmentService {
     /// Sorted by vote count descending — the best-rated matches for the
     /// searched name surface first, not just whatever order CloudKit
     /// happened to return them in.
+    /// Was a server-side `"name CONTAINS[cd] %@"` predicate — CloudKit's
+    /// public database CONTAINS support is unreliable even on a field with
+    /// a Searchable index (same class of issue as every other CloudKit
+    /// query bug found this session), and it was silently returning zero
+    /// results for text the user could see was right there, including
+    /// their own segment's exact name.
+    ///
+    /// `BEGINSWITH` (prefix match on `name`, needs a Searchable index on
+    /// that field in Console — same requirement CONTAINS had, but this
+    /// operator is the one CloudKit's public database actually documents
+    /// and reliably supports) replaces it — filtered server-side, so this
+    /// scales to a large segment count instead of fetching every public
+    /// Segment to filter client-side (which is what Yakınımdakiler still
+    /// does, acceptable there only because "no adjustable radius, fixed
+    /// 50km" bounds it — a name search has no such natural bound). The
+    /// trade: only matches from the *start* of the name, not anywhere
+    /// inside it — same as most contact/type-ahead search boxes.
     static func searchSegments(nameContains text: String) async throws -> [Segment] {
         guard FeatureFlags.globalLeaderboardEnabled else { throw SegmentServiceError.featureNotAvailable }
-        let predicate = NSPredicate(format: "name CONTAINS[cd] %@", text)
+        let predicate = NSPredicate(format: "name BEGINSWITH[c] %@", text)
         let query = CKQuery(recordType: segmentRecordType, predicate: predicate)
 
         do {
-            let (matchResults, _) = try await database.records(matching: query)
+            let (matchResults, _) = try await database.records(matching: query, resultsLimit: 30)
             let segments = matchResults.compactMap { _, result -> Segment? in
                 guard case .success(let record) = result else { return nil }
                 return mapSegment(record)
