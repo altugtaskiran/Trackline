@@ -13,6 +13,7 @@ struct TripDetailView: View {
     @State private var viewModel: TripDetailViewModel
     @State private var showsShareSheet = false
     @State private var showsCreateSegment = false
+    @State private var mapReadyRetryTick = 0
     @Environment(\.locale) private var locale
     @AppStorage("distanceUnit") private var distanceUnitRaw = DistanceUnit.systemDefault.rawValue
     private var distanceUnit: DistanceUnit { DistanceUnit(rawValue: distanceUnitRaw) ?? .systemDefault }
@@ -134,15 +135,32 @@ struct TripDetailView: View {
                         .mapStyle(.standard(elevation: .flat, emphasis: .muted, pointsOfInterest: .excludingAll, showsTraffic: false))
                         .environment(\.colorScheme, .light)
                         .opacity(0.6)
-                    RouteCanvas(samples: viewModel.samples, lineWidth: 3, showsEndpoints: true, padding: 24, projector: projector)
-                    RouteEndpointLabels(
-                        samples: viewModel.samples,
-                        startPlaceName: viewModel.trip.startPlaceName,
-                        endPlaceName: viewModel.trip.endPlaceName,
-                        padding: 24,
-                        projector: projector
-                    )
-                    RouteInspectorOverlay(samples: viewModel.samples, padding: 24, inspectedIndex: $viewModel.inspectedIndex, projector: projector)
+
+                    // mapProxy.convert can return nil for every point on
+                    // the very first render — the Map underneath hasn't
+                    // finished establishing its projection yet (this is
+                    // a plain one-shot Canvas, not a continuously
+                    // redrawing one, so it never got a second chance to
+                    // retry) — which the fallback above quietly draws as
+                    // every point stacked at the view's center: no visible
+                    // line at all (confirmed live: "map boş gözüküyor, bir
+                    // kere dokunmam gerekiyor" — any unrelated state change
+                    // forcing a redraw happened to fix it, by which point
+                    // the map was ready). Forcing a few extra redraws
+                    // shortly after appear self-corrects once the map's
+                    // actually ready, with no user interaction needed.
+                    Group {
+                        RouteCanvas(samples: viewModel.samples, lineWidth: 3, showsEndpoints: true, padding: 24, projector: projector)
+                        RouteEndpointLabels(
+                            samples: viewModel.samples,
+                            startPlaceName: viewModel.trip.startPlaceName,
+                            endPlaceName: viewModel.trip.endPlaceName,
+                            padding: 24,
+                            projector: projector
+                        )
+                        RouteInspectorOverlay(samples: viewModel.samples, padding: 24, inspectedIndex: $viewModel.inspectedIndex, projector: projector)
+                    }
+                    .id(mapReadyRetryTick)
 
                     if let sample = viewModel.inspectedSample {
                         VStack {
@@ -151,6 +169,12 @@ struct TripDetailView: View {
                         }
                     }
                 }
+            }
+        }
+        .task {
+            for _ in 0..<5 {
+                try? await Task.sleep(for: .milliseconds(100))
+                mapReadyRetryTick += 1
             }
         }
         .frame(height: 320)
